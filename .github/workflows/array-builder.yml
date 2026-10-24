@@ -149,7 +149,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "array/builder-$GITHUB_RUN_ID"
           git commit -m "feat: ARRAY Builder Grove proposal"
-          git diff --stat HEAD^
+          git show --stat --oneline --format=short HEAD
 
       - name: Publish draft pull request (no automated merge)
         env:
