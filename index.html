@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c120e">
+  <meta name="description" content="Grove by Resonant. A calmer way to plant, build and grow ventures.">
+  <title>Grove | Resonant Venture Ecosystem</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#overview" aria-label="Grove home">
+        <span class="brand-emblem" aria-hidden="true"><svg viewBox="0 0 50 50" fill="none"><path d="M39 15.5a18 18 0 1 0 2.2 20.3V26H27" stroke="currentColor" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M25.5 27V17.2m0 6.8c-7.6-1.1-9.4-6.3-9.1-11.9 6.7.1 10.5 3.7 9.1 11.9Zm.2-3.1c.9-7.3 5-10.8 11.4-11.1-.2 6.3-3.3 10.1-11.4 11.1Z" fill="currentColor"/></svg></span>
+        <span><strong>grove<span class="brand-period">.</span></strong><small>BY RESONANT</small></span>
+      </a>
+      <div class="workspace-pill"><span class="workspace-icon"><i data-lucide="sprout"></i></span><span><strong>My Grove</strong><small>Personal workspace</small></span><i data-lucide="chevron-down" class="workspace-chevron"></i></div>
+      <div class="nav-caption">WORKSPACE</div>
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <button type="button" class="nav-link active" data-view="overview"><i data-lucide="layout-dashboard"></i><span>Overview</span><span class="nav-active-indicator"></span></button>
+        <button type="button" class="nav-link" data-view="seeds"><i data-lucide="sprout"></i><span>My Seeds</span><span class="nav-count" id="navSeedCount">1</span></button>
+        <button type="button" class="nav-link" data-view="treasury"><i data-lucide="wallet"></i><span>Treasury</span></button>
+        <button type="button" class="nav-link" data-view="activity"><i data-lucide="activity"></i><span>Activity</span></button>
+      </nav>
+      <div class="nav-caption second-caption">ECOSYSTEM</div>
+      <div class="sidebar-projects"><div class="sidebar-project"><span class="project-dot" style="--dot:#aac9ff"></span>ARROW <span>Future</span></div><div class="sidebar-project"><span class="project-dot" style="--dot:#d9c1fa"></span>RAVIN <span>Future</span></div><div class="sidebar-project"><span class="project-dot" style="--dot:#ffc9a5"></span>Resonant Bikes <span>Future</span></div></div>
+      <div class="sidebar-grow"></div>
+      <div class="sidebar-note"><span class="note-symbol"><i data-lucide="lightbulb"></i></span><strong>Small seeds.<br>Big possibilities.</strong><p>Every great venture begins with one small move.</p><button type="button" data-action="new-seed">+ Plant a seed</button></div>
+      <button type="button" class="sidebar-settings nav-link" data-view="settings"><i data-lucide="settings-2"></i><span>Settings</span></button>
+      <div class="sidebar-profile"><div class="profile-avatar">R</div><span><strong>Resonant Grove</strong><small>Local prototype</small></span><i data-lucide="chevrons-up-down"></i></div>
+    </aside>
+
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="topbar-left"><button type="button" class="icon-button mobile-menu" id="menuButton" aria-label="Toggle menu"><i data-lucide="menu"></i></button><span class="breadcrumb-root">Workspace</span><i data-lucide="chevron-right" class="breadcrumb-arrow"></i><strong id="breadcrumb">Overview</strong></div>
+        <div class="topbar-right"><span class="local-indicator"><span></span>Saved on this device</span><span class="topbar-separator"></span><button class="top-icon-button" type="button" data-view="activity" aria-label="View activity"><i data-lucide="bell"></i></button><button class="top-add-button" type="button" data-action="new-seed"><i data-lucide="plus"></i><span>New seed</span></button></div>
+      </header>
+      <main id="mainContent">
+        <section class="view active" id="view-overview" aria-label="Overview">
+          <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-dot"></span> YOUR VENTURE ECOSYSTEM</div><h1>Good things <em>grow here.</em></h1><p>A home for the ideas you're turning into something real.</p></div><div class="date-box"><i data-lucide="calendar-days"></i><span id="todayLabel">Today</span></div></div>
+          <section class="hero-banner">
+            <div class="hero-copy"><div class="hero-kicker"><span></span> A NEW BEGINNING <span class="hero-kicker-line"></span> EST. 2026</div><h2>Build a little.<br><em>Grow a lot.</em></h2><p>Start with one small idea. Give it attention, learn what works, and let the results fund the next big thing.</p><div class="hero-actions"><button type="button" class="button button-light" data-action="new-seed">Plant your next seed <i data-lucide="arrow-up-right"></i></button><button type="button" class="hero-text-link" data-view="seeds">Explore the grove <i data-lucide="arrow-right"></i></button></div></div>
+            <div class="hero-art" aria-hidden="true"><div class="hero-glow"></div><svg viewBox="0 0 480 370" fill="none"><circle cx="263" cy="190" r="154" stroke="#c6e9b4" stroke-opacity=".11"/><circle cx="263" cy="190" r="124" stroke="#c6e9b4" stroke-opacity=".16"/><circle cx="263" cy="190" r="93" stroke="#c6e9b4" stroke-opacity=".21"/><circle cx="263" cy="190" r="63" stroke="#c6e9b4" stroke-opacity=".25"/><path d="M263 283V180" stroke="#b8e5ad" stroke-width="3.8" stroke-linecap="round"/><path d="M263 222c-59-6-90-41-92-95 58 0 94 27 92 95Z" fill="#8bbf8c" fill-opacity=".72" stroke="#ccebbd" stroke-opacity=".75"/><path d="M263 190c3-57 35-87 90-90-1 54-28 89-90 90Z" fill="#bde2a4" fill-opacity=".82" stroke="#e0f7ce" stroke-opacity=".86"/><path d="M261 221c-30-31-48-54-74-77M265 188c23-28 46-50 68-65" stroke="#e3f2ce" stroke-opacity=".35" stroke-width="1.8"/><path d="M229 283h69" stroke="#b8e5ad" stroke-width="3.8" stroke-linecap="round"/><circle cx="360" cy="65" r="4" fill="#dcf5be"/><circle cx="125" cy="238" r="3" fill="#dcf5be"/><circle cx="404" cy="245" r="2" fill="#dcf5be"/><path d="M363 82v10m-5-5h10M121 139v8m-4-4h8" stroke="#c8ebb7" stroke-opacity=".7"/></svg><div class="floating-label label-one"><span class="floating-dot"></span> ONE IDEA AT A TIME</div><div class="floating-label label-two">01 <span> / INFINITE POTENTIAL</span></div></div>
+          </section>
+          <div class="section-row"><div><h3 class="section-title">At a glance <span class="section-subtitle">/ the important stuff</span></h3></div><span class="quiet-note">Real numbers, no guesswork <i data-lucide="check-circle-2"></i></span></div>
+          <div class="metric-grid" id="metrics"></div>
+          <div class="dashboard-grid">
+            <section class="panel seeds-panel"><div class="panel-header"><div><div class="tiny-overline">WHERE IDEAS TAKE ROOT</div><h3>Growing in your grove</h3></div><button class="subtle-link" type="button" data-view="seeds">All seeds <i data-lucide="arrow-up-right"></i></button></div><div id="overviewSeeds" class="overview-seeds"></div></section>
+            <section class="panel milestone-panel"><div class="panel-header"><div><div class="tiny-overline">YOUR FIRST MILESTONE</div><h3>The first dollar</h3></div><span class="stage-pill">SEED 001</span></div><div class="milestone-inner"><div class="milestone-ring" id="milestoneRing"><div><strong id="firstDollarCurrent">$0</strong><small>of $1 earned</small></div></div><p>Every venture begins somewhere. Your first real dollar is a milestone worth celebrating.</p><div class="milestone-track"><div id="firstDollarBar"></div></div><div class="milestone-foot"><span>Milestone progress</span><strong id="milestonePercent">0%</strong></div><button class="outline-button" type="button" data-action="revenue"><i data-lucide="plus"></i> Record your first earning</button></div></section>
+          </div>
+          <div class="bottom-grid">
+            <section class="panel activity-panel"><div class="panel-header"><div><div class="tiny-overline">STAY IN THE LOOP</div><h3>Recent activity</h3></div><button class="subtle-link" type="button" data-view="activity">View all <i data-lucide="arrow-up-right"></i></button></div><div id="overviewActivity" class="activity-list"></div></section>
+            <section class="panel keeper-panel"><div class="panel-header"><div><div class="tiny-overline">THE GARDEN KEEPER</div><h3>Your next small move</h3></div><div class="keeper-symbol"><i data-lucide="sparkles"></i></div></div><p class="keeper-intro">A little direction can go a long way. Here's what your Grove needs next.</p><div id="keeperAdvice"></div><p class="keeper-disclaimer">Prototype recommendations based on your saved data. AI automation is not connected yet.</p></section>
+          </div>
+          <footer class="page-footer"><span>GROVE <span class="footer-separator">/</span> AN INITIATIVE BY RESONANT</span><span>Plant. Build. Grow. Fund. <span class="footer-sprout">✳</span></span></footer>
+        </section>
+
+        <section class="view" id="view-seeds" aria-label="Seeds">
+          <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> YOUR IDEAS, IN MOTION</div><h1>The seed collection<span class="heading-period">.</span></h1><p>Start small, try things, and keep the ideas that grow.</p></div>
+          <div class="section-toolbar"><div class="filter-tabs" id="seedFilters"><button class="filter-tab active" data-filter="all">All seeds</button><button class="filter-tab" data-filter="active">Active</button><button class="filter-tab" data-filter="idea">Ideas</button><button class="filter-tab" data-filter="retired">Archived</button></div><button class="button button-green" type="button" data-action="new-seed"><i data-lucide="plus"></i> Plant a seed</button></div>
+          <div class="seed-grid" id="seedGrid"></div>
+          <div class="seed-explainer"><div class="explainer-icon"><i data-lucide="leaf"></i></div><div><strong>A seed is a small experiment, not a lifelong commitment.</strong><p>Every seed should earn, teach, or retire. Keep the promising ones. Learn from the rest.</p></div></div>
+        </section>
+
+        <section class="view" id="view-treasury" aria-label="Treasury">
+          <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> FUEL FOR WHAT'S NEXT</div><h1>The treasury<span class="heading-period">.</span></h1><p>Know what came in, what went out, and what's ready to reinvest.</p></div>
+          <div id="treasuryMetrics" class="treasury-metrics"></div>
+          <div class="treasury-grid"><section class="panel finance-panel"><div class="panel-header"><div><div class="tiny-overline">REAL CASH FLOW</div><h3>Income vs. expenses</h3></div><span class="quiet-note">Last 6 months</span></div><div id="cashflowChart" class="cashflow-chart"></div><div class="chart-legend"><span><i class="legend-income"></i>Income</span><span><i class="legend-expense"></i>Expenses</span></div></section><section class="panel allocation-panel"><div class="panel-header"><div><div class="tiny-overline">THE BIGGER PICTURE</div><h3>Fueling the future</h3></div><span class="keeper-symbol"><i data-lucide="waypoints"></i></span></div><div class="allocation-graphic"><div class="allocation-line"></div><div class="allocation-item"><span class="allocation-icon one"><i data-lucide="sprout"></i></span><div><strong>Plant small ideas</strong><p>Low-cost experiments</p></div><span class="allocation-number">01</span></div><div class="allocation-item"><span class="allocation-icon two"><i data-lucide="trending-up"></i></span><div><strong>Grow what works</strong><p>Reinvest real earnings</p></div><span class="allocation-number">02</span></div><div class="allocation-item"><span class="allocation-icon three"><i data-lucide="rocket"></i></span><div><strong>Fund ambitious things</strong><p>ARROW, RAVIN, Bikes & beyond</p></div><span class="allocation-number">03</span></div></div><p class="allocation-footnote">This is the vision, not an automatic investment service.</p></section></div>
+          <section class="panel transactions-panel"><div class="panel-header"><div><div class="tiny-overline">EVERY DOLLAR HAS A STORY</div><h3>Transactions</h3></div><div class="header-actions"><button class="outline-small" type="button" data-action="expense"><i data-lucide="minus"></i> Expense</button><button class="button button-green small" type="button" data-action="revenue"><i data-lucide="plus"></i> Income</button></div></div><div id="transactionList"></div></section>
+        </section>
+
+        <section class="view" id="view-activity" aria-label="Activity">
+          <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> EVERY STEP COUNTS</div><h1>The growth journal<span class="heading-period">.</span></h1><p>A running record of ideas planted, lessons learned, and progress made.</p></div><section class="panel journal-panel"><div class="panel-header"><div><div class="tiny-overline">FROM THE BEGINNING</div><h3>Activity timeline</h3></div><button class="outline-small" type="button" data-action="new-note"><i data-lucide="pencil-line"></i> Add a note</button></div><div id="fullActivity" class="full-activity"></div></section>
+        </section>
+
+        <section class="view" id="view-settings" aria-label="Settings">
+          <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> MAKE IT YOURS</div><h1>Grove settings<span class="heading-period">.</span></h1><p>A simple workspace, under your control.</p></div><section class="panel settings-panel"><div class="settings-item"><div class="settings-icon"><i data-lucide="download"></i></div><div><strong>Export your Grove</strong><p>Download seeds, revenue, expenses and activity as a JSON backup.</p></div><button type="button" class="outline-small" data-action="export">Export data</button></div><div class="settings-item"><div class="settings-icon"><i data-lucide="upload"></i></div><div><strong>Import a backup</strong><p>Restore data from a previously exported Grove JSON file.</p></div><button type="button" class="outline-small" data-action="import">Import data</button></div><div class="settings-item"><div class="settings-icon"><i data-lucide="rotate-ccw"></i></div><div><strong>Reset local workspace</strong><p>Erase data saved in this browser and return to the starter seed.</p></div><button type="button" class="outline-small danger-outline" data-action="reset">Reset</button></div></section><div class="settings-info"><i data-lucide="info"></i><div><strong>Prototype mode</strong><p>Your changes are stored only in this browser on this device. There are no accounts, cloud sync, payment processing, or connected AI actions yet. Export backups before clearing browser storage.</p></div></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <div class="mobile-shade" id="mobileShade"></div>
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div id="modalContent"></div></div></div>
+  <input id="importFile" type="file" accept=".json,application/json" hidden>
+  <div class="toast-area" id="toastArea" role="status" aria-live="polite"></div>
+</body>
+</html>
