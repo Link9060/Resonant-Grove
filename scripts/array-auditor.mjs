@@ -76,7 +76,7 @@ export function reviewBuilderPr(pr, run, changedPaths, baseCss, headCss) {
       run.head_branch !== 'main' ||
       !['issues', 'workflow_dispatch'].includes(run.event) ||
       run.actor?.login !== 'Link9060' ||
-      typeof run.path !== 'string' || !run.path.endsWith('/.github/workflows/array-builder.yml')) {
+      typeof run.path !== 'string' || run.path !== '.github/workflows/array-builder.yml') {
     return reject('Originating Builder workflow was not verified as owner-run and successful.');
   }
   if (typeof pr.body !== 'string' || !pr.body.includes('**Mode:** code')) return reject('Only code-mode Builder PRs can qualify.');
