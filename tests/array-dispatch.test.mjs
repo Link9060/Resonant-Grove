@@ -40,3 +40,12 @@ test('copy and code modes do not grant the AI publication privileges', () => {
   assert.match(workflow, /git add -A -- app\.js index\.html styles\.css/);
   assert.doesNotMatch(workflow, /gh pr merge/);
 });
+
+test('only the publisher can comment on owner task issues with a review link', () => {
+  assert.match(workflow, /publish-draft:[\s\S]*?permissions:[\s\S]*?issues: write/);
+  const builder = workflow.slice(workflow.indexOf('  build-proposal:'), workflow.indexOf('  publish-draft:'));
+  assert.doesNotMatch(builder, /issues: write/);
+  assert.match(workflow, /gh issue comment/);
+  assert.match(workflow, /if \[ -n "\$ARRAY_ISSUE_NUMBER" \]/);
+  assert.doesNotMatch(workflow, /gh issue close/);
+});
