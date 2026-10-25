@@ -1,10 +1,12 @@
-name: Validate ARRAY Safe Editor
+name: Validate ARRAY Builder
 
 on:
   pull_request:
     paths:
       - 'scripts/array-copy-editor.mjs'
+      - 'scripts/array-code-worker.mjs'
       - 'tests/array-copy-editor.test.mjs'
+      - 'tests/array-code-worker.test.mjs'
       - 'tests/array-dispatch.test.mjs'
       - '.github/workflows/array-builder.yml'
       - '.github/workflows/array-copy-check.yml'
@@ -26,4 +28,5 @@ jobs:
         run: |
           node --check app.js
           node --check scripts/array-copy-editor.mjs
+          node --check scripts/array-code-worker.mjs
           node --test tests/*.test.mjs
