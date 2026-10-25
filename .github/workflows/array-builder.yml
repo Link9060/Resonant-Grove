@@ -7,6 +7,9 @@ on:
         description: "Small, specific Grove website improvement for Builder"
         required: true
         type: string
+  # Owner-created [ARRAY] issues are the ChatGPT-to-Builder handoff.
+  issues:
+    types: [opened]
 
 concurrency:
   group: array-builder-grove
@@ -14,8 +17,11 @@ concurrency:
 
 jobs:
   build-proposal:
-    # Require a deliberate dispatch by the repository owner.
-    if: github.actor == 'Link9060'
+    # Manual run by owner, or owner-created issue with exact [ARRAY] prefix.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.actor == 'Link9060') ||
+      (github.event_name == 'issues' && github.event.issue.user.login == 'Link9060' &&
+       startsWith(github.event.issue.title, '[ARRAY] '))
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -34,7 +40,7 @@ jobs:
 
       - name: Validate objective
         env:
-          ARRAY_OBJECTIVE: ${{ inputs.objective }}
+          ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
         run: |
           set -euo pipefail
           if [ -z "$ARRAY_OBJECTIVE" ] || [ "$(printf '%s' "$ARRAY_OBJECTIVE" | wc -c)" -gt 1200 ]; then
@@ -60,7 +66,7 @@ jobs:
 
       - name: Run safe text editor against local Ollama model
         env:
-          ARRAY_OBJECTIVE: ${{ inputs.objective }}
+          ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
         run: |
           set -euo pipefail
           node --check scripts/array-copy-editor.mjs
@@ -99,7 +105,10 @@ jobs:
 
   publish-draft:
     needs: build-proposal
-    if: github.actor == 'Link9060'
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.actor == 'Link9060') ||
+      (github.event_name == 'issues' && github.event.issue.user.login == 'Link9060' &&
+       startsWith(github.event.issue.title, '[ARRAY] '))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -143,7 +152,7 @@ jobs:
       - name: Publish draft pull request (no automated merge)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ARRAY_OBJECTIVE: ${{ inputs.objective }}
+          ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
         run: |
           set -euo pipefail
           gh auth setup-git
