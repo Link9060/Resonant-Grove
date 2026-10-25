@@ -68,7 +68,7 @@ Suggested first code-mode test task:
 
 > Improve the visible styling of the New Seed card using a very small CSS adjustment, such as slightly refining its existing spacing. Preserve layout and behavior. Make one targeted change to styles.css only.
 
-If the model cannot produce a safe and exact patch, GitHub Actions fails **without changing the live site**. Inspect the run logs and refine the task. A passing workflow is evidence that the bounded checks succeeded, not proof of full functional or security correctness.
+If both model proposals fail verification, the worker can now recover **only explicitly specified CSS spacing changes**: the task must name one unique class selector and an exact old-to-new declaration (for example, `gap:13px` to `gap:14px`). A trusted code path locates the selector in the actual stylesheet, validates a small numeric change, and passes the same code checks. This is **deterministic recovery**, not successful model tool use. Every proposed change still needs a human-reviewed PR. Other invalid proposals fail without changing the live site. Inspect the run logs and refine the task. A passing workflow is evidence that the bounded checks succeeded, not proof of full functional or security correctness.
 
 ## Later upgrades
 
