@@ -7,6 +7,7 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Script } from 'node:vm';
+import { recoverExplicitCssSpacing } from './array-css-recovery.mjs';
 
 export const CODE_FILES = Object.freeze(['app.js', 'index.html', 'styles.css']);
 const MAX_EDITS = 3;
@@ -184,7 +185,18 @@ export async function proposeCodeChanges(objective, sources, fetchImpl = fetch) 
       console.error('ARRAY v2 proposal ' + attempt + ' rejected: ' + feedback);
     }
   }
-  throw new Error('Both code proposals were rejected by the safety/structure validator: ' + feedback);
+  // No free-form fallback. When the user explicitly requested an exact numeric
+  // CSS property change, recover a tightly scoped patch from the real selector.
+  // All the normal atomic patch validators still run on this result.
+  try {
+    const recovery = recoverExplicitCssSpacing(objective, sources);
+    const outcome = applyCodeProposal(recovery, sources);
+    console.log('ARRAY v2: safe deterministic CSS recovery applied after model validation failures.');
+    return outcome;
+  } catch (recoveryError) {
+    const reason = recoveryError instanceof Error ? recoveryError.message : 'recovery unavailable';
+    throw new Error('Both code proposals rejected (' + feedback + '); strict CSS recovery unavailable: ' + reason);
+  }
 }
 
 async function main() {
