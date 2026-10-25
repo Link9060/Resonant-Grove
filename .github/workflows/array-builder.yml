@@ -7,6 +7,12 @@ on:
         description: "Small, specific Grove website improvement for Builder"
         required: true
         type: string
+      mode:
+        description: "copy = wording only; code = bounded multi-file implementation"
+        type: choice
+        required: true
+        default: copy
+        options: [copy, code]
   # Owner-created [ARRAY] issues are the ChatGPT-to-Builder handoff.
   issues:
     types: [opened]
@@ -21,7 +27,8 @@ jobs:
     if: >-
       (github.event_name == 'workflow_dispatch' && github.actor == 'Link9060') ||
       (github.event_name == 'issues' && github.event.issue.user.login == 'Link9060' &&
-       startsWith(github.event.issue.title, '[ARRAY] '))
+       (startsWith(github.event.issue.title, '[ARRAY] ') ||
+        startsWith(github.event.issue.title, '[ARRAY-CODE] ')))
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -64,21 +71,33 @@ jobs:
           ollama pull qwen2.5-coder:3b
           ollama list
 
-      - name: Run safe text editor against local Ollama model
+      - name: Run bounded ARRAY coding worker
         env:
           ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
+          ARRAY_MODE: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, '[ARRAY-CODE] ') && 'code' || inputs.mode || 'copy' }}
         run: |
           set -euo pipefail
-          node --check scripts/array-copy-editor.mjs
-          node --test tests/array-copy-editor.test.mjs
-          node scripts/array-copy-editor.mjs
+          if [ "$ARRAY_MODE" = "code" ]; then
+            echo "ARRAY v2: bounded code mode (max 3 edits across 2 files)."
+            node --check scripts/array-code-worker.mjs
+            node --test tests/array-code-worker.test.mjs
+            node scripts/array-code-worker.mjs
+          elif [ "$ARRAY_MODE" = "copy" ]; then
+            echo "ARRAY v1: one safe user-facing wording edit."
+            node --check scripts/array-copy-editor.mjs
+            node --test tests/array-copy-editor.test.mjs
+            node scripts/array-copy-editor.mjs
+          else
+            echo "::error::Unsupported ARRAY mode."
+            exit 1
+          fi
 
       - name: Validate proposed changes
         run: |
           set -euo pipefail
           # Only permitted website files are eligible for publication.
-          git add -A -- app.js index.html
-          # This first milestone permits copy-only edits in app.js or index.html.
+          git add -A -- app.js index.html styles.css
+          # The code agent may edit at most two source files; model-created files are excluded.
           if git diff --cached --quiet; then
             echo "::error::Builder made no allowed changes."
             exit 1
@@ -91,6 +110,11 @@ jobs:
           node --check app.js
           test -s index.html
           test -s styles.css
+          # Reject any diff that grows beyond a bounded source-change budget.
+          if [ "$(git diff --cached --numstat | awk '{a+=$1; d+=$2} END{print a+d+0}')" -gt 45 ]; then
+            echo "::error::ARRAY source change is too large."
+            exit 1
+          fi
           mkdir -p array-proposal
           cp -- app.js index.html styles.css README.md favicon.svg array-proposal/
           git diff --cached --stat
@@ -108,7 +132,8 @@ jobs:
     if: >-
       (github.event_name == 'workflow_dispatch' && github.actor == 'Link9060') ||
       (github.event_name == 'issues' && github.event.issue.user.login == 'Link9060' &&
-       startsWith(github.event.issue.title, '[ARRAY] '))
+       (startsWith(github.event.issue.title, '[ARRAY] ') ||
+        startsWith(github.event.issue.title, '[ARRAY-CODE] ')))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -154,6 +179,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
           ARRAY_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || '' }}
+          ARRAY_MODE: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, '[ARRAY-CODE] ') && 'code' || inputs.mode || 'copy' }}
         run: |
           set -euo pipefail
           gh auth setup-git
@@ -164,6 +190,7 @@ jobs:
             if [ -n "$ARRAY_ISSUE_NUMBER" ]; then
               printf '\n**Requested from:** issue #%s (opened by repository owner).\n' "$ARRAY_ISSUE_NUMBER"
             fi
+            printf '\n**Mode:** %s\n' "$ARRAY_MODE"
             printf '\n**Checks:** app.js syntax, required site files, staged diff check.\n'
             printf '\n**Safety:** No merge or deployment was performed. Inspect every change before merging.\n'
           } > /tmp/array-builder-pr.md
