@@ -52,6 +52,24 @@ This workflow is a useful bridge for GPT-assisted task delegation, but it does n
 
 The ARRAY Flight Monitor shows public GitHub Actions status. The ChatGPT hourly watchdog checks actual run outcomes but cannot guarantee an unattended successful fix. Do not add any provider keys, payment details, or credentials to the repository.
 
+## ARRAY Builder v2: bounded code mode (experimental)
+
+The original copy editor remains the default and is unchanged. A separate **code mode** has been added for tiny, review-only logic or presentation improvements:
+
+- **From ChatGPT:** open a task issue titled `[ARRAY-CODE] Specific task name` from the owner GitHub account. The issue body is the full objective, maximum 1200 bytes.
+- **From Actions:** choose `mode = code` under the existing manual workflow form.
+- **From ordinary `[ARRAY] ...` issues:** continue using copy mode.
+
+In code mode, local Qwen2.5-Coder 3B proposes **1 to 3 exact find/replace hunks**, touching at most **two of app.js, index.html, styles.css**. The trusted runner refuses missing/ambiguous matches, disallowed files, oversized patches, several high-risk code patterns, broken JavaScript syntax, unexpected CSS brace changes, and malformed HTML structure. The runner tries one corrected proposal if validation fails.
+
+After a passing local validation, the separate publisher can open a **draft PR only**. The AI model never receives GitHub write credentials. **There is no automatic merge or deployment.** This is not yet a general coding assistant: no new files, dependencies, complex refactoring, arbitrary commands, or guarantee that the 3B model will produce a usable patch.
+
+Suggested first code-mode test task:
+
+> Improve the visible styling of the New Seed card using a very small CSS adjustment, such as slightly refining its existing spacing. Preserve layout and behavior. Make one targeted change to styles.css only.
+
+If the model cannot produce a safe and exact patch, GitHub Actions fails **without changing the live site**. Inspect the run logs and refine the task. A passing workflow is evidence that the bounded checks succeeded, not proof of full functional or security correctness.
+
 ## Later upgrades
 
 For higher intelligence, OpenCode also supports account-based ChatGPT sign-in for eligible personal terminal sessions. That interactive login is separate from this unattended GitHub Actions job and is not wired into this workflow. The read-only ARRAY MCP bridge still needs separate HTTPS hosting and an eligible custom MCP connection.
