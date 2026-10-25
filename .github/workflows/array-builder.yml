@@ -55,7 +55,16 @@ jobs:
             exit 1
           fi
 
+      - name: Try verified CSS fast path (no AI required)
+        env:
+          ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
+          ARRAY_MODE: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, '[ARRAY-CODE] ') && 'code' || inputs.mode || 'copy' }}
+        run: |
+          set -euo pipefail
+          node scripts/array-direct-patch.mjs
+
       - name: Install Ollama and load local coding model
+        if: ${{ env.ARRAY_DIRECT_APPLIED != 'true' }}
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --location https://ollama.com/install.sh --output /tmp/array-ollama-install.sh
@@ -72,6 +81,7 @@ jobs:
           ollama list
 
       - name: Run bounded ARRAY coding worker
+        if: ${{ env.ARRAY_DIRECT_APPLIED != 'true' }}
         env:
           ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
           ARRAY_MODE: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, '[ARRAY-CODE] ') && 'code' || inputs.mode || 'copy' }}
