@@ -153,6 +153,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
+          ARRAY_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || '' }}
         run: |
           set -euo pipefail
           gh auth setup-git
@@ -160,6 +161,9 @@ jobs:
           {
             printf 'Review-only automated Grove proposal.\n\n**Objective:**\n\n'
             printf '%s\n' "$ARRAY_OBJECTIVE"
+            if [ -n "$ARRAY_ISSUE_NUMBER" ]; then
+              printf '\n**Requested from:** issue #%s (opened by repository owner).\n' "$ARRAY_ISSUE_NUMBER"
+            fi
             printf '\n**Checks:** app.js syntax, required site files, staged diff check.\n'
             printf '\n**Safety:** No merge or deployment was performed. Inspect every change before merging.\n'
           } > /tmp/array-builder-pr.md
