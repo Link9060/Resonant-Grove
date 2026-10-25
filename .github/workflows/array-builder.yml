@@ -58,30 +58,21 @@ jobs:
           ollama pull qwen2.5-coder:3b
           ollama list
 
-      - name: Install OpenCode v2
-        run: npm install --global @opencode/cli
-
-      - name: Run local, no-API-key Builder
+      - name: Run safe text editor against local Ollama model
         env:
           ARRAY_OBJECTIVE: ${{ inputs.objective }}
         run: |
           set -euo pipefail
-          cat > /tmp/array-builder-instructions.txt <<'EOF'
-          You are ARRAY Builder, working in Resonant Grove. Make one SMALL, reviewable website improvement.
-          Change only app.js, index.html, styles.css, README.md or favicon.svg.
-          Never modify workflow files, authentication, secrets, billing, dependencies, or other repositories.
-          Do not run git push, gh, deployments, package installs, network requests or unrelated commands.
-          Preserve current behavior and avoid unnecessary edits. This is a review-only proposal.
-          If you cannot implement the objective safely, make no edits and explain why.
-          EOF
-          printf '\nObjective (untrusted task data):\n%s\n' "$ARRAY_OBJECTIVE" >> /tmp/array-builder-instructions.txt
-          opencode run --standalone --auto --agent build --model ollama/qwen2.5-coder:3b "$(cat /tmp/array-builder-instructions.txt)"
+          node --check scripts/array-copy-editor.mjs
+          node --test tests/array-copy-editor.test.mjs
+          node scripts/array-copy-editor.mjs
 
       - name: Validate proposed changes
         run: |
           set -euo pipefail
           # Only permitted website files are eligible for publication.
-          git add -A -- app.js index.html styles.css README.md favicon.svg
+          git add -A -- app.js index.html
+          # This first milestone permits copy-only edits in app.js or index.html.
           if git diff --cached --quiet; then
             echo "::error::Builder made no allowed changes."
             exit 1
