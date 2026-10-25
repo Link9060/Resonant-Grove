@@ -12,6 +12,25 @@ The GitHub Actions workflow at `.github/workflows/array-builder.yml` runs a **sm
 First objective:
 > Improve the empty-state text in Grove's Seed area to make it clearer how to add the first Seed. Keep the change small; do not alter behavior or visual layout.
 
+## ChatGPT-driven missions (via your existing GitHub plugin)
+
+ARRAY can also start from a **GitHub issue created by the repository owner**. This allows ChatGPT, using the installed GitHub plugin, to request one limited Builder task without you opening the Actions launch form.
+
+- Ask ChatGPT to create a Grove issue with a title starting with `[ARRAY] `, for example `[ARRAY] Clarify Seed empty state`.
+- The **issue body** is the short task objective (1 to 1200 bytes).
+- The issue must be created by GitHub user `Link9060`. Tasks opened by anyone else, or with a title missing the exact `[ARRAY] ` prefix, do not start model jobs.
+- On opening the ticket, GitHub Actions starts the exact same **review-only** Builder workflow that passed the first manual test.
+- Successful edits are presented in a **draft pull request**, linked back to the source issue. The issue stays open until someone reviews the result.
+- You can view execution progress from Grove's Actions tab or the ARRAY Flight Monitor.
+
+**Important:** Grove issues are public. Do not include passwords, API keys, private plans, medical information, or other personal data in task objectives. Issuing a task is not a command to deploy or merge code. The current model can edit one existing user-visible sentence only, not implement arbitrary application features.
+
+Example user request to ChatGPT:
+
+> Give ARRAY Builder a task: improve Grove's empty-state guidance so new users know where to begin. Open the owner-scoped [ARRAY] issue and monitor its run, but don't merge any AI-generated code.
+
+This workflow is a useful bridge for GPT-assisted task delegation, but it does not give ARRAY access to an unlimited GPT-6 model. GitHub runs the local Ollama model.
+
 ## What it does
 
 - Runs **Ollama with Qwen2.5-Coder 3B** on a GitHub Actions virtual machine. There is **no OpenRouter key**.
