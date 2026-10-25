@@ -5,8 +5,10 @@ on:
     paths:
       - 'scripts/array-copy-editor.mjs'
       - 'scripts/array-code-worker.mjs'
+      - 'scripts/array-css-recovery.mjs'
       - 'tests/array-copy-editor.test.mjs'
       - 'tests/array-code-worker.test.mjs'
+      - 'tests/array-css-recovery.test.mjs'
       - 'tests/array-dispatch.test.mjs'
       - '.github/workflows/array-builder.yml'
       - '.github/workflows/array-copy-check.yml'
@@ -29,4 +31,5 @@ jobs:
           node --check app.js
           node --check scripts/array-copy-editor.mjs
           node --check scripts/array-code-worker.mjs
+          node --check scripts/array-css-recovery.mjs
           node --test tests/*.test.mjs
