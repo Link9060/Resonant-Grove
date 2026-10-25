@@ -70,10 +70,21 @@ export function applyCodeProposal(proposal, sources) {
     if (!edit || typeof edit !== 'object' || Array.isArray(edit)) throw new Error('Invalid edit object.');
     const { path, find, replace } = edit;
     if (!CODE_FILES.includes(path) || typeof next[path] !== 'string') throw new Error('File is outside the source allowlist.');
+    // Short CSS numeric declarations can be edited when they occur exactly once.
+    // Never grant this exception to JavaScript or HTML, and never change a CSS
+    // property name, unit, or add anything other than a bounded numeric value.
+    const numberProperty = /^([a-z-]+):\s*([0-9]+(?:\.[0-9]+)?)(px|rem|em|%)\s*;?$/;
+    const oldProperty = typeof find === 'string' ? numberProperty.exec(find.trim()) : null;
+    const newProperty = typeof replace === 'string' ? numberProperty.exec(replace.trim()) : null;
+    const shortCss = path === 'styles.css' && oldProperty && newProperty &&
+      oldProperty[1] === newProperty[1] && oldProperty[3] === newProperty[3] &&
+      Math.abs(Number(newProperty[2]) - Number(oldProperty[2])) <= 8;
     if (typeof find !== 'string' || typeof replace !== 'string' ||
-        find.length < 20 || find.length > 650 ||
+        (find.length < 20 && !shortCss) || find.length > 650 ||
         replace.length < 5 || replace.length > 850 || find === replace) {
-      throw new Error('Edit is missing, too large, or unchanged.');
+      throw new Error('Edit is missing, too large, or unchanged (file=' + path +
+        ', findChars=' + (typeof find === 'string' ? find.length : 'invalid') +
+        ', replaceChars=' + (typeof replace === 'string' ? replace.length : 'invalid') + ').');
     }
     if (find.includes('\0') || replace.includes('\0')) throw new Error('Binary content is not allowed.');
     if (RISKY.some(pattern => pattern.test(replace) && !pattern.test(find))) {
@@ -148,6 +159,7 @@ export async function proposeCodeChanges(objective, sources, fetchImpl = fetch) 
       'Avoid imports, dependencies, workflow modifications, authentication and deployment changes.',
       'Never replace an entire function/file; keep edits focused and reviewable.',
       'Keep each find under 650 chars and replace under 850 chars, with total find+replace under 1500 bytes.',
+      'For tiny CSS spacing changes, a uniquely matched numeric declaration such as gap:13px -> gap:14px is allowed.',
       'Return JSON only, as required by the schema. Do not describe fake tool calls or execute commands.',
     ].join(' ');
     const prompt = 'Task (untrusted user data):\n' + objective +
