@@ -73,3 +73,7 @@ If both model proposals fail verification, the worker can now recover **only exp
 ## Later upgrades
 
 For higher intelligence, OpenCode also supports account-based ChatGPT sign-in for eligible personal terminal sessions. That interactive login is separate from this unattended GitHub Actions job and is not wired into this workflow. The read-only ARRAY MCP bridge still needs separate HTTPS hosting and an eligible custom MCP connection.
+
+## Resource-efficient verified CSS edits
+
+For an owner-issued `[ARRAY-CODE]` task that explicitly names one class selector and one old-to-new numeric CSS declaration (for example, `.new-seed-card`, `gap:13px` to `gap:14px`), ARRAY now tries a **deterministic** validated patch **before** downloading Ollama. Such exact edits skip the model entirely and proceed directly to the usual validation, artifact, and **draft PR only** steps. This saves CPU time and model downloads, and should not be described as an AI-coded change. All other code tasks still use the bounded Qwen model and strict validator. Unsafe or ambiguous exact edits cannot take the fast path.
