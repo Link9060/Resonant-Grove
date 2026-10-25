@@ -10,6 +10,8 @@ test('owner-created issues can dispatch review-only Builder tasks', () => {
   assert.equal(guards.length, 2, 'both Builder and publisher must independently enforce owner');
   const prefixes = workflow.match(/startsWith\(github\.event\.issue\.title, '\[ARRAY\] '\)/g) || [];
   assert.equal(prefixes.length, 2);
+  const codePrefixes = workflow.match(/startsWith\(github\.event\.issue\.title, '\[ARRAY-CODE\] '\)/g) || [];
+  assert.ok(codePrefixes.length >= 2, 'code jobs must have the same owner gating');
 });
 
 test('the objective enters commands via environment, not shell interpolation', () => {
@@ -29,4 +31,12 @@ test('the proposal cannot publish arbitrary repository files', () => {
   assert.match(workflow, /git add -A -- app\.js index\.html/);
   assert.match(workflow, /node --check app\.js/);
   assert.match(workflow, /ARRAY_ISSUE_NUMBER/);
+});
+
+test('copy and code modes do not grant the AI publication privileges', () => {
+  assert.match(workflow, /ARRAY_MODE:/);
+  assert.match(workflow, /node scripts\/array-code-worker\.mjs/);
+  assert.match(workflow, /node scripts\/array-copy-editor\.mjs/);
+  assert.match(workflow, /git add -A -- app\.js index\.html styles\.css/);
+  assert.doesNotMatch(workflow, /gh pr merge/);
 });
