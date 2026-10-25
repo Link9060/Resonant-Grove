@@ -116,7 +116,7 @@
   }
   function renderOverviewSeeds() {
     const chosen=db.seeds.filter(s=>s.status!=='retired').slice(0,3);
-    $('overviewSeeds').innerHTML=chosen.length?chosen.map(s=>'<button class="overview-seed" type="button" data-action="open-seed" data-id="'+h(s.id)+'"><span class="seed-icon">'+icon('sprout')+'</span><span class="seed-text"><strong>'+h(s.title)+'</strong><small>'+h(s.category)+' · '+progress(s)+'% of tasks complete</small></span><span class="seed-side">'+statusChip(s.status)+icon('arrow-up-right')+'</span></button>').join(''):'<div class="overview-empty">No growing seeds yet. Plant one to get started.</div>';
+    $('overviewSeeds').innerHTML=chosen.length?chosen.map(s=>'<button class="overview-seed" type="button" data-action="open-seed" data-id="'+h(s.id)+'"><span class="seed-icon">'+icon('sprout')+'</span><span class="seed-text"><strong>'+h(s.title)+'</strong><small>'+h(s.category)+' · '+progress(s)+'% of tasks complete</small></span><span class="seed-side">'+statusChip(s.status)+icon('arrow-up-right')+'</span></button>').join(''):'<div class="overview-empty">No seeds yet. Start by planting one.</div>';
   }
   function eventIcon(type) {return ({seed:'sprout',finance:'wallet',note:'notebook-pen',start:'sparkles',task:'check-circle-2',update:'refresh-cw'})[type]||'activity';}
   function activityMarkup(items) {
