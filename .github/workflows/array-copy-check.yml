@@ -7,12 +7,16 @@ on:
       - 'scripts/array-code-worker.mjs'
       - 'scripts/array-css-recovery.mjs'
       - 'scripts/array-direct-patch.mjs'
+      - 'scripts/array-auditor.mjs'
+      - 'scripts/array-audit-runner.mjs'
       - 'tests/array-copy-editor.test.mjs'
       - 'tests/array-code-worker.test.mjs'
       - 'tests/array-css-recovery.test.mjs'
       - 'tests/array-direct-patch.test.mjs'
+      - 'tests/array-auditor.test.mjs'
       - 'tests/array-dispatch.test.mjs'
       - '.github/workflows/array-builder.yml'
+      - '.github/workflows/array-auditor.yml'
       - '.github/workflows/array-copy-check.yml'
   workflow_dispatch:
 
@@ -35,4 +39,6 @@ jobs:
           node --check scripts/array-code-worker.mjs
           node --check scripts/array-css-recovery.mjs
           node --check scripts/array-direct-patch.mjs
+          node --check scripts/array-auditor.mjs
+          node --check scripts/array-audit-runner.mjs
           node --test tests/*.test.mjs
