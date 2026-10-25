@@ -139,6 +139,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      issues: write
     steps:
       - name: Checkout main (no model credentials)
         uses: actions/checkout@v4
@@ -194,5 +195,14 @@ jobs:
             printf '\n**Checks:** app.js syntax, required site files, staged diff check.\n'
             printf '\n**Safety:** No merge or deployment was performed. Inspect every change before merging.\n'
           } > /tmp/array-builder-pr.md
-          gh pr create --draft --base main --head "array/builder-$GITHUB_RUN_ID" \
-            --title "ARRAY Builder: Grove change #$GITHUB_RUN_ID" --body-file /tmp/array-builder-pr.md
+          pr_url="$(gh pr create --draft --base main --head "array/builder-$GITHUB_RUN_ID" \
+            --title "ARRAY Builder: Grove change #$GITHUB_RUN_ID" --body-file /tmp/array-builder-pr.md)"
+          printf 'Draft PR: %s\n' "$pr_url"
+          if [ -n "$ARRAY_ISSUE_NUMBER" ]; then
+            # Link results to their originating issue; never close the issue or merge code.
+            if ! gh issue comment "$ARRAY_ISSUE_NUMBER" --body "ARRAY Builder created a draft code proposal for review: $pr_url
+
+            This is not deployed. Inspect the changes before approving any merge."; then
+              echo "::warning::Draft PR created, but adding the issue result comment failed."
+            fi
+          fi
