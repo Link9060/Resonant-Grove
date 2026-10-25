@@ -85,3 +85,28 @@ test('refuses all-failed proposals without writing files', async () => {
   const mockFetch = async () => ({ ok: true, json: async () => ({ response: '{"edits":[]}' }) });
   await assert.rejects(proposeCodeChanges('Fix the card count behavior please', base, mockFetch), /Both code proposals/);
 });
+
+
+test('a uniquely occurring short CSS numeric declaration may be safely changed', () => {
+  const result = applyCodeProposal({
+    summary: 'Refine spacing',
+    edits: [{ path: 'styles.css', find: 'padding: 12px', replace: 'padding: 14px', reason: 'Small spacing improvement' }],
+  }, base);
+  assert.equal(result.changes.length, 1);
+  assert.match(result.changes[0].after, /padding: 14px/);
+});
+
+test('short CSS exception rejects high-impact or ambiguous changes', () => {
+  assert.throws(() => applyCodeProposal({
+    edits: [{ path: 'styles.css', find: 'padding: 12px', replace: 'padding: 40px' }],
+  }, base), /missing, too large/);
+  assert.throws(() => applyCodeProposal({
+    edits: [{ path: 'styles.css', find: 'padding: 12px', replace: 'margin: 12px' }],
+  }, base), /missing, too large/);
+  assert.throws(() => applyCodeProposal({
+    edits: [{ path: 'app.js', find: 'items.length', replace: 'items.filter(Boolean).length' }],
+  }, base), /missing, too large/);
+  assert.throws(() => applyCodeProposal({
+    edits: [{ path: 'styles.css', find: 'padding: 12px', replace: 'padding: 13px' }],
+  }, { ...base, 'styles.css': base['styles.css'] + '\n.another{padding: 12px;}' }), /not found uniquely/);
+});
