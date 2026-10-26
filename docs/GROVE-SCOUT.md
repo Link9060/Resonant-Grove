@@ -2,7 +2,7 @@
 
 ## What runs by itself
 
-The trusted scheduled workflow .github/workflows/grove-scout.yml attempts one research batch daily at 14:23 UTC. GitHub schedules are best-effort and may be delayed or skipped.
+The trusted scheduled workflow .github/workflows/grove-scout.yml attempts one research batch at 14:23 UTC, with a second catch-up window at 20:23 UTC if the morning job was delayed or skipped. GitHub schedules are best-effort and may be delayed or skipped. A preflight journal check skips model setup for the second run once that UTC date already has an entry.
 
 The workflow uses a locally hosted Ollama qwen2.5:3b model on a GitHub Actions runner. It asks for THREE different zero-upfront-spend digital-product hypotheses in an explicitly allowlisted category. Code validates the output schema, content lengths, basic red-flag language and duplication. If model output fails, the workflow publishes explicitly labeled **curated fallback templates**, not something misrepresented as model-created work.
 
@@ -23,7 +23,7 @@ The label is grove-scout. The dashboard at https://link9060.github.io/Resonant-G
 
 ### Model failures
 
-If the local model cannot be installed, the job may fail before the fallback stage. If the model service is available but returns invalid output, it falls back to curated templates and makes that explicit in the issue. View the Actions run for error details.
+If the local model cannot be installed, started, or downloaded within the bounded startup window, the workflow still attempts a **clearly labeled curated fallback** research issue and a planning worksheet. If the model returns invalid output, it also falls back. If GitHub API access itself fails, the job fails rather than assuming a clean state. View the Actions run for the exact source and error details.
 
 ### Commands and configuration
 
