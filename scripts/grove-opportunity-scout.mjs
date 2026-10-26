@@ -6,6 +6,7 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import {renderPrintableWorksheet} from './grove-worksheet-export.mjs';
+import {auditPrototype,preferRevisedPrototype,revisionPrompt,renderQaSummary,renderFeedbackWorksheet} from './grove-prototype-qa.mjs';
 import {evaluateScoutSeed,renderSeedEvaluation,renderSeedPlan} from './grove-seed-evaluator.mjs';
 import { dayKey, selectScoutTopic, scoutAlreadyRecorded, createScoutPrompt,
   validateScoutDraft, curatedFallback, makeScoutBrief, ISSUE_PREFIX } from './grove-scout-core.mjs';
@@ -81,9 +82,24 @@ export async function runScout(){
     note('Original prototype generation invalid or unavailable: '+(e instanceof Error?e.message:'unknown')+'. Using a clearly labeled planning-template fallback.');
     prototype=prototypeFallback(selected);
   }
+  // Quality evaluation only: it does not test real users or verify any facts.
+  let qa=auditPrototype(topic,selected,prototype);
+  if(qa.warningIds.length&&prototype.source==='local-model-unverified'&&process.env.GROVE_MODEL_AVAILABLE==='true'){
+    try {
+      const revised=validatePrototype(await queryLocalModel(revisionPrompt(topic,selected,prototype,qa)));
+      const choice=preferRevisedPrototype(prototype,revised,topic,selected);
+      prototype=choice.prototype;
+      qa=choice.qa;
+      note(choice.replaced?'One bounded local revision improved static checks.':'The original draft scored as well as the revision.');
+    } catch(e) {
+      note('Optional local revision was unavailable or invalid; keeping the original unverified draft.');
+    }
+  }
+  note('Static prototype quality audit: '+qa.status+' ('+qa.readinessScore+'/'+qa.readinessMax+'). No facts or users verified.');
   const body=makeScoutBrief(date,topic,draft)+'\n\n'+
     renderSeedEvaluation(topic,draft,evaluation)+'\n\n'+
-    renderPrototype(topic,selected,prototype);
+    renderPrototype(topic,selected,prototype)+'\n\n'+
+    renderQaSummary(qa);
   // Turn the bounded prototype into review-only printable files. No site deploy,
   // commercial listing, customer contact or model-created executable code.
   const worksheet=renderPrintableWorksheet(date,topic,selected,prototype);
@@ -93,6 +109,8 @@ export async function runScout(){
   writeFileSync(outputDir+'/worksheet-draft.md',worksheet.markdown,'utf8');
   writeFileSync(outputDir+'/seed-evaluation.json',JSON.stringify(evaluation,null,2)+'\n','utf8');
   writeFileSync(outputDir+'/seed-plan.md',renderSeedPlan(date,topic,draft,evaluation),'utf8');
+  writeFileSync(outputDir+'/prototype-quality-audit.json',JSON.stringify(qa,null,2)+'\n','utf8');
+  writeFileSync(outputDir+'/evidence-and-feedback.md',renderFeedbackWorksheet(topic,selected,qa),'utf8');
   writeFileSync(outputDir+'/READ-ME-FIRST.txt',
     'GROVE INTERNAL RESEARCH DRAFT · '+date+'\n\n'+
     'Not reviewed for correctness, originality, customer demand or eligibility.\n'+
@@ -100,7 +118,9 @@ export async function runScout(){
     'The HTML file is printable in a browser without internet access.\n'+
     'Research source: '+worksheet.source+'\n'+
     'Selected candidate: '+evaluation.selectedCandidate+' of 3\n'+
-    'Draft readiness score: '+evaluation.selectedScore+'/12, not a market score\n',
+    'Draft readiness score: '+evaluation.selectedScore+'/12, not a market score\n'+
+    'Static prototype quality: '+qa.status+', '+qa.readinessScore+'/'+qa.readinessMax+' limited checks\n'+
+    'Human review is still required; no testers or market evidence have been verified.\n',
     'utf8');
   // Recheck after inference. A retry/race must not produce two issues.
   const again=api('repos/'+REPO+'/issues?state=all&per_page=100');
@@ -111,7 +131,7 @@ export async function runScout(){
   note('### New research journal entry: '+issue.html_url+
     '\n- Research category: '+topic.name+
     '\n- Source: '+draft.source+
-    '\n- Three candidate hypotheses, evidence-free readiness ranking, one internal Seed plan and one offline prototype draft; no sales claims, no spending or external marketing.');
+    '\n- Three candidate hypotheses, one internal Seed plan, one offline prototype and an automatic static QA report (not independently verified). No sales claims, spending, customer testing or external marketing.');
   return {created:true,url:issue.html_url};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
