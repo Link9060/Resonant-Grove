@@ -15,6 +15,7 @@ on:
       - 'scripts/grove-scout-core.mjs'
       - 'scripts/grove-opportunity-scout.mjs'
       - 'scripts/grove-prototype.mjs'
+      - 'scripts/grove-seed-evaluator.mjs'
 
 concurrency:
   group: grove-autonomous-scout
@@ -51,8 +52,9 @@ jobs:
           node --check scripts/grove-scout-core.mjs
           node --check scripts/grove-opportunity-scout.mjs
           node --check scripts/grove-prototype.mjs
+          node --check scripts/grove-seed-evaluator.mjs
           node --check scripts/grove-worksheet-export.mjs
-          node --test tests/grove-scout.test.mjs tests/grove-prototype.test.mjs tests/grove-worksheet-export.test.mjs
+          node --test tests/grove-scout.test.mjs tests/grove-prototype.test.mjs tests/grove-worksheet-export.test.mjs tests/grove-seed-evaluator.test.mjs
       - name: Create daily research label if missing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
