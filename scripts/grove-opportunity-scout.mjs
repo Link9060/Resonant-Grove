@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 import { dayKey, selectScoutTopic, scoutAlreadyRecorded, createScoutPrompt,
   validateScoutDraft, curatedFallback, makeScoutBrief, ISSUE_PREFIX } from './grove-scout-core.mjs';
+import {prototypePrompt,validatePrototype,prototypeFallback,renderPrototype} from './grove-prototype.mjs';
 
 const REPO='Link9060/Resonant-Grove';
 const MODEL='qwen2.5:3b';
@@ -23,20 +24,20 @@ function note(message){
   process.stdout.write(message+'\n');
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,message+'\n');
 }
-async function queryLocalModel(topic){
+async function queryLocalModel(prompt){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),210000);
   try{
     const resp=await fetch('http://127.0.0.1:11434/api/generate',{
       method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({model:MODEL,prompt:createScoutPrompt(topic),stream:false,format:'json',
+      body:JSON.stringify({model:MODEL,prompt,stream:false,format:'json',
         options:{temperature:0.4,num_predict:1350}}),
       signal:controller.signal
     });
     if(!resp.ok)throw Error('Local model returned HTTP '+resp.status);
     const data=await resp.json();
     if(typeof data.response!=='string'||data.response.length>25000)throw Error('Invalid local model response');
-    return validateScoutDraft(data.response,topic);
+    return data.response;
   }finally{clearTimeout(timer);}
 }
 export async function runScout(){
@@ -59,13 +60,22 @@ export async function runScout(){
   }
   let draft;
   try{
-    draft=await queryLocalModel(topic);
+    draft=validateScoutDraft(await queryLocalModel(createScoutPrompt(topic)),topic);
     note('Local model generated three structurally validated, UNVERIFIED candidates.');
   }catch(e){
     note('Local model output unavailable or invalid: '+(e instanceof Error?e.message:'unknown')+'. Using explicitly labeled curated fallback.');
     draft=curatedFallback(topic);
   }
-  const body=makeScoutBrief(date,topic,draft);
+  let prototype;
+  try {
+    prototype=validatePrototype(await queryLocalModel(prototypePrompt(topic,draft.ideas[0])));
+    note('Local model prepared a first original checklist draft for independent review.');
+  } catch(e) {
+    note('Original prototype generation invalid or unavailable: '+(e instanceof Error?e.message:'unknown')+'. Using a clearly labeled planning-template fallback.');
+    prototype=prototypeFallback(draft.ideas[0]);
+  }
+  const body=makeScoutBrief(date,topic,draft)+'\n\n'+
+    renderPrototype(topic,draft.ideas[0],prototype);
   // Recheck after inference. A retry/race must not produce two issues.
   const again=api('repos/'+REPO+'/issues?state=all&per_page=100');
   if(!Array.isArray(again))throw Error('Could not recheck issue journal before publishing.');
@@ -75,7 +85,7 @@ export async function runScout(){
   note('### New research journal entry: '+issue.html_url+
     '\n- Research category: '+topic.name+
     '\n- Source: '+draft.source+
-    '\n- Three candidate hypotheses, no sales claims, no spending or external marketing.');
+    '\n- Three candidate hypotheses plus one offline prototype draft; no sales claims, no spending or external marketing.');
   return {created:true,url:issue.html_url};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
