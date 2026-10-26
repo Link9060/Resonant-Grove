@@ -9,6 +9,8 @@ on:
       - 'grove-scout-feed.js'
       - 'scripts/grove-scout-core.mjs'
       - 'scripts/grove-prototype.mjs'
+      - 'scripts/grove-worksheet-export.mjs'
+      - 'tests/grove-worksheet-export.test.mjs'
       - 'tests/grove-prototype.test.mjs'
       - 'scripts/grove-opportunity-scout.mjs'
       - 'tests/grove-scout.test.mjs'
@@ -39,7 +41,8 @@ jobs:
           node --check grove-scout-feed.js
           node --check scripts/grove-scout-core.mjs
           node --check scripts/grove-prototype.mjs
+          node --check scripts/grove-worksheet-export.mjs
           node --check scripts/grove-opportunity-scout.mjs
-          node --test tests/autonomous-grove.test.mjs tests/grove-scout.test.mjs tests/grove-prototype.test.mjs
+          node --test tests/autonomous-grove.test.mjs tests/grove-scout.test.mjs tests/grove-prototype.test.mjs tests/grove-worksheet-export.test.mjs
           test -s index.html
           test -s autonomous-grove.css
