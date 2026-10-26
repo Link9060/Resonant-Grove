@@ -64,7 +64,7 @@
   }
   function ideaId() {
     if(typeof crypto!=='undefined'&&crypto.randomUUID)return crypto.randomUUID();
-    return 'local-'+Date.now()+'-'+state.sequence;
+    return 'local-'+Date.now()+'-'+state.sequence+'-'+Math.random().toString(36).slice(2);
   }
   function createCandidates() {
     if(!state.explorerEnabled)return showMessage('Enable the local idea explorer first.',true);
