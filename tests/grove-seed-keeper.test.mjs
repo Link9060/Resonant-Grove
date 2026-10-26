@@ -77,3 +77,17 @@ test('workflow is bounded with dry-run push, no implicit Builder permissions or 
   assert.match(worker,/alreadyHasWeeklySeed\(recheck,week\)/);
   assert.doesNotMatch(worker,/stripe|paypal|instagram|social\.com|\/payments|\/transfers|array-ready/i);
 });
+
+
+test('same-job handoff reads a newly created Scout issue by ID if the GitHub issues list lags',()=>{
+  const scout=readFileSync('scripts/grove-opportunity-scout.mjs','utf8');
+  const keeper=readFileSync('scripts/grove-seed-keeper.mjs','utf8');
+  assert.match(scout,/Number\.isSafeInteger\(issue\?\.number\)/);
+  assert.match(scout,/GROVE_NEW_SCOUT_ISSUE_NUMBER/);
+  assert.match(scout,/appendFileSync\(process\.env\.GITHUB_ENV/);
+  assert.match(keeper,/GROVE_NEW_SCOUT_ISSUE_NUMBER/);
+  assert.match(keeper,/gh\('repos\/'\+REPO\+'\/issues\/'\+latestId\)/);
+  assert.match(keeper,/fresh\.number!==latestId/);
+  assert.match(keeper,/candidates=\[fresh,\.\.\.issues\]/);
+  assert.match(keeper,/selectWeeklySeed\(candidates,now\)/);
+});
