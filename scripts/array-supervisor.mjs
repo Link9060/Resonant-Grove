@@ -24,6 +24,22 @@ function summary(lines){
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,text);
 }
 export function run(){
+  // Provision labels idempotently from trusted main; GitHub does not permit
+  // attaching labels that have never been created.
+  const labels=gh('repos/'+REPO+'/labels?per_page=100')||[];
+  if(!Array.isArray(labels))throw Error('GitHub labels API returned malformed data.');
+  const needed=[
+    ['array-ready','User-approved for one bounded supervisor dispatch','70ab76'],
+    ['array-dispatched','Already launched by the scheduled supervisor','8d9aa2'],
+    ['array-copy','Bounded copy-editor mission','7288d5'],
+    ['array-code','Bounded code-worker mission','bd9e70'],
+  ];
+  for(const [name,description,color] of needed){
+    if(!labels.some(l=>l?.name===name)){
+      gh('repos/'+REPO+'/labels','POST',{name,description,color});
+      console.log('ARRAY Supervisor registered GitHub label: '+name);
+    }
+  }
   const issues=gh('repos/'+REPO+'/issues?state=open&per_page=100')||[];
   const pulls=gh('repos/'+REPO+'/pulls?state=open&per_page=100')||[];
   const data=gh('repos/'+REPO+'/actions/workflows/array-builder.yml/runs?per_page=30');
