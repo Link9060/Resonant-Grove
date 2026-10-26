@@ -37,6 +37,16 @@ Each new batch also includes `prototype-quality-audit.json` and a blank `evidenc
 
 If the local model cannot be installed, started, or downloaded within the bounded startup window, the workflow still attempts a **clearly labeled curated fallback** research issue and a planning worksheet. If the model returns invalid output, it also falls back. If GitHub API access itself fails, the job fails rather than assuming a clean state. View the Actions run for the exact source and error details.
 
+### First complete pipeline rehearsal
+
+When the owner opens a GitHub issue titled exactly `[GROVE-RUN] First research batch`, the trusted Scout Action is allowed to run its **actual issue-creation path** immediately. To keep the first full integration check quick and resilient, this special kickoff skips optional model installation and explicitly uses the curated-template fallback; it is not represented as model-generated research.
+
+The run checks for an existing daily research journal, generates three explicitly unverified research hypotheses, evaluates their draft readiness, exports its printable internal worksheet plus quality report and blank evidence form, creates one public Scout journal issue, and then runs the weekly Seed Keeper **in the same GitHub Actions job**. The Keeper creates at most one weekly internal plan linking the new Scout issue. Artifacts have a 14-day retention period; owner can download them via the successful Actions run. No real user feedback is asserted.
+
+Ordinary scheduled Scout runs and owner-triggered `workflow_dispatch` runs still attempt a bounded local Ollama model before falling back. Opening any other issue, or a matching issue opened by another account, cannot start the special kickoff. Reopening the title cannot retrigger it because only `issues.opened` is enabled, and the daily/weekly guards prevent duplicates.
+
+This is a real end-to-end workflow rehearsal, not a venture launch. An issue-triggered curated fallback is not proof the local AI model can run; that must be confirmed by a later scheduled or manual Ollama-enabled run.
+
 ### Commands and configuration
 
 To inspect runs, visit:
