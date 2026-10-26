@@ -56,5 +56,5 @@ test('autonomous research journal is read-only and externally sourced',()=>{
   assert.match(feed,/labels=grove-scout/);
   assert.match(feed,/credentials:'omit'/);
   assert.doesNotMatch(feed,/\bPOST\b|\bPUT\b|\bDELETE\b|authorization\s*:/i);
-  assert.match(deploy,/grove-scout-feed\.js _site/);
+  assert.match(deploy,/grove-scout-feed\.js grove-seed-feed\.js grove-build-feed\.js _site/);
 });
