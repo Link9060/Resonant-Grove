@@ -1,5 +1,5 @@
-/* Autonomous Grove v0.1: local ideation cockpit, NOT a live money-making agent.
-   Deliberately no network requests, account connections, posting, spending or payout APIs. */
+/* Autonomous Grove: local ideation plus an explicit GitHub owner-approval handoff.
+   No credentials, financial actions, background browser worker or direct API writes. */
 (() => {
   'use strict';
   const STORAGE = 'resonant-grove-autonomy-v1';
@@ -94,6 +94,8 @@
     $('autoToggle').textContent=state.explorerEnabled?'Pause explorer':'Enable local explorer';
     $('autoGenerate').disabled=!state.explorerEnabled||state.proposals.length>=200;
     $('autoGenerate').textContent='Explore 4 candidate ideas';
+    $('autoQueueSelected').disabled=selected===0;
+    $('autoQueueSelected').textContent='Queue '+selected+' selected '+(selected===1?'idea':'ideas')+' for building';
     const list=$('autoIdeas');
     const visible=state.proposals.slice().reverse().filter(p=>p.status!=='rejected');
     list.innerHTML=visible.length?visible.map(p=>(
@@ -116,6 +118,24 @@
     showMessage(state.explorerEnabled?'Local idea exploration is ready. This is not a background AI worker.':'Idea explorer paused. All public and financial permissions remain off.');
   });
   $('autoGenerate').addEventListener('click',createCandidates);
+  // Local browser selections cannot grant GitHub repository access. The owner
+  // explicitly reviews and SUBMITS a prefilled GitHub issue to authorize a
+  // bounded background prototype batch. Only supported catalog titles cross
+  // this public GitHub issue boundary; no local IDs, secrets or user notes.
+  $('autoQueueSelected').addEventListener('click',()=>{
+    const ids=[...new Set(state.proposals.filter(p=>p.status==='selected')
+      .map(p=>ideas.findIndex(item=>item.title===p.title)+1)
+      .filter(n=>n>0))].sort((a,b)=>a-b);
+    if(!ids.length)return showMessage('Select at least one catalog idea first.',true);
+    const body='GROVE-APPROVAL-BATCH-V1\nCatalog IDs: '+ids.join(',')+
+      '\nInternal drafts only: YES';
+    const title='[GROVE-BATCH] Approved idea prototypes';
+    const url='https://github.com/Link9060/Resonant-Grove/issues/new?'+
+      new URLSearchParams({title,body}).toString();
+    window.open(url,'_blank','noopener,noreferrer');
+    showMessage('GitHub opened a prefilled '+ids.length+
+      '-idea approval issue. Review and click Submit new issue on GitHub to activate the builder. No idea has been queued yet.');
+  });
   $('autoIdeas').addEventListener('click',e=>{
     const btn=e.target.closest('[data-auto-action]');
     if(!btn)return;
