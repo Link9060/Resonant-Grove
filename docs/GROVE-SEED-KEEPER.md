@@ -29,6 +29,10 @@ Internal research can explore many candidate ideas, but blindly creating new pro
 - Weekly Seed archive: https://github.com/Link9060/Resonant-Grove/issues?q=label%3Agrove-seed-draft
 - Research archive: https://github.com/Link9060/Resonant-Grove/issues?q=label%3Agrove-scout
 
+## Real test observations
+
+You can log a genuine, privacy-safe, owner-reported observation through the [Grove Seed feedback form](https://github.com/Link9060/Resonant-Grove/issues/new?template=grove-feedback.yml). A scoped workflow adds a sanitized, explicitly UNVERIFIED receipt to the weekly Seed issue after checking the GitHub owner and provenance. It does not independently verify the tester, any statements, or market interest. See [Evidence ledger guide](GROVE-EVIDENCE.md).
+
 ## Next gate
 
 Before anything can be sold, you still need accurate original deliverables, real voluntary feedback, eligibility checks, an appropriately authorized account owner, and separate safe publishing/payment integrations. No stage claims earnings until confirmed provider records exist.
