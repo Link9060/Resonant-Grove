@@ -13,6 +13,10 @@ on:
         required: true
         default: copy
         options: [copy, code]
+      supervisor_issue:
+        description: "Owner-approved [ARRAY-QUEUE] issue ID, for trusted scheduled dispatch only"
+        required: false
+        type: string
   # Owner-created [ARRAY] issues are the ChatGPT-to-Builder handoff.
   issues:
     types: [opened]
@@ -25,7 +29,9 @@ jobs:
   build-proposal:
     # Manual run by owner, or owner-created issue with exact [ARRAY] prefix.
     if: >-
-      (github.event_name == 'workflow_dispatch' && github.actor == 'Link9060') ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.actor == 'Link9060' ||
+        (github.actor == 'github-actions[bot]' && inputs.supervisor_issue != ''))) ||
       (github.event_name == 'issues' && github.event.issue.user.login == 'Link9060' &&
        (startsWith(github.event.issue.title, '[ARRAY] ') ||
         startsWith(github.event.issue.title, '[ARRAY-CODE] ')))
@@ -33,6 +39,7 @@ jobs:
     timeout-minutes: 25
     permissions:
       contents: read
+      issues: read
     steps:
       - name: Checkout Grove without persistent git credentials
         uses: actions/checkout@v4
@@ -54,6 +61,17 @@ jobs:
             echo "::error::Objective must contain 1 to 1200 bytes."
             exit 1
           fi
+
+      - name: Verify scheduled handoff comes from an approved owner issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARRAY_TRIGGER_ACTOR: ${{ github.actor }}
+          ARRAY_SUPERVISOR_ISSUE: ${{ inputs.supervisor_issue }}
+          ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
+          ARRAY_MODE: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, '[ARRAY-CODE] ') && 'code' || inputs.mode || 'copy' }}
+        run: |
+          set -euo pipefail
+          node scripts/array-queue-verify.mjs
 
       - name: Try verified CSS fast path (no AI required)
         env:
@@ -140,7 +158,9 @@ jobs:
   publish-draft:
     needs: build-proposal
     if: >-
-      (github.event_name == 'workflow_dispatch' && github.actor == 'Link9060') ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.actor == 'Link9060' ||
+        (github.actor == 'github-actions[bot]' && inputs.supervisor_issue != ''))) ||
       (github.event_name == 'issues' && github.event.issue.user.login == 'Link9060' &&
        (startsWith(github.event.issue.title, '[ARRAY] ') ||
         startsWith(github.event.issue.title, '[ARRAY-CODE] ')))
@@ -162,6 +182,15 @@ jobs:
         with:
           name: grove-builder-proposal
           path: array-proposal/
+
+      - name: Independently verify scheduled handoff before publication
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARRAY_TRIGGER_ACTOR: ${{ github.actor }}
+          ARRAY_SUPERVISOR_ISSUE: ${{ inputs.supervisor_issue }}
+          ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
+          ARRAY_MODE: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, '[ARRAY-CODE] ') && 'code' || inputs.mode || 'copy' }}
+        run: node scripts/array-queue-verify.mjs
 
       - name: Re-validate and prepare branch
         run: |
@@ -189,7 +218,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ARRAY_OBJECTIVE: ${{ github.event_name == 'issues' && github.event.issue.body || inputs.objective }}
-          ARRAY_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || '' }}
+          ARRAY_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || inputs.supervisor_issue || '' }}
           ARRAY_MODE: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, '[ARRAY-CODE] ') && 'code' || inputs.mode || 'copy' }}
         run: |
           set -euo pipefail
