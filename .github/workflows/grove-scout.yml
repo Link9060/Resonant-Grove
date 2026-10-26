@@ -51,7 +51,8 @@ jobs:
           node --check scripts/grove-scout-core.mjs
           node --check scripts/grove-opportunity-scout.mjs
           node --check scripts/grove-prototype.mjs
-          node --test tests/grove-scout.test.mjs tests/grove-prototype.test.mjs
+          node --check scripts/grove-worksheet-export.mjs
+          node --test tests/grove-scout.test.mjs tests/grove-prototype.test.mjs tests/grove-worksheet-export.test.mjs
       - name: Create daily research label if missing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -112,3 +113,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GROVE_SCOUT_DRY_RUN: ${{ github.event_name == 'push' }}
         run: node scripts/grove-opportunity-scout.mjs
+      - name: Archive offline printable worksheet for human review
+        if: ${{ github.event_name != 'push' && env.GROVE_SCOUT_ALREADY_DONE != 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: grove-scout-draft-${{ github.run_id }}
+          path: grove-scout-artifact/
+          if-no-files-found: warn
+          retention-days: 14

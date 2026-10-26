@@ -4,7 +4,8 @@
  * The only write operation is creating one research issue per UTC calendar day.
  */
 import { execFileSync } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import {renderPrintableWorksheet} from './grove-worksheet-export.mjs';
 import { dayKey, selectScoutTopic, scoutAlreadyRecorded, createScoutPrompt,
   validateScoutDraft, curatedFallback, makeScoutBrief, ISSUE_PREFIX } from './grove-scout-core.mjs';
 import {prototypePrompt,validatePrototype,prototypeFallback,renderPrototype} from './grove-prototype.mjs';
@@ -78,6 +79,20 @@ export async function runScout(){
   }
   const body=makeScoutBrief(date,topic,draft)+'\n\n'+
     renderPrototype(topic,draft.ideas[0],prototype);
+  // Turn the bounded prototype into review-only printable files. No site deploy,
+  // commercial listing, customer contact or model-created executable code.
+  const worksheet=renderPrintableWorksheet(date,topic,draft.ideas[0],prototype);
+  const outputDir='grove-scout-artifact';
+  mkdirSync(outputDir,{recursive:true});
+  writeFileSync(outputDir+'/worksheet-draft.html',worksheet.html,'utf8');
+  writeFileSync(outputDir+'/worksheet-draft.md',worksheet.markdown,'utf8');
+  writeFileSync(outputDir+'/READ-ME-FIRST.txt',
+    'GROVE INTERNAL RESEARCH DRAFT · '+date+'\n\n'+
+    'Not reviewed for correctness, originality, customer demand or eligibility.\n'+
+    'Not for sale, publication, bulk messaging or automatic distribution.\n'+
+    'The HTML file is printable in a browser without internet access.\n'+
+    'Research source: '+worksheet.source+'\n',
+    'utf8');
   // Recheck after inference. A retry/race must not produce two issues.
   const again=api('repos/'+REPO+'/issues?state=all&per_page=100');
   if(!Array.isArray(again))throw Error('Could not recheck issue journal before publishing.');
