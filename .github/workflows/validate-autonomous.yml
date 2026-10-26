@@ -1,0 +1,34 @@
+name: Validate Autonomous Grove
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'app.js'
+      - 'autonomous-grove.js'
+      - 'autonomous-grove.css'
+      - 'tests/autonomous-grove.test.mjs'
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/validate-autonomous.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify JavaScript and autonomy guardrail checks
+        run: |
+          set -euo pipefail
+          node --check app.js
+          node --check autonomous-grove.js
+          node --test tests/autonomous-grove.test.mjs
+          test -s index.html
+          test -s autonomous-grove.css

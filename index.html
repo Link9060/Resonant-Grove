@@ -11,8 +11,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="autonomous-grove.css">
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="autonomous-grove.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -27,6 +29,7 @@
         <button type="button" class="nav-link active" data-view="overview"><i data-lucide="layout-dashboard"></i><span>Overview</span><span class="nav-active-indicator"></span></button>
         <button type="button" class="nav-link" data-view="seeds"><i data-lucide="sprout"></i><span>My Seeds</span><span class="nav-count" id="navSeedCount">1</span></button>
         <button type="button" class="nav-link" data-view="treasury"><i data-lucide="wallet"></i><span>Treasury</span></button>
+        <button type="button" class="nav-link" data-view="autonomous"><i data-lucide="bot"></i><span>Autonomous Grove</span></button>
         <button type="button" class="nav-link" data-view="activity"><i data-lucide="activity"></i><span>Activity</span></button>
       </nav>
       <div class="nav-caption second-caption">ECOSYSTEM</div>
@@ -78,6 +81,80 @@
 
         <section class="view" id="view-activity" aria-label="Activity">
           <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> EVERY STEP COUNTS</div><h1>The growth journal<span class="heading-period">.</span></h1><p>A running record of ideas planted, lessons learned, and progress made.</p></div><section class="panel journal-panel"><div class="panel-header"><div><div class="tiny-overline">FROM THE BEGINNING</div><h3>Activity timeline</h3></div><button class="outline-small" type="button" data-action="new-note"><i data-lucide="pencil-line"></i> Add a note</button></div><div id="fullActivity" class="full-activity"></div></section>
+        </section>
+
+
+        <section class="view" id="view-autonomous" aria-label="Autonomous Grove venture lab">
+          <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> AUTONOMOUS GROVE / VENTURE LAB</div><h1>Ideas that <em>learn to grow.</em></h1><p>A mission-driven venture system, designed to explore broadly and act carefully.</p></div>
+
+          <div class="auto-intro">
+            <div class="auto-intro-copy">
+              <span class="auto-overline">RESONANT / AUTONOMY CONSOLE 0.1</span>
+              <h2>Explore freely.<br><em>Operate responsibly.</em></h2>
+              <p>Generate and shortlist venture ideas without spending money or misleading people. The current prototype runs local idea exploration only, with no connected AI workers, commerce, or social accounts.</p>
+              <div class="auto-intro-controls"><button type="button" id="autoToggle" class="button button-green">Enable local explorer</button><span id="autoModeText" class="auto-mode">Idea explorer paused</span></div>
+            </div>
+            <div class="auto-intro-art" aria-hidden="true"><div class="auto-planet"><i data-lucide="sprout"></i></div><span class="auto-orbit-text orbit-top">RESEARCH</span><span class="auto-orbit-text orbit-right">VALIDATE</span><span class="auto-orbit-text orbit-bottom">LEARN</span></div>
+          </div>
+
+          <div class="auto-stats" aria-label="Autonomous Grove local workspace metrics">
+            <div class="auto-stat"><span>Ideas explored</span><strong id="autoIdeaCount">0</strong><small>Local drafts</small></div>
+            <div class="auto-stat"><span>Awaiting evaluation</span><strong id="autoCandidateCount">0</strong><small>Unverified concepts</small></div>
+            <div class="auto-stat"><span>Research shortlist</span><strong id="autoSelectedCount">0</strong><small>Human validation needed</small></div>
+            <div class="auto-stat"><span>Verified earnings</span><strong>$0.00</strong><small>No payment provider connected</small></div>
+          </div>
+
+          <div class="auto-columns">
+            <section class="auto-panel">
+              <div class="auto-panel-heading"><div><span class="auto-overline">MISSION CONTROL</span><h3>Operating charter</h3></div><span class="auto-safety-pill"><i data-lucide="shield-check"></i> GUARDRAILS ACTIVE</span></div>
+              <p class="auto-panel-lead">The goals are simple. These rules are hard boundaries, not suggestions an agent can override.</p>
+              <div class="auto-policy-list">
+                <div><i data-lucide="check"></i><span>Find honest opportunities that provide something useful.</span></div>
+                <div><i data-lucide="check"></i><span>$0 discretionary spending. No paid ads, subscriptions, or purchases.</span></div>
+                <div><i data-lucide="check"></i><span>No fake reviews, misleading claims, scams, or artificial engagement.</span></div>
+                <div><i data-lucide="check"></i><span>No unsolicited bulk messaging or unapproved public posting.</span></div>
+                <div><i data-lucide="check"></i><span>No access to bank credentials, payment transfers, or payout controls.</span></div>
+              </div>
+              <div class="auto-readonly"><i data-lucide="lock"></i><span>External actions and money movement are disabled in this prototype. Any future integrations must use limited permissions, provider-side security, and approval gates.</span></div>
+            </section>
+
+            <section class="auto-panel">
+              <div class="auto-panel-heading"><div><span class="auto-overline">EXPERIMENT PIPELINE</span><h3>Opportunity engine</h3></div><span class="auto-chip">LOCAL EXPLORER</span></div>
+              <p class="auto-panel-lead">Explore small, zero-cost opportunities. These are curated idea sketches, <strong>not</strong> AI-generated ventures, verified demand, or automated experiments yet.</p>
+              <div class="auto-pipeline">
+                <span><i data-lucide="lightbulb"></i> Discover</span><i data-lucide="chevron-right"></i><span><i data-lucide="clipboard-check"></i> Validate</span><i data-lucide="chevron-right"></i><span><i data-lucide="rocket"></i> Launch with approval</span>
+              </div>
+              <button type="button" id="autoGenerate" class="button button-green auto-generate" disabled>Explore 4 candidate ideas</button>
+              <p id="autoNotice" class="auto-notice" role="status" aria-live="polite">Enable the local explorer to begin drafting ideas. Nothing runs in the background.</p>
+            </section>
+          </div>
+
+          <section class="auto-panel auto-ideas-panel">
+            <div class="auto-panel-heading"><div><span class="auto-overline">THE WORKBENCH</span><h3>Ideas &amp; experiments</h3></div><button type="button" id="autoExport" class="outline-small"><i data-lucide="download"></i> Export ideas</button></div>
+            <div class="auto-idea-grid" id="autoIdeas"></div>
+          </section>
+
+          <div class="auto-columns">
+            <section class="auto-panel">
+              <div class="auto-panel-heading"><div><span class="auto-overline">ORGANIC DISTRIBUTION</span><h3>Instagram channel</h3></div><span class="auto-chip">NOT CONNECTED</span></div>
+              <p class="auto-panel-lead">A future connection could draft original educational posts, request approval before publishing, and read real engagement metrics using an authorized official API.</p>
+              <div class="auto-integration-status"><i data-lucide="instagram"></i><div><strong>Social publisher</strong><small>Offline. No automated posts, messages, follows, or paid promotions.</small></div><i data-lucide="lock"></i></div>
+            </section>
+            <section class="auto-panel">
+              <div class="auto-panel-heading"><div><span class="auto-overline">FINANCIAL VISIBILITY</span><h3>Verified revenue ledger</h3></div><span class="auto-chip">NOT CONNECTED</span></div>
+              <p class="auto-panel-lead">Grove would display real, provider-confirmed revenue. It would not act as a wallet or custody service.</p>
+              <div class="auto-ledger-row"><span>Provider-confirmed available</span><strong>$0.00</strong></div>
+              <div class="auto-ledger-row"><span>Withdrawable in Grove</span><strong>Not enabled</strong></div>
+              <button type="button" class="auto-disabled" disabled title="Requires eligible payment account, adult representative where required, and a secure server integration">Request payout <i data-lucide="lock"></i></button>
+              <p class="auto-small-note">Payouts would be controlled by you and the payment provider, never by the autonomous agent. A guardian may need to authorize the provider account.</p>
+            </section>
+          </div>
+
+          <section class="auto-panel auto-timeline">
+            <div class="auto-panel-heading"><div><span class="auto-overline">LOCAL SESSION HISTORY</span><h3>Explorer activity</h3></div><span class="auto-chip">ON THIS DEVICE</span></div>
+            <ul id="autoActivity" class="auto-activity-list"></ul>
+            <p class="auto-small-note">Saved only in this browser. The export button downloads an idea-list backup. Clearing browser data can erase this local workspace.</p>
+          </section>
         </section>
 
         <section class="view" id="view-settings" aria-label="Settings">
