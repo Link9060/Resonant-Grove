@@ -94,7 +94,7 @@
             <div class="auto-intro-copy">
               <span class="auto-overline">RESONANT / AUTONOMY CONSOLE 0.1</span>
               <h2>Explore freely.<br><em>Operate responsibly.</em></h2>
-              <p>Generate and shortlist venture ideas without spending money or misleading people. The current prototype runs local idea exploration only, with no connected AI workers, commerce, or social accounts.</p>
+              <p>Generate and shortlist venture ideas without spending money or misleading people. Shortlisted ideas stay in this browser until you explicitly submit a GitHub batch. Grove can then automatically prepare review-only starter drafts, without connected commerce or social accounts.</p>
               <div class="auto-intro-controls"><button type="button" id="autoToggle" class="button button-green">Enable local explorer</button><span id="autoModeText" class="auto-mode">Idea explorer paused</span></div>
             </div>
             <div class="auto-intro-art" aria-hidden="true"><div class="auto-planet"><i data-lucide="sprout"></i></div><span class="auto-orbit-text orbit-top">RESEARCH</span><span class="auto-orbit-text orbit-right">VALIDATE</span><span class="auto-orbit-text orbit-bottom">LEARN</span></div>
@@ -123,18 +123,18 @@
 
             <section class="auto-panel">
               <div class="auto-panel-heading"><div><span class="auto-overline">EXPERIMENT PIPELINE</span><h3>Opportunity engine</h3></div><span class="auto-chip">LOCAL EXPLORER</span></div>
-              <p class="auto-panel-lead">Explore small, zero-cost opportunities. These are curated idea sketches, <strong>not</strong> AI-generated ventures, verified demand, or automated experiments yet.</p>
+              <p class="auto-panel-lead">Explore small, zero-cost opportunities. These are curated sketches, <strong>not</strong> AI-generated ventures or verified demand. To start offline prototype building, shortlist ideas and explicitly submit a GitHub approval batch.</p>
               <div class="auto-pipeline">
                 <span><i data-lucide="lightbulb"></i> Discover</span><i data-lucide="chevron-right"></i><span><i data-lucide="clipboard-check"></i> Validate</span><i data-lucide="chevron-right"></i><span><i data-lucide="rocket"></i> Launch with approval</span>
               </div>
               <button type="button" id="autoGenerate" class="button button-green auto-generate" disabled>Explore 4 candidate ideas</button>
-              <p id="autoNotice" class="auto-notice" role="status" aria-live="polite">Enable the local explorer to begin drafting ideas. Nothing runs in the background.</p>
+              <p id="autoNotice" class="auto-notice" role="status" aria-live="polite">Enable local exploration to create idea sketches. Background builds require a separately submitted GitHub approval issue.</p>
             </section>
           </div>
 
           <section class="auto-panel auto-scout-panel">
             <div class="auto-panel-heading"><div><span class="auto-overline">UNATTENDED RESEARCH / LOCAL MODEL</span><h3>Autonomous opportunity scout</h3></div><span class="auto-chip">DAILY · ZERO SPEND</span></div>
-            <p class="auto-panel-lead">A scheduled open-source model drafts three original zero-cost business hypotheses and one printable prototype each day, then records the results in a public GitHub research journal. They are not validated opportunities, customer orders, sales, or automatic marketing campaigns.</p>
+            <p class="auto-panel-lead">Scout attempts a bounded local model for research, with a clearly labeled curated fallback if the model is unavailable. The journal records three hypotheses and one offline draft. They are not validated opportunities, customer orders, sales, or automatic marketing campaigns.</p>
             <p id="groveScoutStatus" class="auto-notice" role="status">Loading verified GitHub research journal…</p>
             <ul id="groveScoutEntries" class="auto-scout-entries"></ul>
             <div class="auto-scout-links"><a class="outline-small" href="https://github.com/Link9060/Resonant-Grove/issues?q=label%3Agrove-scout" target="_blank" rel="noopener noreferrer">RESEARCH ARCHIVE <i data-lucide="arrow-up-right"></i></a><a class="outline-small" href="https://github.com/Link9060/Resonant-Grove/actions/workflows/grove-scout.yml" target="_blank" rel="noopener noreferrer">VIEW SCOUT RUNS <i data-lucide="arrow-up-right"></i></a></div>
@@ -196,7 +196,7 @@
         </section>
 
         <section class="view" id="view-settings" aria-label="Settings">
-          <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> MAKE IT YOURS</div><h1>Grove settings<span class="heading-period">.</span></h1><p>A simple workspace, under your control.</p></div><section class="panel settings-panel"><div class="settings-item"><div class="settings-icon"><i data-lucide="download"></i></div><div><strong>Export your Grove</strong><p>Download seeds, revenue, expenses and activity as a JSON backup.</p></div><button type="button" class="outline-small" data-action="export">Export data</button></div><div class="settings-item"><div class="settings-icon"><i data-lucide="upload"></i></div><div><strong>Import a backup</strong><p>Restore data from a previously exported Grove JSON file.</p></div><button type="button" class="outline-small" data-action="import">Import data</button></div><div class="settings-item"><div class="settings-icon"><i data-lucide="rotate-ccw"></i></div><div><strong>Reset local workspace</strong><p>Erase data saved in this browser and return to the starter seed.</p></div><button type="button" class="outline-small danger-outline" data-action="reset">Reset</button></div></section><div class="settings-info"><i data-lucide="info"></i><div><strong>Prototype mode</strong><p>Your changes are stored only in this browser on this device. There are no accounts, cloud sync, payment processing, or connected AI actions yet. Export backups before clearing browser storage.</p></div></div>
+          <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> MAKE IT YOURS</div><h1>Grove settings<span class="heading-period">.</span></h1><p>A simple workspace, under your control.</p></div><section class="panel settings-panel"><div class="settings-item"><div class="settings-icon"><i data-lucide="download"></i></div><div><strong>Export your Grove</strong><p>Download seeds, revenue, expenses and activity as a JSON backup.</p></div><button type="button" class="outline-small" data-action="export">Export data</button></div><div class="settings-item"><div class="settings-icon"><i data-lucide="upload"></i></div><div><strong>Import a backup</strong><p>Restore data from a previously exported Grove JSON file.</p></div><button type="button" class="outline-small" data-action="import">Import data</button></div><div class="settings-item"><div class="settings-icon"><i data-lucide="rotate-ccw"></i></div><div><strong>Reset local workspace</strong><p>Erase data saved in this browser and return to the starter seed.</p></div><button type="button" class="outline-small danger-outline" data-action="reset">Reset</button></div></section><div class="settings-info"><i data-lucide="info"></i><div><strong>Prototype mode</strong><p>Your personal workspace is saved in this browser. Approved catalog ideas reach GitHub only when you submit the prefilled issue. The separate review-only worker uses GitHub Actions; financial accounts, payouts and social publishing remain disconnected.</p></div></div>
         </section>
       </main>
     </div>

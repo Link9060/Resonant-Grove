@@ -8,7 +8,7 @@ Autonomous Grove v0.1 is a **browser-local idea exploration and mission-control 
 - Allows locally shortlisting or dismissing concepts and exporting a JSON idea-list backup.
 - Shows a fixed safety charter and clear social/payment integration placeholders.
 - Shows **$0.00 verified earnings** because no payment provider is connected. Does not invent earnings or create fake transfers.
-- Does not run work in the background or connect to the existing ARRAY Builder automatically.
+- The local shortlist alone starts no background work. A separately owner-submitted GitHub batch can now trigger the limited Approved Idea Builder, which creates review-only offline templates, not a general-purpose AI venture or code agent. It does not auto-dispatch the ARRAY Builder.
 
 The core Grove browser storage and the Autonomous Grove local draft storage are separate; their exports are currently separate as well.
 
