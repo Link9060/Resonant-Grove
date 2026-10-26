@@ -1,0 +1,53 @@
+name: Grove Seed feedback (owner report)
+description: Log a genuine, privacy-safe observation about an internal Seed. Public issue, no automated approval.
+title: "[GROVE-FEEDBACK] 2026-W44"
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **PUBLIC NOTE:** Do not include anyone's name, contact information, private responses or bank details. Never invent a test. Replace the example week in the issue title with your Seed's week (YYYY-Www).
+        This records only your own report, not third-party certification, verified demand, or permission to publish.
+  - type: input
+    id: seed
+    attributes:
+      label: Linked Seed issue number
+      description: Just the number of the [GROVE-SEED] weekly issue
+      placeholder: "42"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Evidence type
+      options:
+        - Prototype self-test
+        - Voluntary tester feedback
+        - Independent content review
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Reported outcome
+      options:
+        - Needs revision
+        - Continue testing
+        - Retire experiment
+    validations:
+      required: true
+  - type: textarea
+    id: nonidentifying
+    attributes:
+      label: Non-identifying observation notes
+      description: Record only what genuinely happened, including failures or uncertainty. These notes are not copied by the automation.
+      placeholder: "Observed behavior and limitations, without identifying anyone"
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Reporting limits
+      options:
+        - label: I understand that this is a public, owner-reported observation, not independently verified evidence.
+          required: true

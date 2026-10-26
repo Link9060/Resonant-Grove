@@ -1,0 +1,43 @@
+name: Grove Owner Feedback Ledger
+
+on:
+  issues:
+    types: [opened]
+
+concurrency:
+  group: grove-feedback-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  record:
+    if: >-
+      github.repository == 'Link9060/Resonant-Grove' &&
+      github.event.issue.user.login == 'Link9060' &&
+      startsWith(github.event.issue.title, '[GROVE-FEEDBACK] ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout trusted main (no persistent credentials)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate evidence trust rules
+        run: |
+          set -euo pipefail
+          node --check scripts/grove-evidence-core.mjs
+          node --check scripts/grove-evidence.mjs
+          node --test tests/grove-evidence.test.mjs
+      - name: Record one clearly unverified receipt in the linked Seed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROVE_FEEDBACK_NUMBER: ${{ github.event.issue.number }}
+        run: node scripts/grove-evidence.mjs
