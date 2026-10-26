@@ -6,6 +6,11 @@ on:
       - 'index.html'
       - 'app.js'
       - 'autonomous-grove.js'
+      - 'grove-scout-feed.js'
+      - 'scripts/grove-scout-core.mjs'
+      - 'scripts/grove-opportunity-scout.mjs'
+      - 'tests/grove-scout.test.mjs'
+      - '.github/workflows/grove-scout.yml'
       - 'autonomous-grove.css'
       - 'tests/autonomous-grove.test.mjs'
       - '.github/workflows/deploy.yml'
@@ -29,6 +34,9 @@ jobs:
           set -euo pipefail
           node --check app.js
           node --check autonomous-grove.js
-          node --test tests/autonomous-grove.test.mjs
+          node --check grove-scout-feed.js
+          node --check scripts/grove-scout-core.mjs
+          node --check scripts/grove-opportunity-scout.mjs
+          node --test tests/autonomous-grove.test.mjs tests/grove-scout.test.mjs
           test -s index.html
           test -s autonomous-grove.css
