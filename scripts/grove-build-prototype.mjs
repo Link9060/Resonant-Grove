@@ -64,7 +64,7 @@ function customPart(idea){
 export function buildOfflineFiles(ideaId){
  if(!Number.isInteger(ideaId)||ideaId<1||ideaId>CATALOG.length)throw Error('Invalid catalog ID');
  const idea=CATALOG[ideaId-1];
- if(idea.sections.length!==3||idea.sections.some(s=>s.length!==4||s.some(x=>typeof x!=='string'||x.length<12)))throw Error('Invalid recipe');
+ if(idea.sections.length!==3||idea.sections.some(s=>s.length!==4||typeof s[0]!=='string'||s[0].length<4||s.slice(1).some(x=>typeof x!=='string'||x.length<12)))throw Error('Invalid recipe');
  const sections=idea.sections.map(([heading,...items])=>
   '<section class="panel"><h2>'+escapeHtml(heading)+'</h2>'+
   items.map(x=>'<label class="task"><input type="checkbox"><span>'+escapeHtml(x)+'</span></label>').join('')+'</section>'
