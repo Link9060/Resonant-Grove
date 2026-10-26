@@ -35,7 +35,7 @@ test('strict spending, approval and truthfulness charter remains non-editable',(
 });
 test('ideas are accurately labeled local drafts without automatic external actions',()=>{
   assert.match(html,/not<\/strong> AI-generated ventures/);
-  assert.match(html,/Nothing runs in the background/);
+  assert.match(html,/Background builds require a separately submitted GitHub approval issue/);
   assert.match(logic,/status:'candidate'/);
   assert.match(logic,/Local idea explorer/);
   assert.match(logic,/Unverified concepts|UNTESTED/);
