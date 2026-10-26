@@ -8,6 +8,8 @@ on:
       - 'autonomous-grove.js'
       - 'grove-scout-feed.js'
       - 'scripts/grove-scout-core.mjs'
+      - 'scripts/grove-prototype.mjs'
+      - 'tests/grove-prototype.test.mjs'
       - 'scripts/grove-opportunity-scout.mjs'
       - 'tests/grove-scout.test.mjs'
       - '.github/workflows/grove-scout.yml'
@@ -36,7 +38,8 @@ jobs:
           node --check autonomous-grove.js
           node --check grove-scout-feed.js
           node --check scripts/grove-scout-core.mjs
+          node --check scripts/grove-prototype.mjs
           node --check scripts/grove-opportunity-scout.mjs
-          node --test tests/autonomous-grove.test.mjs tests/grove-scout.test.mjs
+          node --test tests/autonomous-grove.test.mjs tests/grove-scout.test.mjs tests/grove-prototype.test.mjs
           test -s index.html
           test -s autonomous-grove.css

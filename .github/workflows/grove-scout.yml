@@ -12,6 +12,7 @@ on:
       - '.github/workflows/grove-scout.yml'
       - 'scripts/grove-scout-core.mjs'
       - 'scripts/grove-opportunity-scout.mjs'
+      - 'scripts/grove-prototype.mjs'
 
 concurrency:
   group: grove-autonomous-scout
@@ -44,7 +45,8 @@ jobs:
           set -euo pipefail
           node --check scripts/grove-scout-core.mjs
           node --check scripts/grove-opportunity-scout.mjs
-          node --test tests/grove-scout.test.mjs
+          node --check scripts/grove-prototype.mjs
+          node --test tests/grove-scout.test.mjs tests/grove-prototype.test.mjs
       - name: Create daily research label if missing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
