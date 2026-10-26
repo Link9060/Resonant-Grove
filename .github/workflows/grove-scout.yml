@@ -1,0 +1,73 @@
+name: Autonomous Grove Opportunity Scout
+
+on:
+  # Once daily, not unlimited model usage. Scheduled runs can be delayed.
+  schedule:
+    - cron: '23 14 * * *'
+  workflow_dispatch:
+  # A dry-run validates the trusted journal integration at installation.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/grove-scout.yml'
+      - 'scripts/grove-scout-core.mjs'
+      - 'scripts/grove-opportunity-scout.mjs'
+
+concurrency:
+  group: grove-autonomous-scout
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  scout:
+    if: >-
+      github.repository == 'Link9060/Resonant-Grove' &&
+      (github.event_name == 'schedule' || github.actor == 'Link9060' ||
+       github.event_name == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout trusted main source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check logic and bounded content policies
+        run: |
+          set -euo pipefail
+          node --check scripts/grove-scout-core.mjs
+          node --check scripts/grove-opportunity-scout.mjs
+          node --test tests/grove-scout.test.mjs
+      - name: Create daily research label if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! gh label list --limit 100 --json name --jq '.[].name' | grep -Fxq 'grove-scout'; then
+            gh label create grove-scout --color 4f7c51 --description 'Unverified autonomous research, never a sales or Builder instruction'
+          fi
+      - name: Prepare Ollama only for a real scheduled scout
+        if: ${{ github.event_name != 'push' }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location https://ollama.com/install.sh --output /tmp/grove-scout-install.sh
+          sh /tmp/grove-scout-install.sh
+          OLLAMA_HOST=127.0.0.1:11434 ollama serve >/tmp/grove-scout-ollama.log 2>&1 &
+          for n in $(seq 1 45); do
+            if curl --silent --fail http://127.0.0.1:11434/api/tags >/dev/null; then break; fi
+            sleep 2
+          done
+          curl --fail --silent http://127.0.0.1:11434/api/tags >/dev/null
+          ollama pull qwen2.5:3b
+      - name: Research safely and record one unverified journal per UTC day
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROVE_SCOUT_DRY_RUN: ${{ github.event_name == 'push' }}
+        run: node scripts/grove-opportunity-scout.mjs
