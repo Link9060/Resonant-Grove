@@ -53,6 +53,7 @@
     try { localStorage.setItem(STORAGE,JSON.stringify(state)); }
     catch { showMessage('Browser storage unavailable. Export any drafts you want to keep.',true); }
     render();
+    window.GroveCloud?.scheduleSave?.();
   }
   function activity(title) {
     state.activity.push({title,created:now()});
@@ -151,5 +152,13 @@
     a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
     showMessage('Exported local idea drafts. This file contains no earnings or payout credentials.');
   });
+  window.GroveExplorer = {
+    get: () => state,
+    replace: (remote) => {
+      state = normalize(remote);
+      try { localStorage.setItem(STORAGE, JSON.stringify(state)); } catch (error) { console.warn('Grove explorer cloud cache:', error); }
+      render();
+    }
+  };
   render();
 })();
