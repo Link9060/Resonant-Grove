@@ -1,6 +1,16 @@
 name: ARRAY Supervisor (15-minute heartbeat)
 
 on:
+  # Smoke-test trusted status access when this workflow or runner is deployed.
+  # Push is observe-only; ONLY the schedule or explicit owner dispatch can send a task.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/array-supervisor.yml'
+      - 'scripts/array-supervisor-core.mjs'
+      - 'scripts/array-supervisor.mjs'
+      - 'scripts/array-queue-verify.mjs'
+      - '.github/workflows/array-builder.yml'
   # A heartbeat, not a ChatGPT session runner. GitHub schedules are best-effort.
   schedule:
     - cron: "7,22,37,52 * * * *"
