@@ -29,7 +29,20 @@ export function runKeeper(){
     note('## Grove Seed Keeper\nA plan for '+week+' is already recorded. No duplicate.');
     return {created:false,reason:'exists'};
   }
-  const best=selectWeeklySeed(issues,now);
+  // First-run read-after-write path: a newly created Scout issue may not
+  // appear in the issues LIST API immediately after creation. The preceding
+  // trusted workflow step passes the confirmed numeric issue ID through
+  // GITHUB_ENV. Read this exact issue directly and independently validate it.
+  let candidates=issues;
+  if(process.env.GROVE_NEW_SCOUT_ISSUE_NUMBER){
+    const latestId=Number(process.env.GROVE_NEW_SCOUT_ISSUE_NUMBER);
+    if(!Number.isSafeInteger(latestId)||latestId<1)throw Error('Invalid new Scout issue reference');
+    const fresh=gh('repos/'+REPO+'/issues/'+latestId);
+    if(!fresh||fresh.number!==latestId)throw Error('Could not confirm newly created Scout issue');
+    if(!issues.some(issue=>issue?.number===latestId))candidates=[fresh,...issues];
+    note('Confirmed direct Scout issue #'+latestId+' for the same-job Seed handoff.');
+  }
+  const best=selectWeeklySeed(candidates,now);
   if(!best){
     note('## Grove Seed Keeper\nNo eligible bot-authored, recently scored Scout research exists. Nothing to seed.');
     return {created:false,reason:'no-research'};
