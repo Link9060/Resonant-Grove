@@ -42,7 +42,7 @@ test('ideas are accurately labeled local drafts without automatic external actio
   assert.match(logic,/status==='selected'/);
 });
 test('GitHub Pages ships and syntax-checks the venture lab',()=>{
-  assert.match(deploy,/autonomous-grove\.js autonomous-grove\.css _site/);
+  assert.match(deploy,/autonomous-grove\.js autonomous-grove\.css grove-scout-feed\.js _site/);
   assert.match(deploy,/node --check _site\/autonomous-grove\.js/);
   assert.match(css,/@media\(max-width:660px\)/);
 });
@@ -52,7 +52,7 @@ test('autonomous research journal is read-only and externally sourced',()=>{
   assert.match(html,/id="groveScoutEntries"/);
   assert.match(html,/id="groveScoutStatus"/);
   assert.match(html,/src="grove-scout-feed\.js" defer/);
-  assert.match(feed,/github\.com\/Link9060\/Resonant-Grove\/issues/);
+  assert.match(feed,/api\.github\.com\/repos\/Link9060\/Resonant-Grove\/issues/);
   assert.match(feed,/labels=grove-scout/);
   assert.match(feed,/credentials:'omit'/);
   assert.doesNotMatch(feed,/\bPOST\b|\bPUT\b|\bDELETE\b|authorization\s*:/i);
