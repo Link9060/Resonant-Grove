@@ -1,0 +1,21 @@
+/* Grove Cloud: small account panel that does not disturb the existing theme. */
+.grove-cloud-toggle{border:1px solid rgba(165,203,163,.35);border-radius:999px;background:rgba(90,128,84,.17);color:inherit;padding:8px 13px;font:600 12px inherit;cursor:pointer;white-space:nowrap}
+.grove-cloud-panel{position:fixed;right:16px;top:76px;width:min(355px,calc(100vw - 32px));z-index:250;box-sizing:border-box;background:#16221b;color:#f0f6ed;border:1px solid #48624c;border-radius:18px;padding:20px;box-shadow:0 18px 55px rgba(0,0,0,.42);font:14px/1.5 'DM Sans',sans-serif}
+.grove-cloud-panel[hidden],.grove-cloud-panel [hidden]{display:none!important}
+.grove-cloud-heading,.grove-cloud-row,#groveCloudSignedIn{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.grove-cloud-heading strong{font:700 20px 'Manrope',sans-serif}
+.grove-cloud-heading button{border:0;background:none;color:inherit;font-size:24px;cursor:pointer}
+.grove-cloud-hint{color:#b1c4b3;font-size:12px;margin:9px 0 17px}
+.grove-cloud-panel label{display:block;font-weight:600;font-size:12px;margin:10px 0 4px}
+.grove-cloud-panel input{width:100%;box-sizing:border-box;border-radius:9px;border:1px solid #526752;background:#0e1812;color:#fff;padding:10px}
+.grove-cloud-panel button{cursor:pointer}
+.grove-cloud-row{margin-top:12px}
+.grove-cloud-row button,#groveCloudUseRemote,#groveCloudUseLocal{flex:1;border:1px solid #8cae90;background:#afcdaa;color:#102014;border-radius:10px;padding:9px 11px;font-weight:700}
+.grove-cloud-row button+button,#groveCloudUseLocal{background:transparent;color:#dcebdd}
+.grove-cloud-secondary,#groveCloudSignout{width:100%;margin-top:10px;background:transparent;color:#dcebdd;border:1px solid #526752;border-radius:9px;padding:9px}
+#groveCloudUser{overflow-wrap:anywhere;color:#d2e5d0}
+#groveCloudConflict{margin-top:14px;border-top:1px solid #415346;padding-top:12px}
+#groveCloudConflict p{color:#b1c4b3;font-size:12px}
+#groveCloudConflict button{width:100%;margin-top:8px}
+#groveCloudStatus{color:#c6d9c3;font-size:12px;line-height:1.5;margin-top:12px}
+@media(max-width:650px){.grove-cloud-panel{top:62px}.grove-cloud-toggle{padding:7px 8px;font-size:11px}}
