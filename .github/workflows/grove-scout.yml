@@ -7,6 +7,10 @@ on:
     # Retry window if GitHub delays or skips the morning schedule.
     - cron: '23 20 * * *'
   workflow_dispatch:
+  # Explicit owner-only issue starts a single fast, curated first end-to-end batch.
+  # GitHub Actions GITHUB_TOKEN issue creation does not recurse into this trigger.
+  issues:
+    types: [opened]
   # A dry-run validates the trusted journal integration at installation.
   push:
     branches: [main]
@@ -31,7 +35,11 @@ jobs:
   scout:
     if: >-
       github.repository == 'Link9060/Resonant-Grove' &&
-      (github.event_name == 'schedule' || github.actor == 'Link9060' ||
+      (github.event_name == 'schedule' ||
+       (github.event_name == 'workflow_dispatch' && github.actor == 'Link9060') ||
+       (github.event_name == 'issues' &&
+        github.event.issue.user.login == 'Link9060' &&
+        github.event.issue.title == '[GROVE-RUN] First research batch') ||
        github.event_name == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -81,7 +89,7 @@ jobs:
           fi
 
       - name: Prepare optional local Ollama model with strict time limits
-        if: ${{ github.event_name != 'push' && env.GROVE_SCOUT_ALREADY_DONE != 'true' }}
+        if: ${{ github.event_name != 'push' && github.event_name != 'issues' && env.GROVE_SCOUT_ALREADY_DONE != 'true' }}
         timeout-minutes: 9
         continue-on-error: true
         run: |
@@ -118,6 +126,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GROVE_SCOUT_DRY_RUN: ${{ github.event_name == 'push' }}
         run: node scripts/grove-opportunity-scout.mjs
+      # Run Keeper in the same trusted job: a GITHUB_TOKEN-created Scout issue
+      # cannot be relied on to trigger a separate GitHub issue event workflow.
+      - name: Hand off genuine Scout research to the weekly internal Seed Keeper
+        if: ${{ github.event_name != 'push' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          node --check scripts/grove-seed-keeper-core.mjs
+          node --check scripts/grove-seed-keeper.mjs
+          node --test tests/grove-seed-keeper.test.mjs
+          node scripts/grove-seed-keeper.mjs
+
       - name: Archive offline printable worksheet for human review
         if: ${{ github.event_name != 'push' && env.GROVE_SCOUT_ALREADY_DONE != 'true' }}
         uses: actions/upload-artifact@v4
