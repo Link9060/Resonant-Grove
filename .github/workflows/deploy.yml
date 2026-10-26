@@ -28,13 +28,15 @@ jobs:
       - name: Build static site
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js favicon.svg autonomous-grove.js autonomous-grove.css _site/
+          cp index.html styles.css app.js favicon.svg autonomous-grove.js autonomous-grove.css grove-scout-feed.js _site/
           touch _site/.nojekyll
           test -s _site/index.html
           test -s _site/app.js
           test -s _site/styles.css
           test -s _site/autonomous-grove.js
           test -s _site/autonomous-grove.css
+          test -s _site/grove-scout-feed.js
+          node --check _site/grove-scout-feed.js
           node --check _site/autonomous-grove.js
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
