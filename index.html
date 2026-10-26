@@ -16,6 +16,7 @@
   <script src="app.js" defer></script>
   <script src="autonomous-grove.js" defer></script>
   <script src="grove-scout-feed.js" defer></script>
+  <script src="grove-seed-feed.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -136,6 +137,17 @@
             <p id="groveScoutStatus" class="auto-notice" role="status">Loading verified GitHub research journal…</p>
             <ul id="groveScoutEntries" class="auto-scout-entries"></ul>
             <div class="auto-scout-links"><a class="outline-small" href="https://github.com/Link9060/Resonant-Grove/issues?q=label%3Agrove-scout" target="_blank" rel="noopener noreferrer">RESEARCH ARCHIVE <i data-lucide="arrow-up-right"></i></a><a class="outline-small" href="https://github.com/Link9060/Resonant-Grove/actions/workflows/grove-scout.yml" target="_blank" rel="noopener noreferrer">VIEW SCOUT RUNS <i data-lucide="arrow-up-right"></i></a></div>
+          </section>
+
+          <section class="auto-panel auto-scout-panel" aria-label="Weekly Seed Keeper">
+            <div class="auto-panel-heading"><div><span class="auto-overline">AUTOMATED REVIEW QUEUE</span><h3>Weekly Seed Keeper</h3></div><span class="auto-chip">ONE INTERNAL SEED / WEEK</span></div>
+            <p class="auto-panel-lead">After Scout has real research, the Keeper chooses a promising <em>draft to review</em> using a transparent readiness rubric. It creates an evidence checklist in GitHub, not a launched product, verified market opportunity, customer outreach or sale.</p>
+            <p id="groveWeeklySeedStatus" class="auto-notice" role="status">Loading internal Seed plans…</p>
+            <ul id="groveWeeklySeedEntries" class="auto-scout-entries"></ul>
+            <div class="auto-scout-links">
+              <a class="outline-small" href="https://github.com/Link9060/Resonant-Grove/issues?q=label%3Agrove-seed-draft" target="_blank" rel="noopener noreferrer">SEED PLAN ARCHIVE <i data-lucide="arrow-up-right"></i></a>
+              <a class="outline-small" href="https://github.com/Link9060/Resonant-Grove/actions/workflows/grove-seed-keeper.yml" target="_blank" rel="noopener noreferrer">VIEW KEEPER RUNS <i data-lucide="arrow-up-right"></i></a>
+            </div>
           </section>
 
           <section class="auto-panel auto-ideas-panel">
