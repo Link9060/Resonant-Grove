@@ -13,6 +13,7 @@ A responsive, single-page Grove workspace designed around the idea that a Seed s
 - **Treasury:** manually record income and expenses, track net available funds, see a six-month cash-flow chart, and associate records with Seeds.
 - **Journal:** event history and personal notes.
 - **Settings:** import/export JSON backup and reset the local workspace.
+- **Grove Cloud:** optional Supabase account sign-in and owner-scoped cross-device workspace sync, with explicit resolution when local and remote copies differ.
 - **Mobile:** responsive dashboard and navigation.
 
 The starter Seed, **The First Dollar**, begins with three editable steps and a $1 revenue goal. All financial values start at $0, not fabricated demo transactions.
@@ -27,11 +28,11 @@ The repository includes a workflow in `.github/workflows/deploy.yml`. In **Setti
 
 ## Run locally
 
-Open `index.html` with a modern browser, or serve this folder using any simple local HTTP server. No npm install, database, paid API, or build step is needed.
+Open `index.html` with a modern browser, or serve this folder using any simple local HTTP server. No npm install or build step is needed. The browser can work locally without cloud sign-in; Supabase sync is optional.
 
 ## Important prototype limits
 
-- Data lives in browser **localStorage**, not in a shared cloud account. It is device/browser-specific and can be lost if storage is cleared.
+- Grove saves a local browser copy and can optionally sync the workspace and explorer drafts to an authenticated Supabase account. Signed-out offline data is device-specific and can be lost if storage is cleared.
 - The **Keeper** is a transparent rules-based suggestion panel, **not** an AI agent or GitHub controller yet.
 - Transactions are **manual records**; there is no payment processing, banking, invoicing, or financial account connection.
 - Future ARROW, RAVIN, and Bikes projects appear as a **vision**, not existing funded investments.
@@ -40,7 +41,7 @@ Open `index.html` with a modern browser, or serve this folder using any simple l
 ## Roadmap
 
 1. Validate Seed 001 with the first real dollar.
-2. Add authentication and a secure database for multi-device sync.
+2. [Implemented foundation] Optional Supabase authentication and owner-scoped workspace sync. See [SUPABASE.md](SUPABASE.md) for setup, limitations, and testing.
 3. Introduce an approval-based Keeper that can plant, update, and retire Seeds and use authorized integrations.
 4. Add real revenue and expense integrations, budget guardrails, and investment planning.
 5. Expand Grove into its distinctive venture forest visualization.
