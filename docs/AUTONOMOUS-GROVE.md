@@ -12,6 +12,11 @@ Autonomous Grove v0.1 is a **browser-local idea exploration and mission-control 
 
 The core Grove browser storage and the Autonomous Grove local draft storage are separate; their exports are currently separate as well.
 
+## Approved-idea prototype queue (new)
+
+The ideas selected in this browser remain local until the owner presses **Queue selected ideas for building** and separately submits the prefilled public GitHub issue. GitHub then maintains a restricted review-only queue and produces one deterministic offline draft per scheduled build run. This is real autonomous prototype processing, **not AI model-generated venture coding or automatic monetization**. No browser session is required after the owner submits the issue. See [GROVE-APPROVED-BUILDER.md](GROVE-APPROVED-BUILDER.md) for the queue, artifact and safety details.
+
+
 ## Long-term system: controlled autonomy, not unrestricted agency
 
 ### Mission
