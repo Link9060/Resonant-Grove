@@ -95,3 +95,17 @@ test('daily Scout retries safely and preserves a no-model fallback',()=>{
   assert.ok(runner.includes('seed-evaluation.json'));
   assert.match(runner,/renderSeedPlan\(date,topic,draft,evaluation\)/);
 });
+
+
+test('authorized owner kickoff performs full research without installing an unneeded model',()=>{
+  const flow=readFileSync('.github/workflows/grove-scout.yml','utf8');
+  assert.match(flow,/issues:\s*\n\s*types: \[opened\]/);
+  assert.match(flow,/github\.event\.issue\.user\.login == 'Link9060'/);
+  assert.match(flow,/github\.event\.issue\.title == '\[GROVE-RUN\] First research batch'/);
+  assert.match(flow,/github\.event_name != 'issues'/);
+  assert.match(flow,/Hand off genuine Scout research to the weekly internal Seed Keeper/);
+  assert.match(flow,/node scripts\/grove-seed-keeper\.mjs/);
+  assert.match(flow,/node --test tests\/grove-seed-keeper\.test\.mjs/);
+  assert.match(flow,/github\.event_name != 'push'/);
+  assert.match(flow,/GROVE_SCOUT_DRY_RUN: \$\{\{ github.event_name == 'push' \}\}/);
+});
