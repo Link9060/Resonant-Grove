@@ -92,6 +92,6 @@ test('daily Scout retries safely and preserves a no-model fallback',()=>{
   assert.match(runner,/curatedFallback\(topic\)/);
   assert.match(runner,/prototypeFallback\(selected\)/);
   assert.match(runner,/evaluateScoutSeed\(date,topic,draft\)/);
-  assert.match(runner,/seed-evaluation\\.json/);
+  assert.ok(runner.includes('seed-evaluation.json'));
   assert.match(runner,/renderSeedPlan\(date,topic,draft,evaluation\)/);
 });
