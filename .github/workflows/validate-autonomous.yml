@@ -6,6 +6,13 @@ on:
       - 'index.html'
       - 'app.js'
       - 'autonomous-grove.js'
+      - 'grove-build-feed.js'
+      - 'scripts/grove-build-catalog.mjs'
+      - 'scripts/grove-build-prototype.mjs'
+      - 'scripts/grove-build-queue-core.mjs'
+      - 'scripts/grove-build-queue.mjs'
+      - 'tests/grove-build-queue.test.mjs'
+      - '.github/workflows/grove-approved-builder.yml'
       - 'grove-scout-feed.js'
       - 'grove-seed-feed.js'
       - '.github/ISSUE_TEMPLATE/grove-feedback.yml'
@@ -52,6 +59,11 @@ jobs:
           set -euo pipefail
           node --check app.js
           node --check autonomous-grove.js
+          node --check grove-build-feed.js
+          node --check scripts/grove-build-catalog.mjs
+          node --check scripts/grove-build-prototype.mjs
+          node --check scripts/grove-build-queue-core.mjs
+          node --check scripts/grove-build-queue.mjs
           node --check grove-scout-feed.js
           node --check grove-seed-feed.js
           node --check scripts/grove-evidence.mjs
@@ -64,6 +76,6 @@ jobs:
           node --check scripts/grove-seed-evaluator.mjs
           node --check scripts/grove-worksheet-export.mjs
           node --check scripts/grove-opportunity-scout.mjs
-          node --test tests/autonomous-grove.test.mjs tests/grove-scout.test.mjs tests/grove-prototype.test.mjs tests/grove-worksheet-export.test.mjs tests/grove-seed-evaluator.test.mjs tests/grove-seed-keeper.test.mjs tests/grove-prototype-qa.test.mjs tests/grove-evidence.test.mjs
+          node --test tests/grove-build-queue.test.mjs tests/autonomous-grove.test.mjs tests/grove-scout.test.mjs tests/grove-prototype.test.mjs tests/grove-worksheet-export.test.mjs tests/grove-seed-evaluator.test.mjs tests/grove-seed-keeper.test.mjs tests/grove-prototype-qa.test.mjs tests/grove-evidence.test.mjs
           test -s index.html
           test -s autonomous-grove.css

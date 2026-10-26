@@ -17,6 +17,7 @@
   <script src="autonomous-grove.js" defer></script>
   <script src="grove-scout-feed.js" defer></script>
   <script src="grove-seed-feed.js" defer></script>
+  <script src="grove-build-feed.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -151,8 +152,23 @@
             </div>
           </section>
 
+<section class="auto-panel auto-scout-panel" aria-label="Approved Idea Builder">
+            <div class="auto-panel-heading"><div><span class="auto-overline">BOUNDED AUTONOMOUS BUILD QUEUE</span><h3>Approved Idea Builder</h3></div><span class="auto-chip">ONE DRAFT PER RUN</span></div>
+            <p class="auto-panel-lead">Owner-submitted catalog ideas become a durable GitHub queue. The worker prepares one distinct offline draft per run, archives it for review, and continues on a best-effort hourly schedule. It currently uses deterministic templates, not an AI coding model, and never launches products, contacts customers, or spends money.</p>
+            <p id="groveBuildStatus" class="auto-notice" role="status">Loading internal prototype journal…</p>
+            <ul id="groveBuildEntries" class="auto-scout-entries"></ul>
+            <div class="auto-scout-links">
+              <a class="outline-small" href="https://github.com/Link9060/Resonant-Grove/issues?q=label%3Agrove-prototype-draft" target="_blank" rel="noopener noreferrer">PROTOTYPE ARCHIVE <i data-lucide="arrow-up-right"></i></a>
+              <a class="outline-small" href="https://github.com/Link9060/Resonant-Grove/actions/workflows/grove-approved-builder.yml" target="_blank" rel="noopener noreferrer">BUILDER RUNS <i data-lucide="arrow-up-right"></i></a>
+            </div>
+          </section>
+
           <section class="auto-panel auto-ideas-panel">
             <div class="auto-panel-heading"><div><span class="auto-overline">THE WORKBENCH</span><h3>Ideas &amp; experiments</h3></div><button type="button" id="autoExport" class="outline-small"><i data-lucide="download"></i> Export ideas</button></div>
+            <div class="auto-queue-actions">
+              <button type="button" id="autoQueueSelected" class="button button-green" disabled>Queue 0 selected ideas for building</button>
+              <p>After shortlisting, review and <strong>submit the prefilled GitHub issue</strong>. This explicit approval queues your ideas for offline prototype building. Just opening the GitHub page does not queue anything.</p>
+            </div>
             <div class="auto-idea-grid" id="autoIdeas"></div>
           </section>
 
