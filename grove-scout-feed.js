@@ -30,7 +30,7 @@
         const item=document.createElement('li');
         const date=entry.title.slice('[GROVE-SCOUT] '.length);
         item.append(createLink(entry.html_url,'Research batch · '+date));
-        const note=document.createElement('small');note.textContent='3 candidate hypotheses · GitHub verified';
+        const note=document.createElement('small');note.textContent='3 hypotheses + 1 printable draft · GitHub verified';
         item.append(note);list.append(item);
       }
     }catch{
