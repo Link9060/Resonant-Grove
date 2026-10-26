@@ -6,6 +6,7 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import {renderPrintableWorksheet} from './grove-worksheet-export.mjs';
+import {evaluateScoutSeed,renderSeedEvaluation,renderSeedPlan} from './grove-seed-evaluator.mjs';
 import { dayKey, selectScoutTopic, scoutAlreadyRecorded, createScoutPrompt,
   validateScoutDraft, curatedFallback, makeScoutBrief, ISSUE_PREFIX } from './grove-scout-core.mjs';
 import {prototypePrompt,validatePrototype,prototypeFallback,renderPrototype} from './grove-prototype.mjs';
@@ -69,29 +70,37 @@ export async function runScout(){
     note('Local model output unavailable or invalid: '+(e instanceof Error?e.message:'unknown')+'. Using explicitly labeled curated fallback.');
     draft=curatedFallback(topic);
   }
+  const evaluation=evaluateScoutSeed(date,topic,draft);
+  const selected=draft.ideas[evaluation.selectedCandidate-1];
+  note('Ranked three unverified ideas on internal draft readiness; candidate '+evaluation.selectedCandidate+' selected.');
   let prototype;
   try {
-    prototype=validatePrototype(await queryLocalModel(prototypePrompt(topic,draft.ideas[0])));
+    prototype=validatePrototype(await queryLocalModel(prototypePrompt(topic,selected)));
     note('Local model prepared a first original checklist draft for independent review.');
   } catch(e) {
     note('Original prototype generation invalid or unavailable: '+(e instanceof Error?e.message:'unknown')+'. Using a clearly labeled planning-template fallback.');
-    prototype=prototypeFallback(draft.ideas[0]);
+    prototype=prototypeFallback(selected);
   }
   const body=makeScoutBrief(date,topic,draft)+'\n\n'+
-    renderPrototype(topic,draft.ideas[0],prototype);
+    renderSeedEvaluation(topic,draft,evaluation)+'\n\n'+
+    renderPrototype(topic,selected,prototype);
   // Turn the bounded prototype into review-only printable files. No site deploy,
   // commercial listing, customer contact or model-created executable code.
-  const worksheet=renderPrintableWorksheet(date,topic,draft.ideas[0],prototype);
+  const worksheet=renderPrintableWorksheet(date,topic,selected,prototype);
   const outputDir='grove-scout-artifact';
   mkdirSync(outputDir,{recursive:true});
   writeFileSync(outputDir+'/worksheet-draft.html',worksheet.html,'utf8');
   writeFileSync(outputDir+'/worksheet-draft.md',worksheet.markdown,'utf8');
+  writeFileSync(outputDir+'/seed-evaluation.json',JSON.stringify(evaluation,null,2)+'\n','utf8');
+  writeFileSync(outputDir+'/seed-plan.md',renderSeedPlan(date,topic,draft,evaluation),'utf8');
   writeFileSync(outputDir+'/READ-ME-FIRST.txt',
     'GROVE INTERNAL RESEARCH DRAFT · '+date+'\n\n'+
     'Not reviewed for correctness, originality, customer demand or eligibility.\n'+
     'Not for sale, publication, bulk messaging or automatic distribution.\n'+
     'The HTML file is printable in a browser without internet access.\n'+
-    'Research source: '+worksheet.source+'\n',
+    'Research source: '+worksheet.source+'\n'+
+    'Selected candidate: '+evaluation.selectedCandidate+' of 3\n'+
+    'Draft readiness score: '+evaluation.selectedScore+'/12, not a market score\n',
     'utf8');
   // Recheck after inference. A retry/race must not produce two issues.
   const again=api('repos/'+REPO+'/issues?state=all&per_page=100');
@@ -102,7 +111,7 @@ export async function runScout(){
   note('### New research journal entry: '+issue.html_url+
     '\n- Research category: '+topic.name+
     '\n- Source: '+draft.source+
-    '\n- Three candidate hypotheses plus one offline prototype draft; no sales claims, no spending or external marketing.');
+    '\n- Three candidate hypotheses, evidence-free readiness ranking, one internal Seed plan and one offline prototype draft; no sales claims, no spending or external marketing.');
   return {created:true,url:issue.html_url};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
