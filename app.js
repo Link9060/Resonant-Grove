@@ -75,6 +75,7 @@
     try { localStorage.setItem(KEY,JSON.stringify(db)); }
     catch (error) { toast('Could not save. Check browser storage.',true); }
     render();
+    window.GroveCloud?.scheduleSave?.();
   }
   function log(type,title,description) {
     db.activity.unshift({id:uid(),type,title,description,created:now()});
@@ -343,6 +344,14 @@
   $('modalBackdrop').addEventListener('click',(e)=>{if(e.target===$('modalBackdrop'))closeModal();});
   document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){closeModal();closeMenu();}});
   window.addEventListener('hashchange',()=>navigate(location.hash.replace('#','')));
+  window.GroveWorkspace = {
+    get: () => db,
+    replace: (workspace) => {
+      db = normalize(workspace);
+      try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (error) { console.warn('Grove cloud cache:', error); }
+      render();
+    }
+  };
   render();navigate(location.hash.replace('#','')||'overview');
   // Ensure prototype starter is persistently stored only after rendering successfully.
   try{if(!localStorage.getItem(KEY))localStorage.setItem(KEY,JSON.stringify(db));}catch(e){}
