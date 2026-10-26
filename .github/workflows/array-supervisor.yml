@@ -1,0 +1,61 @@
+name: ARRAY Supervisor (15-minute heartbeat)
+
+on:
+  # Smoke-test trusted status access when this workflow or runner is deployed.
+  # Push is observe-only; ONLY the schedule or explicit owner dispatch can send a task.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/array-supervisor.yml'
+      - 'scripts/array-supervisor-core.mjs'
+      - 'scripts/array-supervisor.mjs'
+      - 'scripts/array-queue-verify.mjs'
+      - '.github/workflows/array-builder.yml'
+  # A heartbeat, not a ChatGPT session runner. GitHub schedules are best-effort.
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+    inputs:
+      dispatch:
+        description: "Attempt a single owner-approved queued mission now (false = status only)"
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: array-supervisor-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write
+  issues: write
+  pull-requests: read
+
+jobs:
+  heartbeat:
+    if: ${{ github.event_name == 'schedule' || github.actor == 'Link9060' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout trusted main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run decision engine tests
+        run: |
+          node --check scripts/array-supervisor-core.mjs
+          node --check scripts/array-supervisor.mjs
+          node --test tests/array-supervisor.test.mjs tests/array-queue-verify.test.mjs
+      - name: Assess queue, running missions, and review backlog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Scheduled runs can only dispatch already owner-approved issues.
+          # Manual runs default to read-only status inspection.
+          ARRAY_DISPATCH_ENABLED: ${{ github.event_name == 'schedule' || inputs.dispatch == true }}
+        run: node scripts/array-supervisor.mjs
