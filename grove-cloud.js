@@ -45,6 +45,10 @@
     el('groveCloudConflict').hidden = !pending;
     el('groveCloudUser').textContent = user?.email || '';
     button.textContent = !client ? 'Cloud unavailable' : !user ? 'Cloud sign in' : pending ? 'Choose sync copy' : ready ? 'Cloud connected' : 'Cloud connecting';
+    const indicator = document.querySelector('.local-indicator');
+    if (indicator?.lastChild?.nodeType === Node.TEXT_NODE) {
+      indicator.lastChild.textContent = ready ? 'Synced with cloud' : 'Saved on this device';
+    }
   }
   const localCopy = () => ({ workspace: window.GroveWorkspace.get(), explorer: window.GroveExplorer.get() });
   function useRemote(copy) {
