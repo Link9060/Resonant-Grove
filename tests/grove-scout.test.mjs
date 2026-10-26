@@ -90,5 +90,8 @@ test('daily Scout retries safely and preserves a no-model fallback',()=>{
   assert.match(workflow,/timeout 270s ollama pull qwen2\.5:3b/);
   assert.match(runner,/GROVE_MODEL_AVAILABLE==='false'/);
   assert.match(runner,/curatedFallback\(topic\)/);
-  assert.match(runner,/prototypeFallback\(draft\.ideas\[0\]\)/);
+  assert.match(runner,/prototypeFallback\(selected\)/);
+  assert.match(runner,/evaluateScoutSeed\(date,topic,draft\)/);
+  assert.match(runner,/seed-evaluation\\.json/);
+  assert.match(runner,/renderSeedPlan\(date,topic,draft,evaluation\)/);
 });
