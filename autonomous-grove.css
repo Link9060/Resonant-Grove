@@ -77,3 +77,15 @@
 .auto-activity-list small{font-size:10px;color:#829a86;white-space:nowrap}
 @media(max-width:1050px){.auto-intro-art{margin:0;width:180px;height:180px}.auto-planet{inset:50px}.auto-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.auto-intro{padding:26px}.auto-columns{grid-template-columns:1fr}.auto-intro h2 em{font-size:44px}}
 @media(max-width:660px){.auto-intro{padding:24px;min-height:0}.auto-intro-art{display:none}.auto-intro h2{font-size:30px}.auto-intro h2 em{font-size:36px}.auto-stat{padding:14px}.auto-stat strong{font-size:22px}.auto-stat small{font-size:9px}.auto-panel{padding:18px}.auto-panel-heading h3{font-size:16px}.auto-safety-pill,.auto-chip{font-size:7px;padding:6px}.auto-idea-grid{grid-template-columns:1fr}.auto-pipeline{justify-content:flex-start;gap:11px}}
+
+
+/* Read-only autonomous research journal */
+.auto-scout-panel{margin-bottom:16px}
+.auto-scout-entries{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;padding:0;margin:16px 0}
+.auto-scout-entries li{padding:14px 16px;border:1px solid #364a39;border-radius:10px;background:#1a291e;display:flex;flex-direction:column;gap:6px}
+.auto-scout-entries a{font:700 12px/1.5 "Manrope",sans-serif;color:#d5eccd;text-decoration:none}
+.auto-scout-entries a:hover{text-decoration:underline}
+.auto-scout-entries small{font-size:10px;color:#9cb99e}
+.auto-scout-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.auto-scout-links a{display:inline-flex;align-items:center;gap:7px}
+.auto-scout-links a svg{width:13px;height:13px}
