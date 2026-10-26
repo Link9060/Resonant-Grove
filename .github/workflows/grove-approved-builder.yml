@@ -1,0 +1,73 @@
+name: Grove Approved Idea Builder
+
+on:
+  issues:
+    types: [opened]
+  schedule:
+    - cron: '11 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/grove-approved-builder.yml'
+      - 'scripts/grove-build-catalog.mjs'
+      - 'scripts/grove-build-queue-core.mjs'
+      - 'scripts/grove-build-prototype.mjs'
+      - 'scripts/grove-build-queue.mjs'
+
+concurrency:
+  group: grove-approved-builder-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  build-one:
+    if: >-
+      github.repository == 'Link9060/Resonant-Grove' &&
+      (github.event_name == 'schedule' ||
+       github.event_name == 'push' ||
+       (github.event_name == 'workflow_dispatch' && github.actor == 'Link9060') ||
+       (github.event_name == 'issues' &&
+        github.event.issue.user.login == 'Link9060' &&
+        github.event.issue.title == '[GROVE-BATCH] Approved idea prototypes'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Checkout trusted main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate prototype and queue guardrails
+        run: |
+          set -euo pipefail
+          node --check scripts/grove-build-catalog.mjs
+          node --check scripts/grove-build-queue-core.mjs
+          node --check scripts/grove-build-prototype.mjs
+          node --check scripts/grove-build-queue.mjs
+          node --test tests/grove-build-queue.test.mjs
+      - name: Prepare one offline draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROVE_QUEUE_DRY_RUN: ${{ github.event_name == 'push' }}
+        run: node scripts/grove-build-queue.mjs prepare
+      - name: Archive review-only prototype
+        if: ${{ env.GROVE_QUEUE_READY == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: grove-approved-draft-${{ github.run_id }}
+          path: grove-build-artifact/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Record draft for review
+        if: ${{ env.GROVE_QUEUE_READY == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/grove-build-queue.mjs finalize
