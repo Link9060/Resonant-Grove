@@ -25,6 +25,8 @@ function note(message){
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,message+'\n');
 }
 async function queryLocalModel(prompt){
+  // Model setup is optional: scheduled research must still finish if it is unavailable.
+  if(process.env.GROVE_MODEL_AVAILABLE==='false')throw Error('Local model unavailable; no model claims will be made');
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),210000);
   try{
