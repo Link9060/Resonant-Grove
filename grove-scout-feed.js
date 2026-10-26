@@ -34,9 +34,9 @@
         // New journal entries include a transparent scorecard. Keep all fetched
         // text inert: NEVER parse an issue body as HTML or executable instructions.
         const body=typeof entry.body==='string'?entry.body:'';
-        const chosen=body.match(/^\\*\\*Decision:\\*\\* Candidate ([1-3]) selected for an offline prototype draft\\.$/m);
-        const selection=body.match(/^\\*\\*Selection:\\*\\* ([^\\r\\n]{1,140})$/m);
-        const score=body.match(/^\\*\\*Selected score:\\*\\* (\\d{1,2})\\/12 points/m);
+        const chosen=body.match(/^\*\*Decision:\*\* Candidate ([1-3]) selected for an offline prototype draft\.$/m);
+        const selection=body.match(/^\*\*Selection:\*\* ([^\r\n]{1,140})$/m);
+        const score=body.match(/^\*\*Selected score:\*\* (\d{1,2})\/12 points/m);
         if(chosen&&selection&&score&&Number(score[1])<=12){
           note.textContent='Internal Seed '+chosen[1]+': '+selection[1].slice(0,100)+
             ' · draft readiness '+score[1]+'/12 · unverified, not launched';
