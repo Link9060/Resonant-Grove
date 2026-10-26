@@ -46,3 +46,15 @@ test('GitHub Pages ships and syntax-checks the venture lab',()=>{
   assert.match(deploy,/node --check _site\/autonomous-grove\.js/);
   assert.match(css,/@media\(max-width:660px\)/);
 });
+
+test('autonomous research journal is read-only and externally sourced',()=>{
+  const feed=readFileSync('grove-scout-feed.js','utf8');
+  assert.match(html,/id="groveScoutEntries"/);
+  assert.match(html,/id="groveScoutStatus"/);
+  assert.match(html,/src="grove-scout-feed\.js" defer/);
+  assert.match(feed,/github\.com\/Link9060\/Resonant-Grove\/issues/);
+  assert.match(feed,/labels=grove-scout/);
+  assert.match(feed,/credentials:'omit'/);
+  assert.doesNotMatch(feed,/\bPOST\b|\bPUT\b|\bDELETE\b|authorization\s*:/i);
+  assert.match(deploy,/grove-scout-feed\.js _site/);
+});
