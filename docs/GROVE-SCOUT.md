@@ -25,6 +25,14 @@ The label is grove-scout. The dashboard at https://link9060.github.io/Resonant-G
 - Internal research is not market evidence. Any product/public commercial activity must follow platform rules and age/guardian requirements where applicable.
 - No guarantees of revenue or autonomous monetization. GitHub Actions and Ollama compute are bounded by GitHub's normal account and runner policies, not infinite.
 
+### Automated prototype QA and feedback evidence
+
+After drafting a prototype, Scout performs five **static** checks: bounded 3×3 structure, action-oriented prompts, rough topic relevance, excessive repeated openings, and obvious unsupported promotional language. Its output is only **Needs human review** or **Needs revision**, never approved or verified. These checks are superficial and may miss factual mistakes, plagiarism, copyright issues, safety problems or poor product design.
+
+If a local-model draft triggers warnings and the local model is available, Scout may try **one additional rewrite**, accepting the revision only if it reduces the number of static warnings. No extra costs or API keys are introduced. When the model fails or its output is rejected, the existing labeled planning fallback remains available.
+
+Each new batch also includes `prototype-quality-audit.json` and a blank `evidence-and-feedback.md` worksheet in the existing GitHub Actions artifact. The worksheet is not evidence of an actual user test: a real person must consent, try the draft, and supply genuine observations before any demand claim. Do not put private participant details into public GitHub issues. Grove cannot certify originality or real market demand on its own.
+
 ### Model failures
 
 If the local model cannot be installed, started, or downloaded within the bounded startup window, the workflow still attempts a **clearly labeled curated fallback** research issue and a planning worksheet. If the model returns invalid output, it also falls back. If GitHub API access itself fails, the job fails rather than assuming a clean state. View the Actions run for the exact source and error details.
