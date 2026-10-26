@@ -6,6 +6,8 @@ The trusted scheduled workflow .github/workflows/grove-scout.yml attempts one re
 
 The workflow uses a locally hosted Ollama qwen2.5:3b model on a GitHub Actions runner. It asks for THREE different zero-upfront-spend digital-product hypotheses in an explicitly allowlisted category. Code validates the output schema, content lengths, basic red-flag language and duplication. If model output fails, the workflow publishes explicitly labeled **curated fallback templates**, not something misrepresented as model-created work.
 
+After ideation, the same free local model attempts a second bounded task: drafting one original three-section printable worksheet/checklist with nine actionable items for the first idea. A validator rejects malformed or suspicious output, substituting a clearly labeled curated planning template when needed. The draft stays in the research issue for review; nothing is automatically marketed, sold, or claimed tested.
+
 A batch is a PUBLIC GitHub issue titled [GROVE-SCOUT] YYYY-MM-DD. It includes target audience hypotheses, possible helpful deliverables, prototype steps, ethical validation suggestions and caveats. No verified customers, demand, sales or revenue are claimed.
 
 The label is grove-scout. The dashboard at https://link9060.github.io/Resonant-Grove/#autonomous reads a small public GitHub API journal feed and links to the source issue and Actions run. GitHub API reads have normal unauthenticated rate limits.
