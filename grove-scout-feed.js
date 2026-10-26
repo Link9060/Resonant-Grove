@@ -43,6 +43,8 @@
         }else{
           note.textContent='3 unverified hypotheses + 1 offline draft · no sales activity';
         }
+        const qa=body.match(/^\*\*Prototype QA:\*\* (Needs revision|Needs human review) \(not approved for distribution\)\.$/m);
+        if(qa)note.textContent+=' · '+qa[1].toLowerCase();
         item.append(note);list.append(item);
       }
     }catch{
