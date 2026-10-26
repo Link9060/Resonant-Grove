@@ -42,7 +42,7 @@ test('ideas are accurately labeled local drafts without automatic external actio
   assert.match(logic,/status==='selected'/);
 });
 test('GitHub Pages ships and syntax-checks the venture lab',()=>{
-  assert.match(deploy,/autonomous-grove\.js autonomous-grove\.css grove-scout-feed\.js _site/);
+  assert.match(deploy,/autonomous-grove\.js autonomous-grove\.css grove-scout-feed\.js grove-seed-feed\.js grove-build-feed\.js _site/);
   assert.match(deploy,/node --check _site\/autonomous-grove\.js/);
   assert.match(css,/@media\(max-width:660px\)/);
 });
