@@ -78,3 +78,17 @@ test('scheduled workflow has trusted main, tight quota and no payments or publis
   assert.match(runner,/GROVE_SCOUT_DRY_RUN/);
   assert.doesNotMatch(runner,/paypal|stripe|instagram\.com|\/transfers|\/payments|\/ads\b/i);
 });
+
+test('daily Scout retries safely and preserves a no-model fallback',()=>{
+  const workflow=readFileSync('.github/workflows/grove-scout.yml','utf8');
+  const runner=readFileSync('scripts/grove-opportunity-scout.mjs','utf8');
+  assert.match(workflow,/cron: '23 20 \* \* \*'/);
+  assert.match(workflow,/Check for an existing UTC research journal before model setup/);
+  assert.match(workflow,/GROVE_SCOUT_ALREADY_DONE=true/);
+  assert.match(workflow,/GROVE_MODEL_AVAILABLE: 'false'/);
+  assert.match(workflow,/continue-on-error: true/);
+  assert.match(workflow,/timeout 270s ollama pull qwen2\.5:3b/);
+  assert.match(runner,/GROVE_MODEL_AVAILABLE==='false'/);
+  assert.match(runner,/curatedFallback\(topic\)/);
+  assert.match(runner,/prototypeFallback\(draft\.ideas\[0\]\)/);
+});
