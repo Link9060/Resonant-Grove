@@ -30,7 +30,19 @@
         const item=document.createElement('li');
         const date=entry.title.slice('[GROVE-SCOUT] '.length);
         item.append(createLink(entry.html_url,'Research batch · '+date));
-        const note=document.createElement('small');note.textContent='3 hypotheses + 1 printable draft · GitHub verified';
+        const note=document.createElement('small');
+        // New journal entries include a transparent scorecard. Keep all fetched
+        // text inert: NEVER parse an issue body as HTML or executable instructions.
+        const body=typeof entry.body==='string'?entry.body:'';
+        const chosen=body.match(/^\*\*Decision:\*\* Candidate ([1-3]) selected for an offline prototype draft\.$/m);
+        const selection=body.match(/^\*\*Selection:\*\* ([^\r\n]{1,140})$/m);
+        const score=body.match(/^\*\*Selected score:\*\* (\d{1,2})\/12 points/m);
+        if(chosen&&selection&&score&&Number(score[1])<=12){
+          note.textContent='Internal Seed '+chosen[1]+': '+selection[1].slice(0,100)+
+            ' · draft readiness '+score[1]+'/12 · unverified, not launched';
+        }else{
+          note.textContent='3 unverified hypotheses + 1 offline draft · no sales activity';
+        }
         item.append(note);list.append(item);
       }
     }catch{
