@@ -127,7 +127,12 @@ export async function runScout(){
   if(!Array.isArray(again))throw Error('Could not recheck issue journal before publishing.');
   if(scoutAlreadyRecorded(again,date)){note('Another run already published this UTC day. Skipping.');return {created:false,reason:'race'};}
   const issue=api('repos/'+REPO+'/issues','POST',{title,body,labels:['grove-scout']});
-  if(typeof issue?.html_url!=='string'||typeof issue?.number!=='number')throw Error('Github did not acknowledge the research journal issue.');
+  if(typeof issue?.html_url!=='string'||!Number.isSafeInteger(issue?.number)||issue.number<1)throw Error('Github did not acknowledge the research journal issue.');
+  // Pass the specific, confirmed new journal issue to the next step.
+  // GitHub's issue LIST endpoint can lag a fresh write; GET by ID is direct.
+  if(process.env.GITHUB_ENV){
+    appendFileSync(process.env.GITHUB_ENV,'GROVE_NEW_SCOUT_ISSUE_NUMBER='+issue.number+'\n');
+  }
   note('### New research journal entry: '+issue.html_url+
     '\n- Research category: '+topic.name+
     '\n- Source: '+draft.source+
