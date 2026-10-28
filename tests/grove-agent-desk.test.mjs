@@ -97,6 +97,7 @@ test('review notes save locally only and never trigger a remote write',async()=>
  // The dynamic input has an id property and is not registered in getElementById by our tiny DOM.
  // Register it to emulate the browser's standard ID lookup.
  env.dom.set('deskReviewNote',input);
+ env.dom.set('deskNoteFeedback',env.dom.get('deskDetail').children.at(-1).children.at(-1));
  input.value='Check geometry accuracy with a tester.';
  env.root.handlers.get('click')({target:{closest:selector=>selector==='[data-desk-save]'?{dataset:{deskSave:'11'}}:null}});
  assert.equal(env.writes,1);
