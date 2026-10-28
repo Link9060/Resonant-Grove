@@ -175,7 +175,7 @@
   function render() {
     renderMetrics();renderOverviewSeeds();renderActivities();renderKeeper();renderSeeds();renderTransactions();renderChart();refreshIcons();
   }
-  const viewNames={overview:'Overview',seeds:'My Seeds',treasury:'Treasury',autonomous:'Autonomous Grove',activity:'Activity',settings:'Settings'};
+  const viewNames={overview:'Overview',seeds:'My Seeds',treasury:'Treasury',autonomous:'Agent Desk',activity:'Activity',settings:'Settings'};
   function closeMenu() {$('sidebar').classList.remove('open');$('mobileShade').classList.remove('show');}
   function navigate(target) {
     if(!viewNames[target]) target='overview';
