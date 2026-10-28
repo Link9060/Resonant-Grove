@@ -11,13 +11,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="autonomous-grove.css">\n  <link rel="stylesheet" href="grove-cloud.css">
+  <link rel="stylesheet" href="autonomous-grove.css">
+  <link rel="stylesheet" href="grove-agent-desk.css">
+  <link rel="stylesheet" href="grove-cloud.css">
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script src="app.js" defer></script>
   <script src="autonomous-grove.js" defer></script>
   <script src="grove-scout-feed.js" defer></script>
   <script src="grove-seed-feed.js" defer></script>
-  <script src="grove-build-feed.js" defer></script>\n  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.76.1" defer></script>\n  <script src="grove-cloud.js" defer></script>
+  <script src="grove-build-feed.js" defer></script>
+  <script src="grove-agent-desk.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.76.1" defer></script>
+  <script src="grove-cloud.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -32,7 +37,7 @@
         <button type="button" class="nav-link active" data-view="overview"><i data-lucide="layout-dashboard"></i><span>Overview</span><span class="nav-active-indicator"></span></button>
         <button type="button" class="nav-link" data-view="seeds"><i data-lucide="sprout"></i><span>My Seeds</span><span class="nav-count" id="navSeedCount">1</span></button>
         <button type="button" class="nav-link" data-view="treasury"><i data-lucide="wallet"></i><span>Treasury</span></button>
-        <button type="button" class="nav-link" data-view="autonomous"><i data-lucide="bot"></i><span>Autonomous Grove</span></button>
+        <button type="button" class="nav-link" data-view="autonomous"><i data-lucide="bot"></i><span>Agent Desk</span></button>
         <button type="button" class="nav-link" data-view="activity"><i data-lucide="activity"></i><span>Activity</span></button>
       </nav>
       <div class="nav-caption second-caption">ECOSYSTEM</div>
@@ -87,9 +92,47 @@
         </section>
 
 
-        <section class="view" id="view-autonomous" aria-label="Autonomous Grove venture lab">
-          <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> AUTONOMOUS GROVE / VENTURE LAB</div><h1>Ideas that <em>learn to grow.</em></h1><p>A mission-driven venture system, designed to explore broadly and act carefully.</p></div>
+        <section class="view" id="view-autonomous" aria-label="Grove agent desk">
+          <div class="subpage-heading"><div class="eyebrow"><span class="eyebrow-dot"></span> AGENT ACTIVITY / INTERNAL WORKSPACE</div><h1>Your Grove <em>in motion.</em></h1><p>One clear place to read work, review experiments, and choose what happens next.</p></div>
 
+          
+          <section class="grove-desk" id="groveAgentDesk" aria-label="Agent activity and reports">
+            <div class="desk-intro">
+              <div><span class="desk-kicker">GROVE / AGENT DESK</span><h2>Know what Grove is working on.</h2>
+                <p>Read Scout research, weekly plans, and prototype results right here. These are internal drafts, not verified businesses or live sales.</p></div>
+              <div class="desk-intro-actions">
+                <button class="desk-button secondary" id="deskOpenWorkbench" type="button">Explore new ideas</button>
+                <button class="desk-button" id="deskRefresh" type="button">Refresh activity</button>
+              </div>
+            </div>
+            <p class="desk-status" id="deskStatus" role="status" aria-live="polite">Loading public Grove activity…</p>
+            <div class="desk-metrics" aria-label="Public Grove agent records">
+              <div class="desk-metric"><span>Research reports</span><strong id="deskResearchCount">0</strong><small>Unverified hypotheses</small></div>
+              <div class="desk-metric"><span>Seed plans</span><strong id="deskPlanCount">0</strong><small>Experiments to validate</small></div>
+              <div class="desk-metric"><span>Prototype drafts</span><strong id="deskPrototypeCount">0</strong><small>Offline artifacts only</small></div>
+              <div class="desk-metric"><span>Need human review</span><strong id="deskNeedsReview">0</strong><small>Plans and draft records</small></div>
+            </div>
+            <div class="desk-workspace">
+              <section class="desk-left" aria-label="Agent journal entries">
+                <div class="desk-left-head"><h3>Activity inbox</h3><p>Pick an entry to read the report, without leaving Grove.</p></div>
+                <div class="desk-tabs" role="tablist" aria-label="Filter agent activity">
+                  <button class="desk-tab active" type="button" role="tab" aria-selected="true" data-desk-tab="all">All <span class="desk-tab-count">0</span></button>
+                  <button class="desk-tab" type="button" role="tab" aria-selected="false" data-desk-tab="research">Scout <span class="desk-tab-count">0</span></button>
+                  <button class="desk-tab" type="button" role="tab" aria-selected="false" data-desk-tab="plans">Plans <span class="desk-tab-count">0</span></button>
+                  <button class="desk-tab" type="button" role="tab" aria-selected="false" data-desk-tab="prototypes">Builds <span class="desk-tab-count">0</span></button>
+                </div>
+                <input class="desk-search" id="deskSearch" type="search" aria-label="Search agent reports" placeholder="Search research and prototypes">
+                <div id="deskItems" class="desk-items" aria-label="Reports"></div>
+              </section>
+              <section id="deskDetail" class="desk-detail" aria-label="Selected agent report" aria-live="polite">
+                <p class="desk-empty">Loading report…</p>
+              </section>
+            </div>
+            <div class="desk-disclosure"><strong>How this works:</strong> Grove reads public GitHub journal entries safely and shows their contents here. Personal review notes stay in this browser. Starting a new background build still requires your separate authenticated GitHub approval, and downloadable ZIP artifacts remain in the source archive. No payment or posting controls have been activated.</div>
+          </section>
+          <details class="grove-advanced" id="groveAdvanced">
+            <summary>Idea workbench and advanced settings <span>Explore curated ideas, manage the local shortlist, see detailed pipeline panels and integration limits.</span></summary>
+            <div class="grove-advanced-content">
           <div class="auto-intro">
             <div class="auto-intro-copy">
               <span class="auto-overline">RESONANT / AUTONOMY CONSOLE 0.1</span>
@@ -193,6 +236,8 @@
             <ul id="autoActivity" class="auto-activity-list"></ul>
             <p class="auto-small-note">Saved locally and optionally synchronized to your Grove Cloud account. Export remains available as a separate backup.</p>
           </section>
+            </div>
+          </details>
         </section>
 
         <section class="view" id="view-settings" aria-label="Settings">
