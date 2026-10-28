@@ -43,6 +43,7 @@ jobs:
           test -s _site/grove-seed-feed.js
           node --check _site/autonomous-grove.js
           node --check _site/grove-agent-desk.js
+          node --test tests/grove-agent-desk.test.mjs
           node --check _site/grove-cloud.js
           test -s _site/grove-agent-desk.css
           test -s _site/grove-cloud.css
