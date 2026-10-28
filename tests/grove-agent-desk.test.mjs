@@ -80,7 +80,7 @@ test('renders trusted-origin journal and untrusted body as literal text',async()
  assert.equal(env.dom.get('deskNeedsReview').textContent,'2');
  assert.equal(env.dom.get('deskItems').children.length,3);
  const texts=env.walk(env.dom.get('deskDetail')).map(e=>e.textContent);
- assert.ok(texts.some(t=>t.includes('Original bike checklist')));
+ assert.ok(texts.some(t=>t.includes('Bike maintenance')));
  assert.equal(env.writes,0);
  const research=env.dom.get('deskItems').children.find(e=>e.dataset.deskIssue==='11');
  const click=env.root.handlers.get('click');
@@ -98,6 +98,6 @@ test('review notes save locally only and never trigger a remote write',async()=>
  // Register it to emulate the browser's standard ID lookup.
  env.dom.set('deskReviewNote',input);
  input.value='Check geometry accuracy with a tester.';
- env.root.handlers.get('click')({target:{closest:selector=>selector==='[data-desk-save]'?{dataset:{deskSave:'13'}}:null}});
+ env.root.handlers.get('click')({target:{closest:selector=>selector==='[data-desk-save]'?{dataset:{deskSave:'11'}}:null}});
  assert.equal(env.writes,1);
 });
