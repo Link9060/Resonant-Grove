@@ -28,7 +28,7 @@ jobs:
       - name: Build static site
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js favicon.svg autonomous-grove.js autonomous-grove.css grove-scout-feed.js grove-seed-feed.js grove-build-feed.js _site/
+          cp index.html styles.css app.js favicon.svg autonomous-grove.js autonomous-grove.css grove-agent-desk.js grove-agent-desk.css grove-scout-feed.js grove-seed-feed.js grove-build-feed.js grove-cloud.js grove-cloud.css _site/
           touch _site/.nojekyll
           test -s _site/index.html
           test -s _site/app.js
@@ -42,6 +42,11 @@ jobs:
           test -s _site/grove-build-feed.js
           test -s _site/grove-seed-feed.js
           node --check _site/autonomous-grove.js
+          node --check _site/grove-agent-desk.js
+          node --check _site/grove-cloud.js
+          test -s _site/grove-agent-desk.css
+          test -s _site/grove-cloud.css
+          grep -q 'id="groveAgentDesk"' _site/index.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
