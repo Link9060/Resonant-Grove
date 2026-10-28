@@ -8,10 +8,11 @@ Grove is the venture ecosystem for experiments that could eventually fund larger
 
 A responsive, single-page Grove workspace designed around the idea that a Seed should **earn, teach, or retire**.
 
-- **Overview:** live local summary, first-dollar milestone, recent activity, and a next-action suggestion.
+- **Overview:** local summary, first-dollar milestone, recent activity, a next-action suggestion, and a shortcut to Agent Desk.
 - **Seeds:** create, edit, archive/restore, delete, and manage steps for experimental ventures.
 - **Treasury:** manually record income and expenses, track net available funds, see a six-month cash-flow chart, and associate records with Seeds.
 - **Journal:** event history and personal notes.
+- **Agent Desk:** in-page, searchable public Scout / Seed / Prototype journals; readable source text and optional per-entry private notes stored on this device.
 - **Settings:** import/export JSON backup and reset the local workspace.
 - **Grove Cloud:** optional Supabase account sign-in and owner-scoped cross-device workspace sync, with explicit resolution when local and remote copies differ.
 - **Mobile:** responsive dashboard and navigation.
@@ -33,7 +34,9 @@ Open `index.html` with a modern browser, or serve this folder using any simple l
 ## Important prototype limits
 
 - Grove saves a local browser copy and can optionally sync the workspace and explorer drafts to an authenticated Supabase account. Signed-out offline data is device-specific and can be lost if storage is cleared.
-- The **Keeper** is a transparent rules-based suggestion panel, **not** an AI agent or GitHub controller yet.
+- The **dashboard Keeper advice** uses local rules. Separate GitHub Actions workflows create bounded Scout research journals, weekly Seed plans, and approved offline prototype drafts. These are not independently verified business outcomes.
+- Agent Desk reads public GitHub issue content through the unauthenticated API; it may be unavailable due to network or rate limits. Notes in Agent Desk stay in this browser and are not included in Grove Cloud sync or JSON workspace exports.
+- Agent Desk cannot approve agent tasks or download the complete offline artifact ZIP inside Grove. Owner-authenticated GitHub submission remains required to start a new approved batch; source links remain available for archival downloads.
 - Transactions are **manual records**; there is no payment processing, banking, invoicing, or financial account connection.
 - Future ARROW, RAVIN, and Bikes projects appear as a **vision**, not existing funded investments.
 - Never store sensitive financial information or secrets in local notes; this is an early prototype.
@@ -42,7 +45,7 @@ Open `index.html` with a modern browser, or serve this folder using any simple l
 
 1. Validate Seed 001 with the first real dollar.
 2. [Implemented foundation] Optional Supabase authentication and owner-scoped workspace sync. See [SUPABASE.md](SUPABASE.md) for setup, limitations, and testing.
-3. Introduce an approval-based Keeper that can plant, update, and retire Seeds and use authorized integrations.
+3. Add a secure authenticated approval service so the owner can submit bounded Builder tasks directly from Grove without exposing GitHub credentials in the browser.
 4. Add real revenue and expense integrations, budget guardrails, and investment planning.
 5. Expand Grove into its distinctive venture forest visualization.
 
