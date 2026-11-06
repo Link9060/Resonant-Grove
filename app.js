@@ -42,7 +42,14 @@
   };
   const safeString = (s, max=400) => String(s == null ? '' : s).slice(0,max);
   function normalize(raw) {
-    if (!raw || !Array.isArray(raw.seeds) || !Array.isArray(raw.transactions) || !Array.isArray(raw.activity)) throw Error('Unrecognized Grove backup');
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !Array.isArray(raw.seeds) || !Array.isArray(raw.transactions) || !Array.isArray(raw.activity)) throw Error('Unrecognized Grove backup');
+    // Reject unsupported schemas and malformed records before replacing the current workspace.
+    // Silently slicing oversized backups would irreversibly discard imported records.
+    if (raw.version !== 1) throw Error('Unsupported Grove backup version');
+    if (raw.seeds.length > 500 || raw.transactions.length > 10000 || raw.activity.length > 1000) throw Error('Backup exceeds Grove workspace limits');
+    const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+    if (!raw.seeds.every(s => record(s) && (s.steps === undefined || (Array.isArray(s.steps) && s.steps.length <= 100 && s.steps.every(record)))) ||
+        !raw.transactions.every(record) || !raw.activity.every(record)) throw Error('Backup contains invalid records');
     return {
       version:1,
       seeds:raw.seeds.slice(0,500).map(s => ({
