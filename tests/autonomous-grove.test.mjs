@@ -7,11 +7,13 @@ const app=readFileSync('app.js','utf8');
 const logic=readFileSync('autonomous-grove.js','utf8');
 const css=readFileSync('autonomous-grove.css','utf8');
 const deploy=readFileSync('.github/workflows/deploy.yml','utf8');
+// Validate that each required asset ships, regardless of copy-command ordering.
+const deployedAssets=new Set((deploy.match(/^\s*cp\s+(.+?)\s+_site\/\s*$/m)?.[1] || '').trim().split(/\s+/));
 
 test('venture lab navigation and scripts are connected to Grove',()=>{
   assert.match(html,/data-view="autonomous"/);
   assert.match(html,/id="view-autonomous"/);
-  assert.match(app,/autonomous:'Autonomous Grove'/);
+  assert.match(app,/autonomous:'Agent Desk'/);
   assert.match(html,/src="autonomous-grove\.js" defer/);
   assert.match(html,/href="autonomous-grove\.css"/);
   for(const id of ['autoToggle','autoGenerate','autoIdeas','autoIdeaCount','autoCandidateCount','autoSelectedCount','autoNotice','autoActivity','autoExport']){
@@ -42,7 +44,7 @@ test('ideas are accurately labeled local drafts without automatic external actio
   assert.match(logic,/status==='selected'/);
 });
 test('GitHub Pages ships and syntax-checks the venture lab',()=>{
-  assert.match(deploy,/autonomous-grove\.js autonomous-grove\.css grove-scout-feed\.js grove-seed-feed\.js grove-build-feed\.js _site/);
+  for(const file of ['autonomous-grove.js','autonomous-grove.css','grove-scout-feed.js','grove-seed-feed.js','grove-build-feed.js']) assert.ok(deployedAssets.has(file), `Missing deployment asset: ${file}`);
   assert.match(deploy,/node --check _site\/autonomous-grove\.js/);
   assert.match(css,/@media\(max-width:660px\)/);
 });
@@ -56,5 +58,5 @@ test('autonomous research journal is read-only and externally sourced',()=>{
   assert.match(feed,/labels=grove-scout/);
   assert.match(feed,/credentials:'omit'/);
   assert.doesNotMatch(feed,/\bPOST\b|\bPUT\b|\bDELETE\b|authorization\s*:/i);
-  assert.match(deploy,/grove-scout-feed\.js grove-seed-feed\.js grove-build-feed\.js _site/);
+  for(const file of ['grove-scout-feed.js','grove-seed-feed.js','grove-build-feed.js']) assert.ok(deployedAssets.has(file), `Missing deployment asset: ${file}`);
 });
