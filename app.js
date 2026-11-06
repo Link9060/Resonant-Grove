@@ -48,7 +48,7 @@
     if (raw.version !== 1) throw Error('Unsupported Grove backup version');
     if (raw.seeds.length > 500 || raw.transactions.length > 10000 || raw.activity.length > 1000) throw Error('Backup exceeds Grove workspace limits');
     const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
-    if (!raw.seeds.every(s => record(s) && (s.goal === undefined || (typeof s.goal === 'number' && Number.isFinite(s.goal) && s.goal >= 0 && s.goal <= 999999999)) && (s.steps === undefined || (Array.isArray(s.steps) && s.steps.length <= 100 && s.steps.every(record)))) ||
+    if (!raw.seeds.every(s => record(s) && (s.goal === undefined || (typeof s.goal === 'number' && Number.isFinite(s.goal) && s.goal >= 0 && s.goal <= 999999999)) && (s.steps === undefined || (Array.isArray(s.steps) && s.steps.length <= 100 && s.steps.every(t => record(t) && (t.done === undefined || typeof t.done === 'boolean'))))) ||
         !raw.transactions.every(t => record(t) && (t.type === 'income' || t.type === 'expense') && Number.isFinite(t.amount) && t.amount > 0 && t.amount <= 999999999) || !raw.activity.every(record)) throw Error('Backup contains invalid records');
     return {
       version:1,
