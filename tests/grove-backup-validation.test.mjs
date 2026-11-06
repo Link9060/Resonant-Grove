@@ -60,3 +60,13 @@ test('invalid Seed revenue goals reject the whole backup instead of silently cha
   assert.equal(result.seeds[0].goal,25.5);
   assert.equal(normalize({...empty(),seeds:[{goal:0}]}).seeds[0].goal,0);
 });
+
+test('Seed step completion flags must be booleans to avoid silent progress changes', () => {
+  for (const done of ['false', 'true', 0, 1, null, {}, []]) {
+    assert.throws(() => normalize({...empty(),seeds:[{steps:[{id:'step',text:'Test',done}]}]}), /invalid records/);
+  }
+  const result = normalize({...empty(),seeds:[{steps:[{done:false},{done:true},{}]}]});
+  assert.equal(result.seeds[0].steps[0].done, false);
+  assert.equal(result.seeds[0].steps[1].done, true);
+  assert.equal(result.seeds[0].steps[2].done, false);
+});
