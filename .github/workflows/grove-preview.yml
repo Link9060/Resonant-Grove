@@ -1,0 +1,47 @@
+name: Grove development preview package
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '*.html'
+      - '*.js'
+      - '*.css'
+      - 'tests/**'
+      - '.github/workflows/grove-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate source
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in app.js autonomous-grove.js grove-agent-desk.js grove-scout-feed.js grove-seed-feed.js grove-build-feed.js grove-cloud.js; do
+            node --check "$file"
+          done
+          node --test tests/*.test.mjs
+      - name: Assemble standalone preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p preview
+          for file in index.html styles.css app.js favicon.svg autonomous-grove.js autonomous-grove.css grove-agent-desk.js grove-agent-desk.css grove-scout-feed.js grove-seed-feed.js grove-build-feed.js grove-cloud.js grove-cloud.css; do
+            test -s "$file"
+            cp "$file" preview/
+          done
+          touch preview/.nojekyll
+          printf '%s\n' 'Grove unmerged review build' 'Open index.html with a local HTTP server, not directly as file://.' 'This is an artifact, NOT a hosted preview URL.' > preview/REVIEW.txt
+      - name: Upload unmerged review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: grove-review-${{ github.sha }}
+          path: preview/
+          retention-days: 14
