@@ -18,8 +18,12 @@ jobs:
   preview:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      GROVE_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Validate source
         shell: bash
         run: |
@@ -40,7 +44,7 @@ jobs:
           touch preview/.nojekyll
           # Stamp the exact tested source revision into every downloadable build.
           # This is an offline artifact only; it does not deploy to production.
-          printf '%s\n' "GROVE_PREVIEW_SHA=${GITHUB_SHA}" "GROVE_PREVIEW_PR=${{ github.event.pull_request.number }}" "GROVE_PREVIEW_RUN=${GITHUB_RUN_ID}" > preview/REVIEW.txt
+          printf '%s\n' "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" "GROVE_PREVIEW_PR=${{ github.event.pull_request.number }}" "GROVE_PREVIEW_RUN=${GITHUB_RUN_ID}" > preview/REVIEW.txt
           # Render the verified SHA directly. Never derive the displayed revision from a URL fragment.
           cat > preview/review.html <<EOF
           <!doctype html>
@@ -49,18 +53,18 @@ jobs:
           <body><main style="font:16px system-ui;max-width:640px;margin:8vh auto;padding:24px">
           <h1>Grove review build</h1>
           <p>This is an unmerged development build, not the production website.</p>
-          <p>Source commit: <code id="revision">${GITHUB_SHA}</code></p>
+          <p>Source commit: <code id="revision">${GROVE_SOURCE_SHA}</code></p>
           <p><a href="./index.html">Open Grove development build</a></p>
           <p>Review changes before approving. Data is stored locally in your browser; use a separate browser profile for testing.</p>
           </main></body></html>
           EOF
           printf '%s\n' 'This is an artifact, NOT a hosted preview URL. Serve the extracted directory with a local HTTP server.' >> preview/REVIEW.txt
           test -s preview/review.html
-          grep -Fq "<code id=\"revision\">${GITHUB_SHA}</code>" preview/review.html
-          grep -Fq "GROVE_PREVIEW_SHA=${GITHUB_SHA}" preview/REVIEW.txt
+          grep -Fq "<code id=\"revision\">${GROVE_SOURCE_SHA}</code>" preview/review.html
+          grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" preview/REVIEW.txt
       - name: Upload unmerged review artifact
         uses: actions/upload-artifact@v4
         with:
-          name: grove-review-${{ github.sha }}
+          name: grove-review-${{ github.event.pull_request.head.sha || github.sha }}
           path: preview/
           retention-days: 14
