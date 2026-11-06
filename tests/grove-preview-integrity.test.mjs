@@ -10,6 +10,8 @@ test('review workflow checks out and stamps the same exact PR-head revision',()=
   assert.match(workflow,/ref:\s*\$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
   assert.match(workflow,/grove-review-\$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
   assert.match(workflow,/node --test tests\/\*\.test\.mjs/);
+  assert.match(workflow,/actual_sha="\$\(git rev-parse HEAD\)"/);
+  assert.match(workflow,/test "\$actual_sha" = "\$GROVE_SOURCE_SHA"/);
   assert.match(workflow,/grep -Fq "GROVE_PREVIEW_SHA=\$\{GROVE_SOURCE_SHA\}"/);
 });
 
