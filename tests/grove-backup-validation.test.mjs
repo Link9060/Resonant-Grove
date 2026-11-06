@@ -39,3 +39,15 @@ test('oversized backups fail rather than silently losing records', () => {
   assert.throws(()=>normalize({...empty(),activity:Array(1001).fill({})}),/workspace limits/);
   assert.throws(()=>normalize({...empty(),seeds:[{steps:Array(101).fill({})}]}),/invalid records/);
 });
+
+test('invalid financial records are rejected instead of silently discarded or altered', () => {
+  for (const amount of [0,-1,NaN,Infinity,'10',1000000000]) {
+    assert.throws(()=>normalize({...empty(),transactions:[{type:'income',amount}]}),/invalid records/);
+  }
+  assert.throws(()=>normalize({...empty(),transactions:[{type:'unknown',amount:10}]}),/invalid records/);
+  const transactions=[{id:'a',type:'income',amount:12.5},{id:'b',type:'expense',amount:3}];
+  const result=normalize({...empty(),transactions});
+  assert.equal(result.transactions.length,2);
+  assert.equal(result.transactions[0].amount,12.5);
+  assert.equal(result.transactions[1].type,'expense');
+});
