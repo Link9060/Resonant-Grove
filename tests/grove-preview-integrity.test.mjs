@@ -16,9 +16,9 @@ test('review workflow checks out and stamps the same exact PR-head revision',()=
 });
 
 test('review artifacts are PR-only and never built from manual main-branch dispatch',()=>{
-  assert.match(workflow,/pull_request:\\s*\\n\\s*branches: \\[main\\]/);
+  assert.match(workflow,/pull_request:\s*\n\s*branches: \[main\]/);
   assert.doesNotMatch(workflow,/workflow_dispatch:/);
-  assert.doesNotMatch(workflow,/github\\.sha/);
+  assert.doesNotMatch(workflow,/github\.sha/);
 });
 
 test('review identity is build-stamped rather than accepted from a URL',()=>{
