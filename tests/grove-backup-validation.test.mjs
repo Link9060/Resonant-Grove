@@ -51,3 +51,12 @@ test('invalid financial records are rejected instead of silently discarded or al
   assert.equal(result.transactions[0].amount,12.5);
   assert.equal(result.transactions[1].type,'expense');
 });
+
+test('invalid Seed revenue goals reject the whole backup instead of silently changing targets', () => {
+  for (const goal of [-1, NaN, Infinity, '25', 1000000000]) {
+    assert.throws(() => normalize({...empty(),seeds:[{id:'s1',title:'Goal test',goal,steps:[]}]}), /invalid records/);
+  }
+  const result=normalize({...empty(),seeds:[{id:'s1',title:'Goal test',goal:25.5,steps:[]}]});
+  assert.equal(result.seeds[0].goal,25.5);
+  assert.equal(normalize({...empty(),seeds:[{goal:0}]}).seeds[0].goal,0);
+});
