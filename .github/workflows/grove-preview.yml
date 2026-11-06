@@ -9,7 +9,6 @@ on:
       - '*.css'
       - 'tests/**'
       - '.github/workflows/grove-preview.yml'
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,11 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      GROVE_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      GROVE_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Validate source
         shell: bash
         run: |
@@ -68,6 +67,6 @@ jobs:
       - name: Upload unmerged review artifact
         uses: actions/upload-artifact@v4
         with:
-          name: grove-review-${{ github.event.pull_request.head.sha || github.sha }}
+          name: grove-review-${{ github.event.pull_request.head.sha }}
           path: preview/
           retention-days: 14
