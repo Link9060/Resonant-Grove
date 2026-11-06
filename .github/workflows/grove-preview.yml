@@ -28,6 +28,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Fail closed if the checked-out tree differs from the source SHA used for review.
+          actual_sha="$(git rev-parse HEAD)"
+          test "$actual_sha" = "$GROVE_SOURCE_SHA" || { echo "Source revision mismatch: $actual_sha" >&2; exit 1; }
           for file in app.js autonomous-grove.js grove-agent-desk.js grove-scout-feed.js grove-seed-feed.js grove-build-feed.js grove-cloud.js; do
             node --check "$file"
           done
