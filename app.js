@@ -49,7 +49,7 @@
     if (raw.seeds.length > 500 || raw.transactions.length > 10000 || raw.activity.length > 1000) throw Error('Backup exceeds Grove workspace limits');
     const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
     if (!raw.seeds.every(s => record(s) && (s.steps === undefined || (Array.isArray(s.steps) && s.steps.length <= 100 && s.steps.every(record)))) ||
-        !raw.transactions.every(record) || !raw.activity.every(record)) throw Error('Backup contains invalid records');
+        !raw.transactions.every(t => record(t) && (t.type === 'income' || t.type === 'expense') && Number.isFinite(t.amount) && t.amount > 0 && t.amount <= 999999999) || !raw.activity.every(record)) throw Error('Backup contains invalid records');
     return {
       version:1,
       seeds:raw.seeds.slice(0,500).map(s => ({
@@ -61,7 +61,7 @@
       transactions:raw.transactions.slice(0,10000).map(t=>({
         id:safeString(t.id||uid(),90),type:t.type==='expense'?'expense':'income',amount:Math.max(0,Math.min(999999999,Number(t.amount)||0)),
         description:safeString(t.description,300),seedId:safeString(t.seedId,90),created:safeString(t.created||now(),50)
-      })).filter(t=>t.amount>0),
+      })),
       activity:raw.activity.slice(0,1000).map(a=>({
         id:safeString(a.id||uid(),90),type:['seed','finance','note','start','task','update'].includes(a.type)?a.type:'note',
         title:safeString(a.title,150),description:safeString(a.description,500),created:safeString(a.created||now(),50)
