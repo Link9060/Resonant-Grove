@@ -156,3 +156,21 @@ test('malformed backup identifiers and timestamps are rejected rather than strin
   assert.equal(restored.transactions[0].seedId,'seed-1');
   assert.equal(restored.activity[0].id,'journal-1');
 });
+
+test('duplicate explicit backup identifiers are rejected before records can be confused', () => {
+  const cases = [
+    {seeds:[{id:'same'},{id:'same'}]},
+    {seeds:[{id:'seed',steps:[{id:'step'},{id:'step'}]}]},
+    {transactions:[{id:'same',type:'income',amount:1},{id:'same',type:'expense',amount:2}]},
+    {activity:[{id:'same'},{id:'same'}]}
+  ];
+  for (const patch of cases) {
+    assert.throws(() => normalize({...empty(),...patch}), /duplicate identifiers/);
+  }
+  const valid = normalize({...empty(),seeds:[
+    {id:'seed-1',steps:[{id:'task-1'}]},
+    {id:'seed-2',steps:[{id:'task-1'}]}
+  ],transactions:[{id:'tx-1',type:'income',amount:1}]});
+  assert.equal(valid.seeds.length,2, 'step IDs are scoped to their Seed');
+  assert.equal(normalize({...empty(),seeds:[{},{}]}).seeds.length,2, 'legacy missing IDs remain importable');
+});
