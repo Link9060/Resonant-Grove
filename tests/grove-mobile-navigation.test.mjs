@@ -53,3 +53,13 @@ test('resizing to desktop clears stale mobile navigation state', () => {
 test('opening the mobile menu places keyboard focus on its first navigation link', () => {
   assert.match(app, /if\(open\)\$\('sidebar'\)\.querySelector\('\.nav-link'\)\?\.focus\(\)/);
 });
+
+test('open mobile menu traps Tab and Shift+Tab at the navigation boundaries', () => {
+  assert.match(app, /e\.key!=='Tab'\|\|window\.innerWidth>720/);
+  assert.match(app, /!\$\('sidebar'\)\.classList\.contains\('open'\)/);
+  assert.match(app, /\$\('modalBackdrop'\)\.classList\.contains\('open'\)/);
+  assert.match(app, /if\(e\.shiftKey&&\(active===first\|\|!\$\('sidebar'\)\.contains\(active\)\)\)/);
+  assert.match(app, /else if\(!e\.shiftKey&&\(active===last\|\|!\$\('sidebar'\)\.contains\(active\)\)\)/);
+  assert.match(app, /e\.preventDefault\(\);last\.focus\(\)/);
+  assert.match(app, /e\.preventDefault\(\);first\.focus\(\)/);
+});
