@@ -82,3 +82,15 @@ test('activity categories must be recognized to prevent silent journal rewrites'
   }
   assert.equal(normalize({...empty(),activity:[{title:'Legacy entry'}]}).activity[0].type,'note');
 });
+
+
+test('Seed status values must be recognized to avoid silent lifecycle changes', () => {
+  for (const status of ['unknown', '', null, 12, {}, []]) {
+    assert.throws(() => normalize({...empty(), seeds:[{id:'s1',status,steps:[]}]}), /invalid records/);
+  }
+  for (const status of ['active','idea','retired']) {
+    const result=normalize({...empty(),seeds:[{id:'s1',status,steps:[]}]});
+    assert.equal(result.seeds[0].status,status);
+  }
+  assert.equal(normalize({...empty(),seeds:[{id:'legacy',steps:[]}]}).seeds[0].status,'idea');
+});
