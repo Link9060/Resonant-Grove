@@ -366,6 +366,15 @@
   window.addEventListener('resize',()=>{if(window.innerWidth>720)closeMenu();});
   $('modalBackdrop').addEventListener('click',(e)=>{if(e.target===$('modalBackdrop'))closeModal();});
   document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){const menuWasOpen=$('sidebar').classList.contains('open');closeModal();closeMenu();if(menuWasOpen)$('menuButton').focus();}});
+  // Keep keyboard traversal inside the open mobile navigation until it is dismissed.
+  document.addEventListener('keydown',(e)=>{
+    if(e.key!=='Tab'||window.innerWidth>720||!$('sidebar').classList.contains('open')||$('modalBackdrop').classList.contains('open'))return;
+    const links=[...$('sidebar').querySelectorAll('a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.getClientRects().length);
+    if(!links.length)return;
+    const first=links[0],last=links[links.length-1],active=document.activeElement;
+    if(e.shiftKey&&(active===first||!$('sidebar').contains(active))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&(active===last||!$('sidebar').contains(active))){e.preventDefault();first.focus();}
+  });
   window.addEventListener('hashchange',()=>navigate(location.hash.replace('#','')));
   window.GroveWorkspace = {
     get: () => db,
