@@ -362,6 +362,8 @@
   });
   $('menuButton').addEventListener('click',()=>{const open=$('sidebar').classList.toggle('open');$('mobileShade').classList.toggle('show',open);$('menuButton').setAttribute('aria-expanded',String(open));});
   $('mobileShade').addEventListener('click',closeMenu);
+  // Clear mobile-only navigation state when returning to desktop width.
+  window.addEventListener('resize',()=>{if(window.innerWidth>720)closeMenu();});
   $('modalBackdrop').addEventListener('click',(e)=>{if(e.target===$('modalBackdrop'))closeModal();});
   document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){const menuWasOpen=$('sidebar').classList.contains('open');closeModal();closeMenu();if(menuWasOpen)$('menuButton').focus();}});
   window.addEventListener('hashchange',()=>navigate(location.hash.replace('#','')));
