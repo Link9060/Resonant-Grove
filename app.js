@@ -197,7 +197,7 @@
     renderMetrics();renderOverviewSeeds();renderActivities();renderKeeper();renderSeeds();renderTransactions();renderChart();refreshIcons();
   }
   const viewNames={overview:'Overview',seeds:'My Seeds',treasury:'Treasury',autonomous:'Agent Desk',activity:'Activity',settings:'Settings'};
-  function closeMenu() {$('sidebar').classList.remove('open');$('mobileShade').classList.remove('show');}
+  function closeMenu() {$('sidebar').classList.remove('open');$('mobileShade').classList.remove('show');$('menuButton').setAttribute('aria-expanded','false');}
   function navigate(target) {
     if(!viewNames[target]) target='overview';
     view=target;
@@ -360,7 +360,7 @@
     }catch(err){toast('Could not import this backup: '+err.message,true);}
     finally{e.target.value='';}
   });
-  $('menuButton').addEventListener('click',()=>{$('sidebar').classList.toggle('open');$('mobileShade').classList.toggle('show');});
+  $('menuButton').addEventListener('click',()=>{const open=$('sidebar').classList.toggle('open');$('mobileShade').classList.toggle('show',open);$('menuButton').setAttribute('aria-expanded',String(open));});
   $('mobileShade').addEventListener('click',closeMenu);
   $('modalBackdrop').addEventListener('click',(e)=>{if(e.target===$('modalBackdrop'))closeModal();});
   document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){closeModal();closeMenu();}});
