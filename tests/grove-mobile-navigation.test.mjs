@@ -48,3 +48,8 @@ test('resizing to desktop clears stale mobile navigation state', () => {
   assert.match(styles, /@media\(max-width:720px\)/);
   assert.match(app, /window\.addEventListener\('resize',\(\)=>\{if\(window\.innerWidth>720\)closeMenu\(\);\}\)/);
 });
+
+
+test('opening the mobile menu places keyboard focus on its first navigation link', () => {
+  assert.match(app, /if\(open\)\$\('sidebar'\)\.querySelector\('\.nav-link'\)\?\.focus\(\)/);
+});
