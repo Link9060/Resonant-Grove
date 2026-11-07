@@ -63,3 +63,11 @@ test('open mobile menu traps Tab and Shift+Tab at the navigation boundaries', ()
   assert.match(app, /e\.preventDefault\(\);last\.focus\(\)/);
   assert.match(app, /e\.preventDefault\(\);first\.focus\(\)/);
 });
+
+
+test('navigating from open mobile sidebar restores focus to visible menu button', () => {
+  const navigate = app.match(/function navigate\(target\)\s*\{([\s\S]*?)\n  \}/)?.[1];
+  assert.ok(navigate, 'navigate helper must exist');
+  assert.match(navigate, /const wasMobileMenuOpen=window\.innerWidth<=720&&\$\('sidebar'\)\.classList\.contains\('open'\)/);
+  assert.match(navigate, /closeMenu\(\);[\s\S]*if\(wasMobileMenuOpen\)\$\('menuButton'\)\.focus\(\{preventScroll:true\}\)/);
+});
