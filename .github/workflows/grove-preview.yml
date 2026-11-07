@@ -8,6 +8,7 @@ on:
       - '*.js'
       - '*.css'
       - 'tests/**'
+      - 'docs/PHASE1-ACCEPTANCE.md'
       - '.github/workflows/grove-preview.yml'
 
 permissions:
