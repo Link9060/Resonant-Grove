@@ -34,5 +34,10 @@ test('navigation, backdrop and Escape invoke shared close helper', () => {
   const navigate = app.match(/function navigate\(target\)\s*\{([\s\S]*?)\n  \}/)?.[1];
   assert.ok(navigate && navigate.includes('closeMenu()'), 'navigation must close mobile menu');
   assert.match(app, /\$\('mobileShade'\)\.addEventListener\('click',closeMenu\)/);
-  assert.match(app, /if\(e\.key==='Escape'\)\{closeModal\(\);closeMenu\(\);\}/);
+  assert.match(app, /if\(e\.key==='Escape'\)\{const menuWasOpen=\$\('sidebar'\)\.classList\.contains\('open'\);closeModal\(\);closeMenu\(\);if\(menuWasOpen\)\$\('menuButton'\)\.focus\(\);\}/);
+});
+
+test('Escape returns focus to toggle only if mobile menu was open', () => {
+  assert.match(app, /const menuWasOpen=\$\('sidebar'\)\.classList\.contains\('open'\)/);
+  assert.match(app, /if\(menuWasOpen\)\$\('menuButton'\)\.focus\(\)/);
 });
