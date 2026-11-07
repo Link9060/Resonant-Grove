@@ -42,7 +42,28 @@
   };
   const safeString = (s, max=400) => String(s == null ? '' : s).slice(0,max);
   function normalize(raw) {
-    if (!raw || !Array.isArray(raw.seeds) || !Array.isArray(raw.transactions) || !Array.isArray(raw.activity)) throw Error('Unrecognized Grove backup');
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !Array.isArray(raw.seeds) || !Array.isArray(raw.transactions) || !Array.isArray(raw.activity)) throw Error('Unrecognized Grove backup');
+    // Reject unsupported schemas and malformed records before replacing the current workspace.
+    // Silently slicing oversized backups would irreversibly discard imported records.
+    if (raw.version !== 1) throw Error('Unsupported Grove backup version');
+    if (raw.seeds.length > 500 || raw.transactions.length > 10000 || raw.activity.length > 1000) throw Error('Backup exceeds Grove workspace limits');
+    const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+    // IDs and timestamps must never become coerced object strings during restore.
+    const optionalText = value => value === undefined || (typeof value === 'string' && value.length <= 90);
+    // Reject overlong IDs before normalization truncates them: otherwise distinct
+    // identifiers sharing the first 90 characters would become identical.
+    if (!raw.seeds.every(s => record(s) && optionalText(s.id) && optionalText(s.created) && (s.steps === undefined || (Array.isArray(s.steps) && s.steps.every(t => record(t) && optionalText(t.id)))) && (s.title === undefined || typeof s.title === 'string') && (s.description === undefined || typeof s.description === 'string') && (s.category === undefined || typeof s.category === 'string') && (s.status === undefined || allowedStatuses.includes(s.status)) && (s.goal === undefined || (typeof s.goal === 'number' && Number.isFinite(s.goal) && s.goal >= 0 && s.goal <= 999999999)) && (s.steps === undefined || (Array.isArray(s.steps) && s.steps.length <= 100 && s.steps.every(t => record(t) && ((t.done === undefined || typeof t.done === 'boolean') && (t.text === undefined || typeof t.text === 'string')))))) ||
+        !raw.transactions.every(t => record(t) && optionalText(t.id) && optionalText(t.seedId) && optionalText(t.created) && (t.description === undefined || typeof t.description === 'string') && (t.type === 'income' || t.type === 'expense') && Number.isFinite(t.amount) && t.amount > 0 && t.amount <= 999999999) || !raw.activity.every(a => record(a) && optionalText(a.id) && optionalText(a.created) && (a.title === undefined || typeof a.title === 'string') && (a.description === undefined || typeof a.description === 'string') && (a.type === undefined || ['seed','finance','note','start','task','update'].includes(a.type)))) throw Error('Backup contains invalid records');
+    // Duplicate explicit IDs make edits, task toggles and transaction attribution ambiguous.
+    // Reject them before importing; legacy missing IDs can still be generated.
+    const uniqueIds = items => {
+      const ids = items.map(item => item.id).filter(id => typeof id === 'string' && id.length > 0);
+      return new Set(ids).size === ids.length;
+    };
+    if (!uniqueIds(raw.seeds) || !uniqueIds(raw.transactions) || !uniqueIds(raw.activity) ||
+        raw.seeds.some(seed => !uniqueIds(seed.steps || []))) {
+      throw Error('Backup contains duplicate identifiers');
+    }
     return {
       version:1,
       seeds:raw.seeds.slice(0,500).map(s => ({
@@ -54,7 +75,7 @@
       transactions:raw.transactions.slice(0,10000).map(t=>({
         id:safeString(t.id||uid(),90),type:t.type==='expense'?'expense':'income',amount:Math.max(0,Math.min(999999999,Number(t.amount)||0)),
         description:safeString(t.description,300),seedId:safeString(t.seedId,90),created:safeString(t.created||now(),50)
-      })).filter(t=>t.amount>0),
+      })),
       activity:raw.activity.slice(0,1000).map(a=>({
         id:safeString(a.id||uid(),90),type:['seed','finance','note','start','task','update'].includes(a.type)?a.type:'note',
         title:safeString(a.title,150),description:safeString(a.description,500),created:safeString(a.created||now(),50)
@@ -176,7 +197,7 @@
     renderMetrics();renderOverviewSeeds();renderActivities();renderKeeper();renderSeeds();renderTransactions();renderChart();refreshIcons();
   }
   const viewNames={overview:'Overview',seeds:'My Seeds',treasury:'Treasury',autonomous:'Agent Desk',activity:'Activity',settings:'Settings'};
-  function closeMenu() {$('sidebar').classList.remove('open');$('mobileShade').classList.remove('show');}
+  function closeMenu() {$('sidebar').classList.remove('open');$('mobileShade').classList.remove('show');$('menuButton').setAttribute('aria-expanded','false');}
   function navigate(target) {
     if(!viewNames[target]) target='overview';
     view=target;
@@ -339,10 +360,12 @@
     }catch(err){toast('Could not import this backup: '+err.message,true);}
     finally{e.target.value='';}
   });
-  $('menuButton').addEventListener('click',()=>{$('sidebar').classList.toggle('open');$('mobileShade').classList.toggle('show');});
+  $('menuButton').addEventListener('click',()=>{const open=$('sidebar').classList.toggle('open');$('mobileShade').classList.toggle('show',open);$('menuButton').setAttribute('aria-expanded',String(open));});
   $('mobileShade').addEventListener('click',closeMenu);
+  // Clear mobile-only navigation state when returning to desktop width.
+  window.addEventListener('resize',()=>{if(window.innerWidth>720)closeMenu();});
   $('modalBackdrop').addEventListener('click',(e)=>{if(e.target===$('modalBackdrop'))closeModal();});
-  document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){closeModal();closeMenu();}});
+  document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){const menuWasOpen=$('sidebar').classList.contains('open');closeModal();closeMenu();if(menuWasOpen)$('menuButton').focus();}});
   window.addEventListener('hashchange',()=>navigate(location.hash.replace('#','')));
   window.GroveWorkspace = {
     get: () => db,
