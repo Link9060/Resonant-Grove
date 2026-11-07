@@ -114,3 +114,27 @@ test('Seed titles must not be silently converted from malformed values', () => {
   assert.equal(restored.seeds[0].title,'Original title');
   assert.equal(restored.seeds[1].title,'Untitled seed');
 });
+
+test('descriptive backup fields must remain strings, not coerced values', () => {
+  const cases = [
+    {seeds:[{description:{unexpected:'object'}}]},
+    {seeds:[{category:42}]},
+    {transactions:[{type:'income',amount:10,description:false}]},
+    {activity:[{title:[]} ]},
+    {activity:[{description:null}]}
+  ];
+  for (const patch of cases) {
+    assert.throws(() => normalize({...empty(),...patch}), /invalid records/);
+  }
+  const valid = normalize({
+    ...empty(),
+    seeds:[{description:'Keep seed description',category:'Experiment'}],
+    transactions:[{type:'expense',amount:3,description:'Keep transaction memo'}],
+    activity:[{title:'Keep journal title',description:'Keep journal description'}]
+  });
+  assert.equal(valid.seeds[0].description,'Keep seed description');
+  assert.equal(valid.seeds[0].category,'Experiment');
+  assert.equal(valid.transactions[0].description,'Keep transaction memo');
+  assert.equal(valid.activity[0].title,'Keep journal title');
+  assert.equal(valid.activity[0].description,'Keep journal description');
+});
