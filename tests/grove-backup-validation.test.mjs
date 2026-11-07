@@ -104,3 +104,13 @@ test('Seed task text must not be silently converted from non-string values', () 
   assert.equal(result.seeds[0].steps[0].text,'Keep original');
   assert.equal(result.seeds[0].steps[1].text,'');
 });
+
+
+test('Seed titles must not be silently converted from malformed values', () => {
+  for (const title of [null, 42, false, {}, []]) {
+    assert.throws(() => normalize({...empty(),seeds:[{id:'seed',title,steps:[]}]}), /invalid records/);
+  }
+  const restored=normalize({...empty(),seeds:[{title:'Original title',steps:[]}, {steps:[]}]});
+  assert.equal(restored.seeds[0].title,'Original title');
+  assert.equal(restored.seeds[1].title,'Untitled seed');
+});
