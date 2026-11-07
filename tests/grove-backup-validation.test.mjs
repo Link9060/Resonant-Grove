@@ -215,3 +215,16 @@ test('overlong imported text is rejected rather than silently truncated', () => 
   assert.equal(valid.transactions[0].description.length,300);
   assert.equal(valid.activity[0].description.length,500);
 });
+
+
+test('created timestamps preserve the 50-character storage boundary without silent truncation', () => {
+  const valid = '2'.repeat(50);
+  const tooLong = '2'.repeat(51);
+  for (const section of ['seeds', 'transactions', 'activity']) {
+    const item = section === 'seeds' ? {id:'s1',title:'Seed',steps:[]} :
+      section === 'transactions' ? {id:'x1',type:'income',amount:1} : {id:'a1',type:'note'};
+    const accepted = normalize({...empty(),[section]:[{...item,created:valid}]});
+    assert.equal(accepted[section][0].created,valid);
+    assert.throws(() => normalize({...empty(),[section]:[{...item,created:tooLong}]}),/invalid records/);
+  }
+});
