@@ -138,3 +138,21 @@ test('descriptive backup fields must remain strings, not coerced values', () => 
   assert.equal(valid.activity[0].title,'Keep journal title');
   assert.equal(valid.activity[0].description,'Keep journal description');
 });
+
+test('malformed backup identifiers and timestamps are rejected rather than stringified', () => {
+  const invalid = [null, 12, false, {}, []];
+  for (const value of invalid) {
+    for (const field of ['id', 'created']) {
+      assert.throws(() => normalize({...empty(), seeds:[{[field]:value}]}), /invalid records/);
+      assert.throws(() => normalize({...empty(), transactions:[{type:'income',amount:1,[field]:value}]}), /invalid records/);
+      assert.throws(() => normalize({...empty(), activity:[{[field]:value}]}), /invalid records/);
+    }
+    assert.throws(() => normalize({...empty(), seeds:[{steps:[{id:value}]}]}), /invalid records/);
+    assert.throws(() => normalize({...empty(), transactions:[{type:'income',amount:1,seedId:value}]}), /invalid records/);
+  }
+  const restored=normalize({...empty(),seeds:[{id:'seed-1',created:'2026-11-07',steps:[{id:'task-1'}]}],transactions:[{id:'tx-1',type:'income',amount:1,seedId:'seed-1'}],activity:[{id:'journal-1'}]});
+  assert.equal(restored.seeds[0].id,'seed-1');
+  assert.equal(restored.seeds[0].steps[0].id,'task-1');
+  assert.equal(restored.transactions[0].seedId,'seed-1');
+  assert.equal(restored.activity[0].id,'journal-1');
+});
