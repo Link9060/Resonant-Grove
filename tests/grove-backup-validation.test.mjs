@@ -70,3 +70,15 @@ test('Seed step completion flags must be booleans to avoid silent progress chang
   assert.equal(result.seeds[0].steps[1].done, true);
   assert.equal(result.seeds[0].steps[2].done, false);
 });
+
+test('activity categories must be recognized to prevent silent journal rewrites', () => {
+  for (const type of ['unknown', '', null, 12, {}, []]) {
+    assert.throws(() => normalize({...empty(),activity:[{id:'a1',type,title:'Original entry'}]}), /invalid records/);
+  }
+  for (const type of ['seed','finance','note','start','task','update']) {
+    const result=normalize({...empty(),activity:[{id:'a1',type,title:'Original entry'}]});
+    assert.equal(result.activity[0].type,type);
+    assert.equal(result.activity[0].title,'Original entry');
+  }
+  assert.equal(normalize({...empty(),activity:[{title:'Legacy entry'}]}).activity[0].type,'note');
+});
