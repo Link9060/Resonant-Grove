@@ -174,3 +174,20 @@ test('duplicate explicit backup identifiers are rejected before records can be c
   assert.equal(valid.seeds.length,2, 'step IDs are scoped to their Seed');
   assert.equal(normalize({...empty(),seeds:[{},{}]}).seeds.length,2, 'legacy missing IDs remain importable');
 });
+
+
+test('overlong identifiers cannot collide after import normalization', () => {
+  const prefix = 'a'.repeat(90);
+  const cases = [
+    {seeds:[{id:prefix+'1'},{id:prefix+'2'}]},
+    {seeds:[{steps:[{id:prefix+'1'},{id:prefix+'2'}]}]},
+    {transactions:[{id:prefix+'1',type:'income',amount:1}]},
+    {activity:[{id:prefix+'1'}]},
+    {transactions:[{type:'income',amount:1,seedId:prefix+'1'}]}
+  ];
+  for (const patch of cases) {
+    assert.throws(() => normalize({...empty(),...patch}), /invalid records/);
+  }
+  const maxLength = 'z'.repeat(90);
+  assert.equal(normalize({...empty(),seeds:[{id:maxLength}]}).seeds[0].id,maxLength);
+});
