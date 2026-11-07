@@ -33,3 +33,11 @@ test('preview workflow only uploads a review artifact and cannot deploy producti
   assert.match(production,/branches: \[main\]/);
   assert.doesNotMatch(production,/grove\/release-platform-preview/);
 });
+
+
+test('acceptance guide changes rebuild the review package and guide ships with artifact',()=>{
+  assert.match(workflow,/^\s*- 'docs\/PHASE1-ACCEPTANCE\.md'\s*$/m);
+  assert.match(workflow,/mkdir -p preview\/docs/);
+  assert.match(workflow,/cp docs\/PHASE1-ACCEPTANCE\.md preview\/docs\/PHASE1-ACCEPTANCE\.md/);
+  assert.match(workflow,/test -s preview\/docs\/PHASE1-ACCEPTANCE\.md/);
+});
