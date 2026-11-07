@@ -191,3 +191,27 @@ test('overlong identifiers cannot collide after import normalization', () => {
   const maxLength = 'z'.repeat(90);
   assert.equal(normalize({...empty(),seeds:[{id:maxLength}]}).seeds[0].id,maxLength);
 });
+
+test('overlong imported text is rejected rather than silently truncated', () => {
+  const cases = [
+    {seeds:[{title:'x'.repeat(101)}]},
+    {seeds:[{description:'x'.repeat(1001)}]},
+    {seeds:[{category:'x'.repeat(61)}]},
+    {seeds:[{steps:[{text:'x'.repeat(301)}]}]},
+    {transactions:[{type:'income',amount:1,description:'x'.repeat(301)}]},
+    {activity:[{title:'x'.repeat(151)}]},
+    {activity:[{description:'x'.repeat(501)}]}
+  ];
+  for (const patch of cases) {
+    assert.throws(() => normalize({...empty(),...patch}), /invalid records/);
+  }
+  const valid=normalize({...empty(),seeds:[{
+    title:'x'.repeat(100),description:'x'.repeat(1000),category:'x'.repeat(60),
+    steps:[{text:'x'.repeat(300)}]
+  }],transactions:[{type:'income',amount:1,description:'x'.repeat(300)}],
+  activity:[{title:'x'.repeat(150),description:'x'.repeat(500)}]});
+  assert.equal(valid.seeds[0].description.length,1000);
+  assert.equal(valid.seeds[0].steps[0].text.length,300);
+  assert.equal(valid.transactions[0].description.length,300);
+  assert.equal(valid.activity[0].description.length,500);
+});
