@@ -360,7 +360,7 @@
     }catch(err){toast('Could not import this backup: '+err.message,true);}
     finally{e.target.value='';}
   });
-  $('menuButton').addEventListener('click',()=>{const open=$('sidebar').classList.toggle('open');$('mobileShade').classList.toggle('show',open);$('menuButton').setAttribute('aria-expanded',String(open));});
+  $('menuButton').addEventListener('click',()=>{const open=$('sidebar').classList.toggle('open');$('mobileShade').classList.toggle('show',open);$('menuButton').setAttribute('aria-expanded',String(open));if(open)$('sidebar').querySelector('.nav-link')?.focus();});
   $('mobileShade').addEventListener('click',closeMenu);
   // Clear mobile-only navigation state when returning to desktop width.
   window.addEventListener('resize',()=>{if(window.innerWidth>720)closeMenu();});
