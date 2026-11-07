@@ -41,3 +41,10 @@ test('Escape returns focus to toggle only if mobile menu was open', () => {
   assert.match(app, /const menuWasOpen=\$\('sidebar'\)\.classList\.contains\('open'\)/);
   assert.match(app, /if\(menuWasOpen\)\$\('menuButton'\)\.focus\(\)/);
 });
+
+
+test('resizing to desktop clears stale mobile navigation state', () => {
+  const styles = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
+  assert.match(styles, /@media\(max-width:720px\)/);
+  assert.match(app, /window\.addEventListener\('resize',\(\)=>\{if\(window\.innerWidth>720\)closeMenu\(\);\}\)/);
+});
