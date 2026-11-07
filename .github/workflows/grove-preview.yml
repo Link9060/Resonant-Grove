@@ -44,6 +44,8 @@ jobs:
             test -s "$file"
             cp "$file" preview/
           done
+          mkdir -p preview/docs
+          cp docs/PHASE1-ACCEPTANCE.md preview/docs/PHASE1-ACCEPTANCE.md
           touch preview/.nojekyll
           # Stamp the exact tested source revision into every downloadable build.
           # This is an offline artifact only; it does not deploy to production.
@@ -63,6 +65,7 @@ jobs:
           EOF
           printf '%s\n' 'This is an artifact, NOT a hosted preview URL. Serve the extracted directory with a local HTTP server.' >> preview/REVIEW.txt
           test -s preview/review.html
+          test -s preview/docs/PHASE1-ACCEPTANCE.md
           grep -Fq "<code id=\"revision\">${GROVE_SOURCE_SHA}</code>" preview/review.html
           grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" preview/REVIEW.txt
       - name: Upload unmerged review artifact
