@@ -94,3 +94,13 @@ test('Seed status values must be recognized to avoid silent lifecycle changes', 
   }
   assert.equal(normalize({...empty(),seeds:[{id:'legacy',steps:[]}]}).seeds[0].status,'idea');
 });
+
+
+test('Seed task text must not be silently converted from non-string values', () => {
+  for (const text of [null, 12, false, {}, []]) {
+    assert.throws(() => normalize({...empty(),seeds:[{steps:[{id:'task',text,done:false}]}]}), /invalid records/);
+  }
+  const result=normalize({...empty(),seeds:[{steps:[{text:'Keep original',done:false},{}]}]});
+  assert.equal(result.seeds[0].steps[0].text,'Keep original');
+  assert.equal(result.seeds[0].steps[1].text,'');
+});
