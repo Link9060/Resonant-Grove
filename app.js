@@ -205,7 +205,11 @@
     document.querySelectorAll('[data-view]').forEach(v=>v.classList.toggle('active',v.classList.contains('nav-link')&&v.dataset.view===target));
     $('breadcrumb').textContent=viewNames[target];
     if (location.hash.slice(1)!==target) history.replaceState(null,'','#'+target);
-    closeMenu();window.scrollTo({top:0,behavior:'instant'});refreshIcons();
+    const wasMobileMenuOpen=window.innerWidth<=720&&$('sidebar').classList.contains('open');
+    closeMenu();
+    // Do not leave keyboard focus inside a sidebar that has just become hidden.
+    if(wasMobileMenuOpen)$('menuButton').focus({preventScroll:true});
+    window.scrollTo({top:0,behavior:'instant'});refreshIcons();
   }
   function modal(markup) {
     $('modalContent').innerHTML=markup;
