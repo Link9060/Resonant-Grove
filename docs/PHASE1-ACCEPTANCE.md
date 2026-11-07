@@ -16,7 +16,7 @@ This guide applies to the **unmerged development branch** in PR #65. It does not
 
 Record **pass/fail/blocked** and browser/device for each step. A passing CI run alone does not satisfy these tests.
 
-1. **Navigation and accessibility:** open dashboard, Seeds, Treasury, Journal, Agent Desk, Settings; navigate by keyboard, check visible focus and readable labels, and test at narrow phone width without horizontal clipping.
+1. **Navigation and accessibility:** open dashboard, Seeds, Treasury, Journal, Agent Desk, Settings; navigate by keyboard, check visible focus and readable labels, and test at narrow phone width without horizontal clipping. At phone width, verify the menu button starts with `aria-expanded="false"` and `aria-controls="sidebar"`; opening it changes expanded to `true`, and closing it via the toggle, backdrop, or a navigation selection restores `false`. Open the menu with the keyboard, press Escape, and verify the sidebar closes, the shade disappears, expanded returns to `false`, and focus returns to the menu button. With the menu already closed, focus another control and press Escape; focus must not jump to the menu button. Record the screen-reader announcement and any keyboard traps.
 2. **Persistence:** create a disposable Seed with two steps, edit its title, toggle one step, refresh, and verify all values persist. Archive and restore it; verify the state survives another refresh.
 3. **Treasury:** enter disposable income and expense entries linked to the Seed. Verify totals, transaction types, and Seed attribution. No real payments should occur.
 4. **Journal:** add a note and verify it survives refresh. Confirm the activity feed still renders after the Seed and Treasury changes.
