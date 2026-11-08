@@ -69,3 +69,13 @@ test('CI downloads the uploaded artifact and verifies extracted hidden files and
   const verify=workflow.indexOf('cd restored-preview && sha256sum --check SHA256SUMS.txt');
   assert.ok(upload>=0 && download>upload && verify>download);
 });
+
+test('downloaded artifact includes a self-contained portable integrity verifier',()=>{
+  const guide=readFileSync(new URL('../docs/PHASE1-ACCEPTANCE.md',import.meta.url),'utf8');
+  assert.match(workflow,/mkdir -p preview\/docs preview\/scripts/);
+  assert.match(workflow,/cp scripts\/verify_review_artifact\.py preview\/scripts\/verify_review_artifact\.py/);
+  assert.match(workflow,/test -s preview\/scripts\/verify_review_artifact\.py/);
+  assert.match(workflow,/python3 restored-preview\/scripts\/verify_review_artifact\.py restored-preview/);
+  assert.match(guide,/python3 scripts\/verify_review_artifact\.py \./);
+  assert.match(guide,/before serving/);
+});
