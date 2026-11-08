@@ -10,7 +10,32 @@ This guide applies to the **unmerged development branch** in PR #65. It does not
 4. **Verify package integrity before serving.** From the extracted artifact root, run `sha256sum --check SHA256SUMS.txt` on Linux or an environment with GNU coreutils. On macOS or Windows with Python 3, use this equivalent cross-platform verification command:
 
    ```bash
-   python3 -c 'import hashlib,pathlib,sys; root=pathlib.Path.cwd().resolve(); rows=(root/"SHA256SUMS.txt").read_text().splitlines(); ok=True; seen=set(); expected={p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file() and p.name!="SHA256SUMS.txt"}; exec("for row in rows:\\n digest,sep,name=row.partition(\\\"  \\\")\\n target=(root/name).resolve()\\n valid=bool(sep) and len(digest)==64 and all(c in \\\"0123456789abcdef\\\" for c in digest) and target.is_relative_to(root) and target.is_file() and name not in seen\\n seen.add(name)\\n valid=valid and hashlib.sha256(target.read_bytes()).hexdigest()==digest if valid else False\\n print((\\\"OK \\\" if valid else \\\"FAIL \\\")+name)\\n ok=ok and valid"); print("Manifest complete:",seen==expected); sys.exit(0 if ok and seen==expected else 1)'
+   python3 - <<'PY'
+   import hashlib
+   from pathlib import Path
+
+   root = Path.cwd().resolve()
+   lines = (root / "SHA256SUMS.txt").read_text().splitlines()
+   expected = {p.relative_to(root).as_posix() for p in root.rglob("*")
+               if p.is_file() and p.name != "SHA256SUMS.txt"}
+   seen = set()
+   passed = True
+   for line in lines:
+       digest, separator, name = line.partition("  ")
+       target = (root / name).resolve()
+       valid = (bool(separator) and len(digest) == 64
+                and all(c in "0123456789abcdef" for c in digest)
+                and target.is_relative_to(root) and target.is_file()
+                and name not in seen)
+       seen.add(name)
+       if valid:
+           valid = hashlib.sha256(target.read_bytes()).hexdigest() == digest
+       print(("OK: " if valid else "FAIL: ") + name)
+       passed = passed and valid
+   if not passed or seen != expected:
+       raise SystemExit("Integrity verification failed or manifest incomplete")
+   print("All packaged files verified")
+   PY
    ```
 
    All entries must report OK, and the manifest must cover every extracted file other than itself. If any check fails, stop and obtain a fresh artifact. For GROVE-035/036, alter a **copy** of an extracted file and confirm verification fails; never test tampering against the only copy.
