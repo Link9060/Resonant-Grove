@@ -6,8 +6,7 @@ This guide applies to the **unmerged development branch** in PR #65. It does not
 
 1. Open PR #65 and copy its full head commit SHA.
 2. Open the successful **Grove development preview package** workflow run for that SHA, download the `grove-review-<SHA>` artifact, and extract it.
-3. In a terminal in the extracted folder, run `python3 -m http.server 8765 --bind 127.0.0.1`. Visit `http://127.0.0.1:8765/review.html`.
-4. **Verify package integrity before serving.** From the extracted artifact root, run `sha256sum --check SHA256SUMS.txt` on Linux or an environment with GNU coreutils. On macOS or Windows with Python 3, use this equivalent cross-platform verification command:
+3. **Verify package integrity before serving.** From the extracted artifact root, run `sha256sum --check SHA256SUMS.txt` on Linux or an environment with GNU coreutils. On macOS or Windows with Python 3, use this equivalent cross-platform verification command:
 
    ```bash
    python3 - <<'PY'
@@ -26,8 +25,10 @@ This guide applies to the **unmerged development branch** in PR #65. It does not
        valid = (bool(separator) and len(digest) == 64
                 and all(c in "0123456789abcdef" for c in digest)
                 and target.is_relative_to(root) and target.is_file()
-                and name not in seen)
-       seen.add(name)
+                and target.is_relative_to(root)
+                and target.relative_to(root).as_posix() not in seen)
+       normalized_name = target.relative_to(root).as_posix() if target.is_relative_to(root) else name
+       seen.add(normalized_name)
        if valid:
            valid = hashlib.sha256(target.read_bytes()).hexdigest() == digest
        print(("OK: " if valid else "FAIL: ") + name)
@@ -39,6 +40,7 @@ This guide applies to the **unmerged development branch** in PR #65. It does not
    ```
 
    All entries must report OK, and the manifest must cover every extracted file other than itself. If any check fails, stop and obtain a fresh artifact. For GROVE-035/036, alter a **copy** of an extracted file and confirm verification fails; never test tampering against the only copy.
+4. In a terminal in the extracted folder, run `python3 -m http.server 8765 --bind 127.0.0.1`. Visit `http://127.0.0.1:8765/review.html`.
 5. Verify the full SHA on `review.html` and `REVIEW.txt` matches the PR head. If it differs, stop: the artifact is stale.
 6. Use a separate browser profile so test data cannot overwrite your everyday Grove workspace. Do not enter real customer, banking, or confidential data.
 
