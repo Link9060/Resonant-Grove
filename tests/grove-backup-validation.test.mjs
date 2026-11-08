@@ -251,3 +251,22 @@ test('late malformed records reject the complete backup without mutating the sou
   assert.throws(()=>normalize(malformedActivity),/invalid records/);
   assert.equal(JSON.stringify(malformedActivity.activity[0]),JSON.stringify(backup.activity[0]));
 });
+
+
+test('explicit empty identifiers and timestamps reject instead of silently generating replacements', () => {
+  for (const field of ['id','created']) {
+    assert.throws(() => normalize({...empty(),seeds:[{[field]:''}]}),/invalid records/);
+    assert.throws(() => normalize({...empty(),transactions:[{type:'income',amount:1,[field]:''}]}),/invalid records/);
+    assert.throws(() => normalize({...empty(),activity:[{[field]:''}]}),/invalid records/);
+  }
+  assert.throws(() => normalize({...empty(),seeds:[{steps:[{id:''}]}]}),/invalid records/);
+  // An empty transaction seedId means an unassigned/general transaction.
+  assert.equal(normalize({...empty(),transactions:[{type:'income',amount:1,seedId:''}]}).transactions[0].seedId,'');
+  // Missing legacy IDs and timestamps still receive generated defaults.
+  const restored=normalize({...empty(),seeds:[{steps:[{}]}],transactions:[{type:'expense',amount:1}],activity:[{}]});
+  assert.ok(restored.seeds[0].id);
+  assert.ok(restored.seeds[0].created);
+  assert.ok(restored.seeds[0].steps[0].id);
+  assert.ok(restored.transactions[0].id);
+  assert.ok(restored.activity[0].created);
+});
