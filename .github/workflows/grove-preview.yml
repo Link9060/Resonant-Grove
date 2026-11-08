@@ -35,6 +35,7 @@ jobs:
             node --check "$file"
           done
           node --test tests/*.test.mjs
+          python3 -m unittest discover -s tests -p 'test_*.py'
       - name: Assemble standalone preview
         shell: bash
         run: |
