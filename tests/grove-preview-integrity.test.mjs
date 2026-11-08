@@ -55,3 +55,16 @@ test('review artifact manifest hashes every file and verifies hashes before uplo
   const upload=workflow.indexOf('uses: actions/upload-artifact@v4');
   assert.ok(verify>=0 && upload>verify,'integrity verification must precede artifact upload');
 });
+
+test('CI downloads the uploaded artifact and verifies extracted hidden files and hashes',()=>{
+  assert.match(workflow,/uses: actions\/download-artifact@v4/);
+  assert.match(workflow,/path: restored-preview\//);
+  assert.match(workflow,/test -f restored-preview\/\.nojekyll/);
+  assert.match(workflow,/\(cd restored-preview && sha256sum --check SHA256SUMS\.txt\)/);
+  assert.match(workflow,/diff -u preview\/SHA256SUMS\.txt restored-preview\/SHA256SUMS\.txt/);
+  assert.match(workflow,/find restored-preview -type f/);
+  const upload=workflow.indexOf('uses: actions/upload-artifact@v4');
+  const download=workflow.indexOf('uses: actions/download-artifact@v4');
+  const verify=workflow.indexOf('cd restored-preview && sha256sum --check SHA256SUMS.txt');
+  assert.ok(upload>=0 && download>upload && verify>download);
+});
