@@ -19,7 +19,7 @@ class LocalAssets(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
-        path = attributes.get("src") if tag == "script" else attributes.get("href") if tag == "link" else None
+        path = (attributes.get("src") if tag in ("script", "img", "source")\n                else attributes.get("href") if tag == "link" else None)
         if path and not path.startswith(("https://", "http://", "//", "data:", "#")):
             self.paths.add(path.split("?", 1)[0].split("#", 1)[0])
 
