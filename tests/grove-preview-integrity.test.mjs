@@ -79,3 +79,16 @@ test('downloaded artifact includes a self-contained portable integrity verifier'
   assert.match(guide,/python3 scripts\/verify_review_artifact\.py \./);
   assert.match(guide,/before serving/);
 });
+
+test('downloaded review build receives an actual loopback HTTP smoke check',()=>{
+  const smoke=readFileSync(new URL('../scripts/smoke_review_http.py',import.meta.url),'utf8');
+  assert.match(workflow,/python3 scripts\/smoke_review_http\.py restored-preview "\$GROVE_SOURCE_SHA"/);
+  assert.match(workflow,/^\s*- 'scripts\/smoke_review_http\.py'$/m);
+  assert.match(smoke,/ThreadingHTTPServer/);
+  assert.match(smoke,/127\.0\.0\.1/);
+  assert.match(smoke,/review\.html/);
+  assert.match(smoke,/index\.html/);
+  assert.match(smoke,/app\.js/);
+  assert.match(smoke,/styles\.css/);
+  assert.match(smoke,/server\.shutdown\(\)/);
+});
