@@ -61,6 +61,7 @@ test('CI downloads the uploaded artifact and verifies extracted hidden files and
   assert.match(workflow,/path: restored-preview\//);
   assert.match(workflow,/test -f restored-preview\/\.nojekyll/);
   assert.match(workflow,/\(cd restored-preview && sha256sum --check SHA256SUMS\.txt\)/);
+  assert.match(workflow,/python3 scripts\/verify_review_artifact\.py restored-preview/);
   assert.match(workflow,/diff -u preview\/SHA256SUMS\.txt restored-preview\/SHA256SUMS\.txt/);
   assert.match(workflow,/find restored-preview -type f/);
   const upload=workflow.indexOf('uses: actions/upload-artifact@v4');
