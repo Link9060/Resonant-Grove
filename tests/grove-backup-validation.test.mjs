@@ -288,3 +288,13 @@ test('whitespace-only identifiers and timestamps reject instead of creating unus
   assert.equal(valid.seeds[0].created,' 2026-11-07 ');
   assert.equal(valid.transactions[0].seedId,'');
 });
+
+
+test('transaction Seed references reject whitespace-only values while preserving unassigned and meaningful IDs', () => {
+  for (const seedId of [' ', '\t', '\n', '   ']) {
+    assert.throws(() => normalize({...empty(),transactions:[{type:'income',amount:1,seedId}]}),/invalid records/);
+  }
+  assert.equal(normalize({...empty(),transactions:[{type:'income',amount:1,seedId:''}]}).transactions[0].seedId,'');
+  assert.equal(normalize({...empty(),transactions:[{type:'income',amount:1,seedId:' seed-a '}]}).transactions[0].seedId,' seed-a ');
+  assert.equal(normalize({...empty(),transactions:[{type:'income',amount:1}]}).transactions[0].seedId,'');
+});
