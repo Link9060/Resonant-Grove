@@ -228,3 +228,26 @@ test('created timestamps preserve the 50-character storage boundary without sile
     assert.throws(() => normalize({...empty(),[section]:[{...item,created:tooLong}]}),/invalid records/);
   }
 });
+
+test('late malformed records reject the complete backup without mutating the source', () => {
+  const backup = {
+    ...empty(),
+    seeds:[{id:'seed-a',title:'Keep',steps:[{id:'step-a',text:'Plan',done:false}]}],
+    transactions:[
+      {id:'tx-a',type:'income',amount:25,seedId:'seed-a'},
+      {id:'tx-b',type:'expense',amount:4,seedId:'seed-a',description:'Expense'}
+    ],
+    activity:[{id:'log-a',type:'note',title:'Keep log'}]
+  };
+  const snapshot = JSON.stringify(backup);
+  assert.equal(normalize(backup).transactions.length,2);
+  assert.equal(JSON.stringify(backup),snapshot,'successful normalization must not mutate input');
+  const malformed = JSON.parse(snapshot);
+  malformed.transactions[1].amount = '4';
+  assert.throws(()=>normalize(malformed),/invalid records/);
+  assert.equal(JSON.stringify(backup),snapshot,'failed import must not mutate the original backup');
+  const malformedActivity = JSON.parse(snapshot);
+  malformedActivity.activity.push({id:'log-b',type:'invalid'});
+  assert.throws(()=>normalize(malformedActivity),/invalid records/);
+  assert.equal(JSON.stringify(malformedActivity.activity[0]),JSON.stringify(backup.activity[0]));
+});
