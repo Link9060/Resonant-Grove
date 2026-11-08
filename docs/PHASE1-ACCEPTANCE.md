@@ -6,40 +6,13 @@ This guide applies to the **unmerged development branch** in PR #65. It does not
 
 1. Open PR #65 and copy its full head commit SHA.
 2. Open the successful **Grove development preview package** workflow run for that SHA, download the `grove-review-<SHA>` artifact, and extract it.
-3. **Verify package integrity before serving.** From the extracted artifact root, run `sha256sum --check SHA256SUMS.txt` on Linux or an environment with GNU coreutils. On macOS or Windows with Python 3, use this equivalent cross-platform verification command:
+3. **Verify package integrity before serving.** The downloaded artifact includes its own portable verifier. In the extracted artifact root, run:
 
    ```bash
-   python3 - <<'PY'
-   import hashlib
-   from pathlib import Path
-
-   root = Path.cwd().resolve()
-   lines = (root / "SHA256SUMS.txt").read_text().splitlines()
-   expected = {p.relative_to(root).as_posix() for p in root.rglob("*")
-               if p.is_file() and p.name != "SHA256SUMS.txt"}
-   seen = set()
-   passed = True
-   for line in lines:
-       digest, separator, name = line.partition("  ")
-       target = (root / name).resolve()
-       valid = (bool(separator) and len(digest) == 64
-                and all(c in "0123456789abcdef" for c in digest)
-                and target.is_relative_to(root) and target.is_file()
-                and target.is_relative_to(root)
-                and target.relative_to(root).as_posix() not in seen)
-       normalized_name = target.relative_to(root).as_posix() if target.is_relative_to(root) else name
-       seen.add(normalized_name)
-       if valid:
-           valid = hashlib.sha256(target.read_bytes()).hexdigest() == digest
-       print(("OK: " if valid else "FAIL: ") + name)
-       passed = passed and valid
-   if not passed or seen != expected:
-       raise SystemExit("Integrity verification failed or manifest incomplete")
-   print("All packaged files verified")
-   PY
+   python3 scripts/verify_review_artifact.py .
    ```
 
-   All entries must report OK, and the manifest must cover every extracted file other than itself. If any check fails, stop and obtain a fresh artifact. For GROVE-035/036, alter a **copy** of an extracted file and confirm verification fails; never test tampering against the only copy.
+   Require `PASS: ... files verified`. This checks SHA-256 hashes, complete manifest coverage, duplicate paths, hidden `.nojekyll`, unexpected files, symlinks and path traversal. On Linux, `sha256sum --check SHA256SUMS.txt` is an additional optional check, not a substitute for the strict verifier. If verification fails, stop and obtain a fresh artifact. To test tampering, modify a **copy** of the extracted artifact and require the verifier to fail. Never modify the only copy.
 4. In a terminal in the extracted folder, run `python3 -m http.server 8765 --bind 127.0.0.1`. Visit `http://127.0.0.1:8765/review.html`.
 5. Verify the full SHA on `review.html` and `REVIEW.txt` matches the PR head. If it differs, stop: the artifact is stale.
 6. Use a separate browser profile so test data cannot overwrite your everyday Grove workspace. Do not enter real customer, banking, or confidential data.
