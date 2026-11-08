@@ -273,7 +273,7 @@ test('explicit empty identifiers and timestamps reject instead of silently gener
 
 
 test('whitespace-only identifiers and timestamps reject instead of creating unusable records', () => {
-  for (const blank of [' ', '  ', '\\t', '\\n']) {
+  for (const blank of [' ', '  ', '\t', '\n']) {
     for (const field of ['id','created']) {
       assert.throws(() => normalize({...empty(),seeds:[{[field]:blank}]}),/invalid records/);
       assert.throws(() => normalize({...empty(),transactions:[{type:'income',amount:1,[field]:blank}]}),/invalid records/);
