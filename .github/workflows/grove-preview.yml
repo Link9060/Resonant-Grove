@@ -64,6 +64,11 @@ jobs:
           </main></body></html>
           EOF
           printf '%s\n' 'This is an artifact, NOT a hosted preview URL. Serve the extracted directory with a local HTTP server.' >> preview/REVIEW.txt
+          # Publish a deterministic integrity manifest for the exact downloadable review build.
+          # Reviewers can verify every packaged file after extracting the artifact.
+          (cd preview && find . -type f ! -name SHA256SUMS.txt -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
+          (cd preview && sha256sum --check SHA256SUMS.txt)
+          test -s preview/SHA256SUMS.txt
           test -s preview/review.html
           test -s preview/docs/PHASE1-ACCEPTANCE.md
           grep -Fq "<code id=\"revision\">${GROVE_SOURCE_SHA}</code>" preview/review.html
