@@ -21,7 +21,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         for filename, body in {
             "review.html": f'<code id="revision">{SHA}</code>',
             "REVIEW.txt": f"GROVE_PREVIEW_SHA={SHA}\n",
-            "index.html": "<!doctype html><html lang='en'></html>",
+            "index.html": "<!doctype html><html lang='en'><head><link rel='stylesheet' href='styles.css'></head><body><script src='app.js'></script></body></html>",
             "app.js": "console.log('ready')",
             "styles.css": "body { color: black; }",
         }.items():
@@ -29,6 +29,20 @@ class ReviewHttpSmokeTests(unittest.TestCase):
 
     def test_complete_artifact_passes(self):
         module.smoke(self.root, SHA)
+
+    def test_missing_linked_asset_fails(self):
+        (self.root / "index.html").write_text(
+            "<html><head><link rel='stylesheet' href='missing.css'></head>"
+            "<body><script src='app.js'></script></body></html>", encoding="utf-8")
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
+
+    def test_linked_asset_empty_fails(self):
+        (self.root / "index.html").write_text(
+            "<html><body><script src='empty.js'></script></body></html>", encoding="utf-8")
+        (self.root / "empty.js").write_text("", encoding="utf-8")
+        with self.assertRaises(AssertionError):
+            module.smoke(self.root, SHA)
 
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
