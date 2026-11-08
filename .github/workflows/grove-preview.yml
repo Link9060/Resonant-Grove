@@ -46,8 +46,9 @@ jobs:
             test -s "$file"
             cp "$file" preview/
           done
-          mkdir -p preview/docs
+          mkdir -p preview/docs preview/scripts
           cp docs/PHASE1-ACCEPTANCE.md preview/docs/PHASE1-ACCEPTANCE.md
+          cp scripts/verify_review_artifact.py preview/scripts/verify_review_artifact.py
           touch preview/.nojekyll
           # Stamp the exact tested source revision into every downloadable build.
           # This is an offline artifact only; it does not deploy to production.
@@ -73,6 +74,7 @@ jobs:
           test -s preview/SHA256SUMS.txt
           test -s preview/review.html
           test -s preview/docs/PHASE1-ACCEPTANCE.md
+          test -s preview/scripts/verify_review_artifact.py
           grep -Fq "<code id=\"revision\">${GROVE_SOURCE_SHA}</code>" preview/review.html
           grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" preview/REVIEW.txt
       - name: Upload unmerged review artifact
@@ -96,7 +98,7 @@ jobs:
           test -s restored-preview/SHA256SUMS.txt
           (cd restored-preview && sha256sum --check SHA256SUMS.txt)
           # Reject extra files, duplicate manifest paths, symlinks and traversal as well as tampering.
-          python3 scripts/verify_review_artifact.py restored-preview
+          python3 restored-preview/scripts/verify_review_artifact.py restored-preview
           diff -u preview/SHA256SUMS.txt restored-preview/SHA256SUMS.txt
           test "$(find preview -type f | wc -l)" -eq "$(find restored-preview -type f | wc -l)"
           grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" restored-preview/REVIEW.txt
