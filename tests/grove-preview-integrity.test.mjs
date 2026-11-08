@@ -47,6 +47,10 @@ test('review artifact manifest hashes every file and verifies hashes before uplo
   assert.match(workflow,/LC_ALL=C sort -z \| xargs -0 sha256sum > SHA256SUMS\.txt/);
   assert.match(workflow,/\(cd preview && sha256sum --check SHA256SUMS\.txt\)/);
   assert.match(workflow,/test -s preview\/SHA256SUMS\.txt/);
+  // .nojekyll is hidden and included in the manifest; upload-artifact must preserve it.
+  assert.match(workflow,/touch preview\/\.nojekyll/);
+  assert.match(workflow,/include-hidden-files:\s*true/);
+
   const verify=workflow.indexOf('sha256sum --check SHA256SUMS.txt');
   const upload=workflow.indexOf('uses: actions/upload-artifact@v4');
   assert.ok(verify>=0 && upload>verify,'integrity verification must precede artifact upload');
