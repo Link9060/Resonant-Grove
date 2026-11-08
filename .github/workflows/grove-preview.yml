@@ -9,6 +9,7 @@ on:
       - '*.css'
       - 'tests/**'
       - 'scripts/verify_review_artifact.py'
+      - 'scripts/smoke_review_http.py'
       - 'docs/PHASE1-ACCEPTANCE.md'
       - '.github/workflows/grove-preview.yml'
 
@@ -102,3 +103,5 @@ jobs:
           diff -u preview/SHA256SUMS.txt restored-preview/SHA256SUMS.txt
           test "$(find preview -type f | wc -l)" -eq "$(find restored-preview -type f | wc -l)"
           grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" restored-preview/REVIEW.txt
+          # Exercise the actual extracted site over a loopback HTTP server, not only file hashes.
+          python3 scripts/smoke_review_http.py restored-preview "$GROVE_SOURCE_SHA"
