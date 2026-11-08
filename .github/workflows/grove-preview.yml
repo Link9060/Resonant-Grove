@@ -95,6 +95,8 @@ jobs:
           test -f restored-preview/.nojekyll
           test -s restored-preview/SHA256SUMS.txt
           (cd restored-preview && sha256sum --check SHA256SUMS.txt)
+          # Reject extra files, duplicate manifest paths, symlinks and traversal as well as tampering.
+          python3 scripts/verify_review_artifact.py restored-preview
           diff -u preview/SHA256SUMS.txt restored-preview/SHA256SUMS.txt
           test "$(find preview -type f | wc -l)" -eq "$(find restored-preview -type f | wc -l)"
           grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" restored-preview/REVIEW.txt
