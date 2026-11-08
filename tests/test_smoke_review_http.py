@@ -44,6 +44,31 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, SHA)
 
+    def test_linked_script_wrong_mime_fails(self):
+        # Simulate a host returning a 200 HTML fallback for a JavaScript URL.
+        original_guess_type = module.http.server.SimpleHTTPRequestHandler.guess_type
+
+        def wrong_mime(handler, path):
+            if path.endswith("app.js"):
+                return "text/html"
+            return original_guess_type(handler, path)
+
+        with patch.object(module.http.server.SimpleHTTPRequestHandler, "guess_type", wrong_mime):
+            with self.assertRaisesRegex(AssertionError, "Wrong content type for app.js"):
+                module.smoke(self.root, SHA)
+
+    def test_linked_stylesheet_wrong_mime_fails(self):
+        original_guess_type = module.http.server.SimpleHTTPRequestHandler.guess_type
+
+        def wrong_mime(handler, path):
+            if path.endswith("styles.css"):
+                return "text/html"
+            return original_guess_type(handler, path)
+
+        with patch.object(module.http.server.SimpleHTTPRequestHandler, "guess_type", wrong_mime):
+            with self.assertRaisesRegex(AssertionError, "Wrong content type for styles.css"):
+                module.smoke(self.root, SHA)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
