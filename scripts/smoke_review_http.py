@@ -61,8 +61,21 @@ def smoke(directory: Path, expected_sha: str) -> None:
             if asset.startswith("/") or ".." in Path(asset).parts:
                 raise AssertionError(f"Unsafe local asset reference: {asset}")
             with urllib.request.urlopen(base + "/" + asset, timeout=5) as response:
-                if response.status != 200 or not response.read():
+                payload = response.read()
+                if response.status != 200 or not payload:
                     raise AssertionError(f"Missing or empty referenced asset: {asset}")
+                # A 200 HTML fallback is not a usable JavaScript or CSS asset.
+                suffix = Path(asset).suffix.lower()
+                mime = response.headers.get_content_type()
+                expected_mime = {
+                    ".js": ("text/javascript", "application/javascript"),
+                    ".css": ("text/css",),
+                    ".svg": ("image/svg+xml",),
+                }.get(suffix)
+                if expected_mime and mime not in expected_mime:
+                    raise AssertionError(
+                        f"Wrong content type for {asset}: {mime} (expected {expected_mime})"
+                    )
         print(f"PASS: loopback HTTP serves review build for {expected_sha} ({len(parser.paths)} linked assets)")
     finally:
         server.shutdown()
