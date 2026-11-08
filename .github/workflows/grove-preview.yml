@@ -81,3 +81,18 @@ jobs:
           # .nojekyll is included in SHA256SUMS; upload-artifact excludes hidden files by default.
           include-hidden-files: true
           retention-days: 14
+      - name: Verify downloaded review artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: grove-review-${{ github.event.pull_request.head.sha }}
+          path: restored-preview/
+      - name: Validate extracted artifact completeness
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f restored-preview/.nojekyll
+          test -s restored-preview/SHA256SUMS.txt
+          (cd restored-preview && sha256sum --check SHA256SUMS.txt)
+          diff -u preview/SHA256SUMS.txt restored-preview/SHA256SUMS.txt
+          test "$(find preview -type f | wc -l)" -eq "$(find restored-preview -type f | wc -l)"
+          grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" restored-preview/REVIEW.txt
