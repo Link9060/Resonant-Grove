@@ -270,3 +270,21 @@ test('explicit empty identifiers and timestamps reject instead of silently gener
   assert.ok(restored.transactions[0].id);
   assert.ok(restored.activity[0].created);
 });
+
+
+test('whitespace-only identifiers and timestamps reject instead of creating unusable records', () => {
+  for (const blank of [' ', '  ', '\\t', '\\n']) {
+    for (const field of ['id','created']) {
+      assert.throws(() => normalize({...empty(),seeds:[{[field]:blank}]}),/invalid records/);
+      assert.throws(() => normalize({...empty(),transactions:[{type:'income',amount:1,[field]:blank}]}),/invalid records/);
+      assert.throws(() => normalize({...empty(),activity:[{[field]:blank}]}),/invalid records/);
+    }
+    assert.throws(() => normalize({...empty(),seeds:[{steps:[{id:blank}]}]}),/invalid records/);
+  }
+  // Existing meaningful values with surrounding whitespace remain unchanged.
+  const valid = normalize({...empty(),seeds:[{id:' seed-1 ',created:' 2026-11-07 '}],
+    transactions:[{id:' tx-1 ',type:'income',amount:1,seedId:''}]});
+  assert.equal(valid.seeds[0].id,' seed-1 ');
+  assert.equal(valid.seeds[0].created,' 2026-11-07 ');
+  assert.equal(valid.transactions[0].seedId,'');
+});
