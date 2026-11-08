@@ -41,3 +41,13 @@ test('acceptance guide changes rebuild the review package and guide ships with a
   assert.match(workflow,/cp docs\/PHASE1-ACCEPTANCE\.md preview\/docs\/PHASE1-ACCEPTANCE\.md/);
   assert.match(workflow,/test -s preview\/docs\/PHASE1-ACCEPTANCE\.md/);
 });
+
+test('review artifact manifest hashes every file and verifies hashes before upload',()=>{
+  assert.match(workflow,/find \. -type f ! -name SHA256SUMS\.txt -print0/);
+  assert.match(workflow,/LC_ALL=C sort -z \| xargs -0 sha256sum > SHA256SUMS\.txt/);
+  assert.match(workflow,/\(cd preview && sha256sum --check SHA256SUMS\.txt\)/);
+  assert.match(workflow,/test -s preview\/SHA256SUMS\.txt/);
+  const verify=workflow.indexOf('sha256sum --check SHA256SUMS.txt');
+  const upload=workflow.indexOf('uses: actions/upload-artifact@v4');
+  assert.ok(verify>=0 && upload>verify,'integrity verification must precede artifact upload');
+});
