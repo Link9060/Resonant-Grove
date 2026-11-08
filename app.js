@@ -50,11 +50,11 @@
     const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
     // IDs and timestamps must never become coerced object strings during restore.
     // Explicit empty identifiers are invalid: only omitted legacy IDs may be generated.
-    const optionalText = value => value === undefined || (typeof value === 'string' && value.length > 0 && value.length <= 90);
+    const optionalText = value => value === undefined || (typeof value === 'string' && value.trim().length > 0 && value.length <= 90);
     // Created timestamps are stored at 50 characters, unlike 90-character identifiers.
     // Validate separately so restore cannot silently truncate timestamps.
     // Explicit empty timestamps are invalid: only omitted legacy timestamps may default.
-    const optionalTimestamp = value => value === undefined || (typeof value === 'string' && value.length > 0 && value.length <= 50);
+    const optionalTimestamp = value => value === undefined || (typeof value === 'string' && value.trim().length > 0 && value.length <= 50);
     // Imported text must not be silently shortened; reject values beyond display/storage limits.
     const boundedText = (value, max) => value === undefined || (typeof value === 'string' && value.length <= max);
     // Reject overlong IDs before normalization truncates them: otherwise distinct
