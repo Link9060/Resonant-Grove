@@ -78,4 +78,6 @@ jobs:
         with:
           name: grove-review-${{ github.event.pull_request.head.sha }}
           path: preview/
+          # .nojekyll is included in SHA256SUMS; upload-artifact excludes hidden files by default.
+          include-hidden-files: true
           retention-days: 14
