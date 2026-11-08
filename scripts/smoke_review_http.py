@@ -6,10 +6,22 @@ Uses only Python's standard library. Does not contact external hosts or deploy.
 import argparse
 import functools
 import http.server
+from html.parser import HTMLParser
 from pathlib import Path
 import re
 import threading
 import urllib.request
+
+class LocalAssets(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.paths = set()
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        path = attributes.get("src") if tag == "script" else attributes.get("href") if tag == "link" else None
+        if path and not path.startswith(("https://", "http://", "//", "data:", "#")):
+            self.paths.add(path.split("?", 1)[0].split("#", 1)[0])
 
 
 def smoke(directory: Path, expected_sha: str) -> None:
@@ -39,7 +51,19 @@ def smoke(directory: Path, expected_sha: str) -> None:
                     raise AssertionError(f"{path}: empty response")
                 if expected and expected.lower().encode() not in data.lower():
                     raise AssertionError(f"{path}: expected content missing or wrong SHA")
-        print(f"PASS: loopback HTTP serves review build for {expected_sha}")
+        # A 200 response for index.html does not prove its linked assets exist.
+        with urllib.request.urlopen(base + "/index.html", timeout=5) as response:
+            parser = LocalAssets()
+            parser.feed(response.read().decode("utf-8"))
+        if not parser.paths:
+            raise AssertionError("index.html references no local assets")
+        for asset in sorted(parser.paths):
+            if asset.startswith("/") or ".." in Path(asset).parts:
+                raise AssertionError(f"Unsafe local asset reference: {asset}")
+            with urllib.request.urlopen(base + "/" + asset, timeout=5) as response:
+                if response.status != 200 or not response.read():
+                    raise AssertionError(f"Missing or empty referenced asset: {asset}")
+        print(f"PASS: loopback HTTP serves review build for {expected_sha} ({len(parser.paths)} linked assets)")
     finally:
         server.shutdown()
         server.server_close()
