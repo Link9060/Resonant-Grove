@@ -8,6 +8,7 @@ on:
       - '*.js'
       - '*.css'
       - 'tests/**'
+      - 'scripts/verify_review_artifact.py'
       - 'docs/PHASE1-ACCEPTANCE.md'
       - '.github/workflows/grove-preview.yml'
 
