@@ -101,9 +101,14 @@
   let db = read(), view = 'overview', filter = 'all';
   function save() {
     try { localStorage.setItem(KEY,JSON.stringify(db)); }
-    catch (error) { toast('Could not save. Check browser storage.',true); }
+    catch (error) {
+      toast('Could not save. Check browser storage.',true);
+      render();
+      return false;
+    }
     render();
     window.GroveCloud?.scheduleSave?.();
+    return true;
   }
   function log(type,title,description) {
     db.activity.unshift({id:uid(),type,title,description,created:now()});
