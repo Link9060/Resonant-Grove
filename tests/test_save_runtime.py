@@ -112,5 +112,41 @@ assert.equal(errors, 0);
         self.assertEqual(completed.returncode, 0, completed.stderr)
 
 
+    def test_cloud_schedule_exception_keeps_local_save_successful(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node.js is unavailable; cloud scheduling test not run")
+        start = APP.index("function save() {")
+        end = APP.index("  function log(", start)
+        save_source = APP[start:end]
+        script = """
+const assert = require('node:assert/strict');
+let writes = 0, renders = 0, errors = 0, scheduled = 0;
+const db = {seeds: []};
+const KEY = 'grove-test';
+const localStorage = {setItem: (key, value) => {
+  assert.equal(key, KEY);
+  assert.deepEqual(JSON.parse(value), db);
+  writes++;
+}};
+const window = {GroveCloud: {scheduleSave: () => {
+  scheduled++;
+  throw Error('cloud adapter failure');
+}}};
+const toast = (_message, isError) => {if (isError) errors++;};
+const render = () => renders++;
+""" + save_source + """
+assert.equal(save(), true, 'local save remains successful despite cloud failure');
+assert.equal(writes, 1);
+assert.equal(renders, 1);
+assert.equal(scheduled, 1);
+assert.equal(errors, 1, 'cloud scheduling failure must notify user');
+"""
+        completed = subprocess.run(
+            [node, "-e", script], text=True, capture_output=True, timeout=15
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
