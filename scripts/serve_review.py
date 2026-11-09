@@ -8,6 +8,16 @@ import re
 import subprocess
 import sys
 
+class ReviewHandler(http.server.SimpleHTTPRequestHandler):
+    """Keep review pages uncached and limit browser content sniffing."""
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, max-age=0")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        super().end_headers()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", nargs="?", default=".", type=Path)
@@ -31,7 +41,7 @@ def main():
     completed = subprocess.run([sys.executable, str(verifier), str(root)], check=False)
     if completed.returncode:
         parser.error("artifact integrity verification failed; refusing to serve")
-    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
+    handler = functools.partial(ReviewHandler, directory=str(root))
     with http.server.ThreadingHTTPServer(("127.0.0.1", args.port), handler) as server:
         print(f"Verified Grove review SHA {matches[0]}", flush=True)
         print(f"Open http://127.0.0.1:{args.port}/review.html (local only)", flush=True)
