@@ -148,5 +148,37 @@ assert.equal(errors, 1, 'cloud scheduling failure must notify user');
         self.assertEqual(completed.returncode, 0, completed.stderr)
 
 
+    def test_cloud_adapter_without_scheduler_keeps_local_save(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node.js is unavailable; adapter fallback test not run")
+        start = APP.index("function save() {")
+        end = APP.index("  function log(", start)
+        save_source = APP[start:end]
+        script = """
+const assert = require('node:assert/strict');
+let writes = 0, renders = 0, errors = 0;
+const db = {seeds: [{id: 'draft'}]};
+const KEY = 'grove-test';
+const window = {GroveCloud: {ready: false}};
+const localStorage = {setItem: (key, value) => {
+  assert.equal(key, KEY);
+  assert.deepEqual(JSON.parse(value), db);
+  writes++;
+}};
+const toast = (_message, isError) => {if (isError) errors++;};
+const render = () => renders++;
+""" + save_source + """
+assert.equal(save(), true, 'missing optional scheduler must not break local save');
+assert.equal(writes, 1);
+assert.equal(renders, 1);
+assert.equal(errors, 0);
+"""
+        completed = subprocess.run(
+            [node, "-e", script], text=True, capture_output=True, timeout=15
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
