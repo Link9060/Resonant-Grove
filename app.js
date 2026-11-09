@@ -103,7 +103,8 @@
     try { localStorage.setItem(KEY,JSON.stringify(db)); }
     catch (error) {
       toast('Could not save. Check browser storage.',true);
-      render();
+      try { render(); }
+      catch (renderError) { /* Storage failure remains authoritative; never schedule cloud sync. */ }
       return false;
     }
     try { render(); }
