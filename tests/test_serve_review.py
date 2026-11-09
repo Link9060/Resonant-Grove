@@ -57,6 +57,19 @@ class ServeReviewTests(unittest.TestCase):
                 self.invoke()
             server.assert_not_called()
 
+    def test_review_response_disables_caching_and_framing(self):
+        handler = object.__new__(serve_review.ReviewHandler)
+        with mock.patch.object(handler, "send_header") as header, mock.patch.object(
+            serve_review.http.server.SimpleHTTPRequestHandler, "end_headers"
+        ) as parent:
+            handler.end_headers()
+        self.assertEqual(header.call_args_list, [
+            mock.call("Cache-Control", "no-store, max-age=0"),
+            mock.call("X-Content-Type-Options", "nosniff"),
+            mock.call("X-Frame-Options", "DENY"),
+        ])
+        parent.assert_called_once_with()
+
     def test_verified_artifact_binds_loopback_only(self):
         with mock.patch.object(serve_review.subprocess, "run", return_value=mock.Mock(returncode=0)) as verify, mock.patch.object(
             serve_review.http.server, "ThreadingHTTPServer"
