@@ -12,6 +12,7 @@ on:
       - 'scripts/smoke_review_http.py'
       - 'scripts/serve_review.py'
       - 'docs/PHASE1-ACCEPTANCE.md'
+      - 'docs/ISOLATED-PREVIEW-SETUP.md'
       - '.github/workflows/grove-preview.yml'
 
 permissions:
@@ -51,6 +52,7 @@ jobs:
           done
           mkdir -p preview/docs preview/scripts
           cp docs/PHASE1-ACCEPTANCE.md preview/docs/PHASE1-ACCEPTANCE.md
+          cp docs/ISOLATED-PREVIEW-SETUP.md preview/docs/ISOLATED-PREVIEW-SETUP.md
           cp scripts/verify_review_artifact.py preview/scripts/verify_review_artifact.py
           cp scripts/serve_review.py preview/scripts/serve_review.py
           touch preview/.nojekyll
@@ -78,6 +80,7 @@ jobs:
           test -s preview/SHA256SUMS.txt
           test -s preview/review.html
           test -s preview/docs/PHASE1-ACCEPTANCE.md
+          test -s preview/docs/ISOLATED-PREVIEW-SETUP.md
           test -s preview/scripts/verify_review_artifact.py
           test -s preview/scripts/serve_review.py
           grep -Fq "<code id=\"revision\">${GROVE_SOURCE_SHA}</code>" preview/review.html
@@ -101,6 +104,7 @@ jobs:
           set -euo pipefail
           test -f restored-preview/.nojekyll
           test -s restored-preview/SHA256SUMS.txt
+          test -s restored-preview/docs/ISOLATED-PREVIEW-SETUP.md
           (cd restored-preview && sha256sum --check SHA256SUMS.txt)
           # Reject extra files, duplicate manifest paths, symlinks and traversal as well as tampering.
           python3 restored-preview/scripts/verify_review_artifact.py restored-preview
