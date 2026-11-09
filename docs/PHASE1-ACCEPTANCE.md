@@ -13,7 +13,7 @@ This guide applies to the **unmerged development branch** in PR #65. It does not
    ```
 
    Require `PASS: ... files verified`. This checks SHA-256 hashes, complete manifest coverage, duplicate paths, hidden `.nojekyll`, unexpected files, symlinks and path traversal. On Linux, `sha256sum --check SHA256SUMS.txt` is an additional optional check, not a substitute for the strict verifier. If verification fails, stop and obtain a fresh artifact. To test tampering, modify a **copy** of the extracted artifact and require the verifier to fail. Never modify the only copy.
-4. In a terminal in the extracted folder, run `python3 -m http.server 8765 --bind 127.0.0.1`. Visit `http://127.0.0.1:8765/review.html`.
+4. **Preferred:** in a terminal in the extracted folder run `python3 scripts/serve_review.py .`. The bundled launcher checks the exact SHA marker and runs the strict integrity verifier **before** opening a loopback-only HTTP server. Visit `http://127.0.0.1:8765/review.html`. If verification fails, it refuses to serve. The alternative `python3 -m http.server 8765 --bind 127.0.0.1` does **not** verify the artifact automatically, so complete step 3 first.
 5. Verify the full SHA on `review.html` and `REVIEW.txt` matches the PR head. If it differs, stop: the artifact is stale.
 6. Use a separate browser profile so test data cannot overwrite your everyday Grove workspace. Do not enter real customer, banking, or confidential data.
 
