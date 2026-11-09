@@ -19,9 +19,12 @@ class LocalAssets(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
-        path = (attributes.get("src") if tag in ("script", "img", "source")
+        path = (attributes.get("src") if tag in ("script", "img", "source", "audio", "video")
                 else attributes.get("href") if tag == "link" else None)
         candidates = [path] if path else []
+        # Video poster files are visible assets even without a <source> element.
+        if tag == "video" and attributes.get("poster"):
+            candidates.append(attributes["poster"])
         # Responsive images may use srcset without src; check every local candidate.
         if tag in ("img", "source") and attributes.get("srcset"):
             candidates.extend(
