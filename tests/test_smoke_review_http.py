@@ -107,6 +107,32 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             )
         module.smoke(self.root, SHA)
 
+    def test_missing_video_poster_fails(self):
+        (self.root / "index.html").write_text(
+            "<html><body><video poster='missing-poster.svg'></video>"
+            "<script src='app.js'></script></body></html>", encoding="utf-8"
+        )
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
+
+    def test_missing_direct_audio_source_fails(self):
+        (self.root / "index.html").write_text(
+            "<html><body><audio src='missing-audio.wav'></audio>"
+            "<script src='app.js'></script></body></html>", encoding="utf-8"
+        )
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
+
+    def test_present_video_and_audio_assets_pass(self):
+        (self.root / "index.html").write_text(
+            "<html><body><video src='clip.webm' poster='poster.svg'></video>"
+            "<audio src='sound.wav'></audio><script src='app.js'></script></body></html>",
+            encoding="utf-8"
+        )
+        for name in ("clip.webm", "poster.svg", "sound.wav"):
+            (self.root / name).write_bytes(b"test fixture")
+        module.smoke(self.root, SHA)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
