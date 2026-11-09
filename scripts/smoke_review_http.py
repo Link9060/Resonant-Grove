@@ -21,8 +21,17 @@ class LocalAssets(HTMLParser):
         attributes = dict(attrs)
         path = (attributes.get("src") if tag in ("script", "img", "source")
                 else attributes.get("href") if tag == "link" else None)
-        if path and not path.startswith(("https://", "http://", "//", "data:", "#")):
-            self.paths.add(path.split("?", 1)[0].split("#", 1)[0])
+        candidates = [path] if path else []
+        # Responsive images may use srcset without src; check every local candidate.
+        if tag in ("img", "source") and attributes.get("srcset"):
+            candidates.extend(
+                candidate.strip().split()[0]
+                for candidate in attributes["srcset"].split(",")
+                if candidate.strip()
+            )
+        for candidate in candidates:
+            if not candidate.startswith(("https://", "http://", "//", "data:", "#")):
+                self.paths.add(candidate.split("?", 1)[0].split("#", 1)[0])
 
 
 def smoke(directory: Path, expected_sha: str) -> None:
