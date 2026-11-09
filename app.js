@@ -106,7 +106,8 @@
       render();
       return false;
     }
-    render();
+    try { render(); }
+    catch (error) { toast('Saved locally, but the workspace could not be refreshed.', true); }
     try { window.GroveCloud?.scheduleSave?.(); }
     catch (error) { toast('Saved locally, but cloud sync could not be scheduled.', true); }
     return true;
