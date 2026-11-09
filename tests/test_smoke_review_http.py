@@ -87,6 +87,26 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         )
         module.smoke(self.root, SHA)
 
+    def test_missing_srcset_candidate_fails(self):
+        (self.root / "index.html").write_text(
+            "<html><body><img srcset='missing-small.svg 1x, missing-large.svg 2x'>"
+            "<script src='app.js'></script></body></html>", encoding="utf-8"
+        )
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
+
+    def test_existing_srcset_candidates_pass(self):
+        (self.root / "index.html").write_text(
+            "<html><body><picture><source srcset='small.svg 1x, large.svg 2x'>"
+            "<img src='small.svg'></picture><script src='app.js'></script></body></html>",
+            encoding="utf-8",
+        )
+        for name in ("small.svg", "large.svg"):
+            (self.root / name).write_text(
+                "<svg xmlns='http://www.w3.org/2000/svg'></svg>", encoding="utf-8"
+            )
+        module.smoke(self.root, SHA)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
