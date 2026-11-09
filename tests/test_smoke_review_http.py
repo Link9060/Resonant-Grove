@@ -69,6 +69,24 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, "Wrong content type for styles.css"):
                 module.smoke(self.root, SHA)
 
+    def test_missing_linked_image_fails(self):
+        (self.root / "index.html").write_text(
+            "<html><body><img src='missing.svg'><script src='app.js'></script></body></html>",
+            encoding="utf-8",
+        )
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
+
+    def test_existing_linked_image_passes(self):
+        (self.root / "index.html").write_text(
+            "<html><body><img src='logo.svg'><script src='app.js'></script></body></html>",
+            encoding="utf-8",
+        )
+        (self.root / "logo.svg").write_text(
+            "<svg xmlns='http://www.w3.org/2000/svg'></svg>", encoding="utf-8"
+        )
+        module.smoke(self.root, SHA)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
