@@ -10,6 +10,7 @@ on:
       - 'tests/**'
       - 'scripts/verify_review_artifact.py'
       - 'scripts/smoke_review_http.py'
+      - 'scripts/serve_review.py'
       - 'docs/PHASE1-ACCEPTANCE.md'
       - '.github/workflows/grove-preview.yml'
 
@@ -38,6 +39,7 @@ jobs:
           done
           node --test tests/*.test.mjs
           python3 -m unittest discover -s tests -p 'test_*.py'
+          python3 -m py_compile scripts/serve_review.py
       - name: Assemble standalone preview
         shell: bash
         run: |
@@ -50,6 +52,7 @@ jobs:
           mkdir -p preview/docs preview/scripts
           cp docs/PHASE1-ACCEPTANCE.md preview/docs/PHASE1-ACCEPTANCE.md
           cp scripts/verify_review_artifact.py preview/scripts/verify_review_artifact.py
+          cp scripts/serve_review.py preview/scripts/serve_review.py
           touch preview/.nojekyll
           # Stamp the exact tested source revision into every downloadable build.
           # This is an offline artifact only; it does not deploy to production.
@@ -76,6 +79,7 @@ jobs:
           test -s preview/review.html
           test -s preview/docs/PHASE1-ACCEPTANCE.md
           test -s preview/scripts/verify_review_artifact.py
+          test -s preview/scripts/serve_review.py
           grep -Fq "<code id=\"revision\">${GROVE_SOURCE_SHA}</code>" preview/review.html
           grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" preview/REVIEW.txt
       - name: Upload unmerged review artifact
