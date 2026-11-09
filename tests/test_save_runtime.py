@@ -44,5 +44,40 @@ assert.equal(renders, 2);
         self.assertEqual(completed.returncode, 0, completed.stderr)
 
 
+    def test_serialization_failure_does_not_write_or_sync(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node.js is unavailable; behavioral save test not run")
+        start = APP.index("function save() {")
+        end = APP.index("  function log(", start)
+        save_source = APP[start:end]
+        script = """
+const assert = require('node:assert/strict');
+let writes = 0, scheduled = 0, renders = 0, errors = 0;
+const db = {};
+db.circular = db;
+const KEY = 'grove-test';
+const window = {GroveCloud: {scheduleSave: () => scheduled++}};
+const localStorage = {setItem: () => writes++};
+const toast = (_message, isError) => {if (isError) errors++;};
+const render = () => renders++;
+""" + save_source + """
+assert.equal(save(), false, 'serialization failure must report failure');
+assert.equal(writes, 0, 'failed serialization must not write');
+assert.equal(scheduled, 0, 'failed serialization must not schedule cloud sync');
+assert.equal(errors, 1, 'failed serialization must notify user');
+assert.equal(renders, 1);
+delete db.circular;
+db.seeds = [];
+assert.equal(save(), true, 'retry after fixing data must succeed');
+assert.equal(writes, 1);
+assert.equal(scheduled, 1);
+assert.equal(renders, 2);
+"""
+        completed = subprocess.run(
+            [node, "-e", script], text=True, capture_output=True, timeout=15
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+
 if __name__ == "__main__":
     unittest.main()
