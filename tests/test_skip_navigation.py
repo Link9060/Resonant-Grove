@@ -20,6 +20,16 @@ class SkipNavigationTests(unittest.TestCase):
         self.assertIn('class="skip-to-content"', first.group(0))
         self.assertRegex(self.html, r'<main\b[^>]*\bid="mainContent"[^>]*\btabindex="-1"')
 
+    def test_skip_link_has_visible_high_contrast_focus_outline(self):
+        focus_rule = re.search(r"\.skip-to-content:focus\s*\{([^}]*)\}", self.html)
+        self.assertIsNotNone(focus_rule)
+        declarations = focus_rule.group(1)
+        self.assertRegex(declarations, r"outline:\s*3px\s+solid\s+#0b110d\s*;")
+        self.assertRegex(declarations, r"outline-offset:\s*3px\s*;?")
+        base_rule = re.search(r"\.skip-to-content\s*\{([^}]*)\}", self.html)
+        self.assertIsNotNone(base_rule)
+        self.assertRegex(base_rule.group(1), r"background:\s*#ecf3dc\s*;")
+
     def test_skip_link_becomes_visible_on_keyboard_focus(self):
         self.assertRegex(self.html, r"\.skip-to-content:focus\s*\{[^}]*transform:\s*translateY\(0\)")
         self.assertRegex(self.html, r"\.skip-to-content\s*\{[^}]*transform:\s*translateY\(-160%\)")
