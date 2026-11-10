@@ -30,8 +30,10 @@ def main():
     marker = root / "REVIEW.txt"
     if not marker.is_file():
         parser.error("REVIEW.txt missing: not a Grove review artifact")
-    matches = re.findall(r"^GROVE_PREVIEW_SHA=([0-9a-f]{40})$", marker.read_text(), re.MULTILINE)
-    if len(matches) != 1:
+    marker_lines = marker.read_text().splitlines()
+    sha_lines = [line for line in marker_lines if line.startswith("GROVE_PREVIEW_SHA=")]
+    matches = [line.split("=", 1)[1] for line in sha_lines]
+    if len(matches) != 1 or not re.fullmatch(r"[0-9a-f]{40}", matches[0]):
         parser.error("missing or ambiguous full review SHA")
     if args.expected_sha is not None:
         if not re.fullmatch(r"[0-9a-f]{40}", args.expected_sha):
