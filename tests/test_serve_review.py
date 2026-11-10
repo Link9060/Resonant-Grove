@@ -54,6 +54,24 @@ class ServeReviewTests(unittest.TestCase):
             verify.assert_not_called()
             server.assert_not_called()
 
+    def test_malformed_or_extra_sha_metadata_refuses_to_start(self):
+        # Invalid duplicates cannot be ignored when a valid SHA also exists.
+        with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
+            serve_review.http.server, "ThreadingHTTPServer"
+        ) as server:
+            for marker in (
+                f"GROVE_PREVIEW_SHA={SHA}\\nGROVE_PREVIEW_SHA=invalid\\n",
+                f"GROVE_PREVIEW_SHA=invalid\\nGROVE_PREVIEW_SHA={SHA}\\n",
+                f"GROVE_PREVIEW_SHA={SHA}\\nGROVE_PREVIEW_SHA={SHA.upper()}\\n",
+                "GROVE_PREVIEW_SHA=invalid\\n",
+            ):
+                with self.subTest(marker=marker):
+                    (self.root / "REVIEW.txt").write_text(marker)
+                    with self.assertRaises(SystemExit):
+                        self.invoke("--expected-sha", SHA)
+            verify.assert_not_called()
+            server.assert_not_called()
+
     def test_invalid_port_refuses_before_verification(self):
         with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
             serve_review.http.server, "ThreadingHTTPServer"
