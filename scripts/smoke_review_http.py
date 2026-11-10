@@ -98,7 +98,7 @@ def smoke(directory: Path, expected_sha: str) -> None:
         css_assets = set()
         for css_path in (p for p in parser.paths if Path(p).suffix.lower() == ".css"):
             css_text = (directory / css_path).read_text(encoding="utf-8")
-            for raw in re.findall(r"url\\(\\s*(['\\\"]?)(.*?)\\1\\s*\\)", css_text, re.I):
+            for raw in re.findall(r"url\(\s*(['\"]?)(.*?)\1\s*\)", css_text, re.I):
                 reference = raw[1].strip()
                 if not reference or reference.startswith(("data:", "#", "//")):
                     continue
