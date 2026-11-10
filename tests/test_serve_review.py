@@ -170,7 +170,7 @@ class ServeReviewTests(unittest.TestCase):
 
     def test_http_encoded_traversal_cannot_read_outside_artifact(self):
         # Even a verified artifact should not expose neighboring local files.
-        outside = self.root.parent / "private-review-neighbor.txt"
+        outside = self.root.parent / f"{self.root.name}-private-review-neighbor.txt"
         outside.write_text("never expose neighboring files")
         self.addCleanup(lambda: outside.unlink(missing_ok=True))
         handler = functools.partial(serve_review.ReviewHandler, directory=str(self.root))
@@ -179,9 +179,9 @@ class ServeReviewTests(unittest.TestCase):
             thread.start()
             try:
                 for path in (
-                    "/../private-review-neighbor.txt",
-                    "/%2e%2e/private-review-neighbor.txt",
-                    "/%2e%2e%2fprivate-review-neighbor.txt",
+                    f"/../{outside.name}",
+                    f"/%2e%2e/{outside.name}",
+                    f"/%2e%2e%2f{outside.name}",
                 ):
                     with self.subTest(path=path):
                         connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
