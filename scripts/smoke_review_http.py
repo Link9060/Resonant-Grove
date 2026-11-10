@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import threading
 import urllib.request
+from urllib.parse import urlsplit, unquote
 
 class LocalAssets(HTMLParser):
     def __init__(self):
@@ -92,7 +93,30 @@ def smoke(directory: Path, expected_sha: str) -> None:
                     raise AssertionError(
                         f"Wrong content type for {asset}: {mime} (expected {expected_mime})"
                     )
-        print(f"PASS: loopback HTTP serves review build for {expected_sha} ({len(parser.paths)} linked assets)")
+        # CSS may reference fonts and images not visible to the HTML parser.
+        # Check local url(...) resources, including quoted URLs and query strings.
+        css_assets = set()
+        for css_path in (p for p in parser.paths if Path(p).suffix.lower() == ".css"):
+            css_text = (directory / css_path).read_text(encoding="utf-8")
+            for raw in re.findall(r"url\\(\\s*(['\\\"]?)(.*?)\\1\\s*\\)", css_text, re.I):
+                reference = raw[1].strip()
+                if not reference or reference.startswith(("data:", "#", "//")):
+                    continue
+                parsed = urlsplit(reference)
+                if parsed.scheme or parsed.netloc:
+                    continue
+                decoded = unquote(parsed.path)
+                if not decoded:
+                    continue
+                asset_path = (Path(css_path).parent / decoded)
+                if decoded.startswith("/") or ".." in asset_path.parts:
+                    raise AssertionError(f"Unsafe CSS asset reference: {reference}")
+                css_assets.add(asset_path.as_posix())
+        for asset in sorted(css_assets):
+            with urllib.request.urlopen(base + "/" + asset, timeout=5) as response:
+                if response.status != 200 or not response.read():
+                    raise AssertionError(f"Missing or empty CSS asset: {asset}")
+        print(f"PASS: loopback HTTP serves review build for {expected_sha} ({len(parser.paths) + len(css_assets)} linked assets)")
     finally:
         server.shutdown()
         server.server_close()
