@@ -133,6 +133,34 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             (self.root / name).write_bytes(b"test fixture")
         module.smoke(self.root, SHA)
 
+    def test_missing_embedded_assets_fail(self):
+        cases = (
+            "<iframe src='missing-frame.html'></iframe>",
+            "<video><track src='missing-captions.vtt'></video>",
+            "<object data='missing-diagram.svg'></object>",
+            "<embed src='missing-document.pdf'>",
+        )
+        for markup in cases:
+            with self.subTest(markup=markup):
+                (self.root / "index.html").write_text(
+                    "<html><body>" + markup + "<script src='app.js'></script></body></html>",
+                    encoding="utf-8",
+                )
+                with self.assertRaises(urllib.error.HTTPError):
+                    module.smoke(self.root, SHA)
+
+    def test_existing_embedded_assets_pass(self):
+        (self.root / "index.html").write_text(
+            "<html><body><iframe src='frame.html'></iframe>"
+            "<video><track src='captions.vtt'></video>"
+            "<object data='diagram.svg'></object>"
+            "<embed src='document.pdf'><script src='app.js'></script></body></html>",
+            encoding="utf-8",
+        )
+        for name in ("frame.html", "captions.vtt", "diagram.svg", "document.pdf"):
+            (self.root / name).write_bytes(b"test fixture")
+        module.smoke(self.root, SHA)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
