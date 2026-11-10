@@ -39,6 +39,31 @@ class ServeReviewTests(unittest.TestCase):
             verify.assert_not_called()
             server.assert_not_called()
 
+    def test_duplicate_revision_markers_refuse_to_start(self):
+        # Ambiguous metadata must never select an arbitrary build revision.
+        with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
+            serve_review.http.server, "ThreadingHTTPServer"
+        ) as server:
+            for extra in (SHA, "b" * 40):
+                with self.subTest(extra=extra):
+                    (self.root / "REVIEW.txt").write_text(
+                        f"GROVE_PREVIEW_SHA={SHA}\\nGROVE_PREVIEW_SHA={extra}\\n"
+                    )
+                    with self.assertRaises(SystemExit):
+                        self.invoke("--expected-sha", SHA)
+            verify.assert_not_called()
+            server.assert_not_called()
+
+    def test_invalid_port_refuses_before_verification(self):
+        with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
+            serve_review.http.server, "ThreadingHTTPServer"
+        ) as server:
+            for port in ("0", "65536", "-1"):
+                with self.subTest(port=port), self.assertRaises(SystemExit):
+                    self.invoke("--port", port)
+            verify.assert_not_called()
+            server.assert_not_called()
+
     def test_mismatched_revision_refuses_to_start(self):
         (self.root / "review.html").write_text('<code id="revision">wrong</code>')
         with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
