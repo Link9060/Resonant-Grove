@@ -47,7 +47,7 @@ class ServeReviewTests(unittest.TestCase):
             for extra in (SHA, "b" * 40):
                 with self.subTest(extra=extra):
                     (self.root / "REVIEW.txt").write_text(
-                        f"GROVE_PREVIEW_SHA={SHA}\\nGROVE_PREVIEW_SHA={extra}\\n"
+                        f"GROVE_PREVIEW_SHA={SHA}\nGROVE_PREVIEW_SHA={extra}\n"
                     )
                     with self.assertRaises(SystemExit):
                         self.invoke("--expected-sha", SHA)
