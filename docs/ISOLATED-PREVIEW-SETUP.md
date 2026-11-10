@@ -16,6 +16,17 @@ After owner approval and any required adult/account-owner participation, an owne
 
 This configuration is a **candidate**, not verified to be connected or deployed. The reviewer must verify the deployed output and its commit identity independently. If a host cannot guarantee branch isolation and an exact-head identity, do not call its URL a working preview.
 
+## Safe local staging rehearsal (no hosting or publication)
+
+Before configuring any provider, verify the allowlisted package locally using the existing exact-head Actions artifact. Download and extract the `grove-review-<SHA>` artifact into a disposable folder, then run from that folder:
+
+```bash
+python3 scripts/verify_review_artifact.py .
+python3 scripts/serve_review.py . --expected-sha <FULL_CURRENT_PR_HEAD_SHA>
+```
+
+The first command must pass integrity and file-allowlist checks; the second serves **only on 127.0.0.1**, never the public internet. Inspect `review.html` and `index.html` in the browser. The packaged artifact root is the reviewed publishable file set; **do not point a host at the repository root**. The provider's eventual build/output configuration must reproduce this allowlisted set, without copying a ZIP or source directory wholesale. Do not copy local browser storage or credentials to a hosted environment. This rehearsal is not a hosted preview and does not authorize one.
+
 ## Exact-head verification
 
 1. Record the full current PR head SHA from GitHub immediately before the deployment.
