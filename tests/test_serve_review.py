@@ -2,6 +2,10 @@
 import contextlib
 import importlib.util
 import io
+import functools
+import http.client
+import http.server
+import threading
 from pathlib import Path
 import sys
 import tempfile
@@ -114,6 +118,31 @@ class ServeReviewTests(unittest.TestCase):
             mock.call("Permissions-Policy", "camera=(), microphone=(), geolocation=()"),
         ])
         parent.assert_called_once_with()
+
+    def test_real_http_response_has_privacy_headers_and_no_cache(self):
+        # Exercise an actual loopback HTTP response, not just a mocked handler.
+        (self.root / "index.html").write_text("<title>Grove review</title>")
+        handler = functools.partial(serve_review.ReviewHandler, directory=str(self.root))
+        with http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+                try:
+                    connection.request("GET", "/index.html")
+                    response = connection.getresponse()
+                    self.assertEqual(response.status, 200)
+                    self.assertIn(b"Grove review", response.read())
+                    self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                    self.assertEqual(response.getheader("X-Content-Type-Options"), "nosniff")
+                    self.assertEqual(response.getheader("X-Frame-Options"), "DENY")
+                    self.assertEqual(response.getheader("Referrer-Policy"), "no-referrer")
+                    self.assertEqual(response.getheader("Permissions-Policy"), "camera=(), microphone=(), geolocation=()")
+                finally:
+                    connection.close()
+            finally:
+                server.shutdown()
+                thread.join(timeout=3)
 
     def test_expected_sha_rejects_stale_artifact(self):
         with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
