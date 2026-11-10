@@ -144,6 +144,30 @@ class ServeReviewTests(unittest.TestCase):
                 server.shutdown()
                 thread.join(timeout=3)
 
+    def test_directory_listing_is_denied_but_assets_still_load(self):
+        (self.root / "assets").mkdir()
+        (self.root / "assets" / "sample.css").write_text("body { color: black; }")
+        handler = functools.partial(serve_review.ReviewHandler, directory=str(self.root))
+        with http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+                try:
+                    connection.request("GET", "/assets/")
+                    response = connection.getresponse()
+                    self.assertEqual(response.status, 403)
+                    self.assertNotIn(b"sample.css", response.read())
+                    connection.request("GET", "/assets/sample.css")
+                    response = connection.getresponse()
+                    self.assertEqual(response.status, 200)
+                    self.assertIn(b"color: black", response.read())
+                finally:
+                    connection.close()
+            finally:
+                server.shutdown()
+                thread.join(timeout=3)
+
     def test_expected_sha_rejects_stale_artifact(self):
         with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
             serve_review.http.server, "ThreadingHTTPServer"
