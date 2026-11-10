@@ -110,6 +110,8 @@ class ServeReviewTests(unittest.TestCase):
             mock.call("Cache-Control", "no-store, max-age=0"),
             mock.call("X-Content-Type-Options", "nosniff"),
             mock.call("X-Frame-Options", "DENY"),
+            mock.call("Referrer-Policy", "no-referrer"),
+            mock.call("Permissions-Policy", "camera=(), microphone=(), geolocation=()"),
         ])
         parent.assert_called_once_with()
 
