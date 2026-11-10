@@ -15,6 +15,7 @@ class ReviewResponseHeadersTest(unittest.TestCase):
     def test_privacy_headers_are_sent(self):
         handler = module.ReviewHandler.__new__(module.ReviewHandler)
         handler.wfile = io.BytesIO()
+        handler._headers_buffer = []
         handler.request_version = "HTTP/1.1"
         handler.protocol_version = "HTTP/1.0"
         handler.send_header = Mock()
