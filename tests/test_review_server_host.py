@@ -59,6 +59,31 @@ class HostHeaderTests(unittest.TestCase):
                     self.assertEqual(status, 403)
                     self.assertEqual(cache, "no-store, max-age=0")
 
+    def test_missing_and_duplicate_host_headers_rejected(self):
+        # Raw HTTP/1.1 permits exercising duplicate Host fields that high-level
+        # clients normally normalize before sending.
+        import socket
+        for method in ("GET", "HEAD"):
+            for headers in (
+                "",
+                "Host: localhost\r\nHost: attacker.example\r\n",
+                "Host: attacker.example\r\nHost: localhost\r\n",
+                "Host: localhost\r\nHost: localhost\r\n",
+            ):
+                with self.subTest(method=method, headers=headers):
+                    with socket.create_connection(("127.0.0.1", self.server.server_port), timeout=3) as sock:
+                        sock.sendall((f"{method} /index.html HTTP/1.1\r\n"
+                                      + headers + "Connection: close\r\n\r\n").encode("ascii"))
+                        sock.settimeout(3)
+                        response = b""
+                        while True:
+                            chunk = sock.recv(4096)
+                            if not chunk:
+                                break
+                            response += chunk
+                    self.assertIn(b" 403 ", response.split(b"\r\n", 1)[0])
+                    self.assertNotIn(b"review test", response)
+
     def test_external_host_rejected_without_leaking_contents(self):
         for method in ("GET", "HEAD"):
             for host in ("attacker.example", "attacker.example:8765", "127.0.0.1.attacker.example"):
