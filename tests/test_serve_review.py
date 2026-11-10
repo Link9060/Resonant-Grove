@@ -25,8 +25,8 @@ class ServeReviewTests(unittest.TestCase):
         (self.root / "REVIEW.txt").write_text(f"GROVE_PREVIEW_SHA={SHA}\n")
         (self.root / "review.html").write_text(f'<code id="revision">{SHA}</code>')
 
-    def invoke(self):
-        with mock.patch.object(sys, "argv", ["serve_review.py", str(self.root)]), contextlib.redirect_stderr(io.StringIO()):
+    def invoke(self, *args):
+        with mock.patch.object(sys, "argv", ["serve_review.py", str(self.root), *args]), contextlib.redirect_stderr(io.StringIO()):
             return serve_review.main()
 
     def test_missing_marker_refuses_to_start(self):
@@ -69,6 +69,33 @@ class ServeReviewTests(unittest.TestCase):
             mock.call("X-Frame-Options", "DENY"),
         ])
         parent.assert_called_once_with()
+
+    def test_expected_sha_rejects_stale_artifact(self):
+        with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
+            serve_review.http.server, "ThreadingHTTPServer"
+        ) as server:
+            with self.assertRaises(SystemExit):
+                self.invoke("--expected-sha", "b" * 40)
+            verify.assert_not_called()
+            server.assert_not_called()
+
+    def test_expected_sha_rejects_short_or_invalid_hash(self):
+        with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
+            serve_review.http.server, "ThreadingHTTPServer"
+        ) as server:
+            for bad_sha in ("abc1234", "A" * 40, "g" * 40):
+                with self.subTest(bad_sha=bad_sha), self.assertRaises(SystemExit):
+                    self.invoke("--expected-sha", bad_sha)
+            verify.assert_not_called()
+            server.assert_not_called()
+
+    def test_matching_expected_sha_still_verifies_and_serves(self):
+        with mock.patch.object(serve_review.subprocess, "run", return_value=mock.Mock(returncode=0)) as verify, mock.patch.object(
+            serve_review.http.server, "ThreadingHTTPServer"
+        ) as server, contextlib.redirect_stdout(io.StringIO()):
+            self.invoke("--expected-sha", SHA)
+            verify.assert_called_once()
+            server.return_value.__enter__.return_value.serve_forever.assert_called_once_with()
 
     def test_verified_artifact_binds_loopback_only(self):
         with mock.patch.object(serve_review.subprocess, "run", return_value=mock.Mock(returncode=0)) as verify, mock.patch.object(
