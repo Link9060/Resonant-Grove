@@ -161,6 +161,22 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             (self.root / name).write_bytes(b"test fixture")
         module.smoke(self.root, SHA)
 
+    def test_missing_css_background_asset_fails(self):
+        (self.root / "styles.css").write_text(
+            "body { background-image: url('missing-background.svg?v=1'); }", encoding="utf-8"
+        )
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
+
+    def test_existing_css_background_asset_passes(self):
+        (self.root / "styles.css").write_text(
+            "body { background-image: url(\"background.svg?v=1\"); }", encoding="utf-8"
+        )
+        (self.root / "background.svg").write_text(
+            "<svg xmlns='http://www.w3.org/2000/svg'></svg>", encoding="utf-8"
+        )
+        module.smoke(self.root, SHA)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
