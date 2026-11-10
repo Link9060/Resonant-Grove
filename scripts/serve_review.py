@@ -11,6 +11,27 @@ import sys
 class ReviewHandler(http.server.SimpleHTTPRequestHandler):
     """Keep review pages uncached and limit browser content sniffing."""
 
+    def _allowed_host(self):
+        """Reject DNS-rebinding Host headers on the loopback-only review server."""
+        host = self.headers.get("Host", "")
+        return host in {
+            "127.0.0.1", "localhost",
+            f"127.0.0.1:{self.server.server_port}",
+            f"localhost:{self.server.server_port}",
+        }
+
+    def do_GET(self):
+        if not self._allowed_host():
+            self.send_error(403, "Non-loopback Host rejected")
+            return
+        super().do_GET()
+
+    def do_HEAD(self):
+        if not self._allowed_host():
+            self.send_error(403, "Non-loopback Host rejected")
+            return
+        super().do_HEAD()
+
     def list_directory(self, path):
         """Never expose an automatic directory index from a review artifact."""
         self.send_error(403, "Directory listing disabled")
