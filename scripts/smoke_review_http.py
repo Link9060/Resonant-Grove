@@ -19,9 +19,12 @@ class LocalAssets(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
-        path = (attributes.get("src") if tag in ("script", "img", "source", "audio", "video")
+        path = (attributes.get("src") if tag in ("script", "img", "source", "audio", "video", "iframe", "track", "embed")
                 else attributes.get("href") if tag == "link" else None)
         candidates = [path] if path else []
+        # Embedded documents and media object payloads are also required assets.
+        if tag == "object" and attributes.get("data"):
+            candidates.append(attributes["data"])
         # Video poster files are visible assets even without a <source> element.
         if tag == "video" and attributes.get("poster"):
             candidates.append(attributes["poster"])
