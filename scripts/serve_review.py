@@ -13,7 +13,10 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
 
     def _allowed_host(self):
         """Reject DNS-rebinding Host headers on the loopback-only review server."""
-        host = self.headers.get("Host", "")
+        hosts = self.headers.get_all("Host", [])
+        if len(hosts) != 1:
+            return False
+        host = hosts[0]
         return host in {
             "127.0.0.1", "localhost",
             f"127.0.0.1:{self.server.server_port}",
