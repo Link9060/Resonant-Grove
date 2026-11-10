@@ -168,6 +168,31 @@ class ServeReviewTests(unittest.TestCase):
                 server.shutdown()
                 thread.join(timeout=3)
 
+    def test_head_request_preserves_security_headers_without_body(self):
+        # Browser and tooling HEAD probes must receive the same privacy controls.
+        (self.root / "index.html").write_text("<title>Grove review</title>")
+        handler = functools.partial(serve_review.ReviewHandler, directory=str(self.root))
+        with http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+                try:
+                    connection.request("HEAD", "/index.html")
+                    response = connection.getresponse()
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.read(), b"")
+                    self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                    self.assertEqual(response.getheader("X-Content-Type-Options"), "nosniff")
+                    self.assertEqual(response.getheader("X-Frame-Options"), "DENY")
+                    self.assertEqual(response.getheader("Referrer-Policy"), "no-referrer")
+                    self.assertEqual(response.getheader("Permissions-Policy"), "camera=(), microphone=(), geolocation=()")
+                finally:
+                    connection.close()
+            finally:
+                server.shutdown()
+                thread.join(timeout=3)
+
     def test_http_encoded_traversal_cannot_read_outside_artifact(self):
         # Even a verified artifact should not expose neighboring local files.
         outside = self.root.parent / f"{self.root.name}-private-review-neighbor.txt"
