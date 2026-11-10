@@ -22,6 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", nargs="?", default=".", type=Path)
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--expected-sha", help="Require this exact 40-character PR head SHA")
     args = parser.parse_args()
     root = args.directory.resolve(strict=True)
     if not root.is_dir() or not 1 <= args.port <= 65535:
@@ -32,6 +33,11 @@ def main():
     matches = re.findall(r"^GROVE_PREVIEW_SHA=([0-9a-f]{40})$", marker.read_text(), re.MULTILINE)
     if len(matches) != 1:
         parser.error("missing or ambiguous full review SHA")
+    if args.expected_sha is not None:
+        if not re.fullmatch(r"[0-9a-f]{40}", args.expected_sha):
+            parser.error("--expected-sha must be a full lowercase 40-character commit SHA")
+        if matches[0] != args.expected_sha:
+            parser.error("review artifact SHA differs from --expected-sha; refusing stale build")
     revision = root / "review.html"
     if not revision.is_file() or f'<code id="revision">{matches[0]}</code>' not in revision.read_text():
         parser.error("review.html SHA mismatch")
