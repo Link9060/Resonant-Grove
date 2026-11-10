@@ -17,7 +17,16 @@ This guide applies to the **unmerged development branch** in PR #65. It does not
 5. Verify the full SHA on `review.html` and `REVIEW.txt` matches the PR head. If it differs, stop: the artifact is stale.
 6. Use a separate browser profile so test data cannot overwrite your everyday Grove workspace. Do not enter real customer, banking, or confidential data.
 
-**Hosted preview:** unavailable until an isolated, authorized branch deployment is configured. A downloadable Actions artifact is not a hosted URL. The main GitHub Pages URL is production, not this release.
+**Hosted preview evidence (2026-11-10):** The Cloudflare Pages GitHub bot reported a successful deployment of PR head `9958af6ad0eae451be75ffbcd9f50c3468478451` at [immutable deployment](https://ef115f26.resonant-grove.pages.dev/) and [development branch alias](https://grove-release-platform-previ.resonant-grove.pages.dev/), in [PR comment](https://github.com/Link9060/Resonant-Grove/pull/65#issuecomment-6776058606). **This is a deployment report, not independently verified browser acceptance.** Automated retrieval from the builder runtime could not reach either address. Do not treat those URLs as a confirmed working preview or claim they reflect a newer PR head without new evidence. The main GitHub Pages URL is production, not this release.
+
+### Hosted-preview verification (GROVE-002, still blocked until observed)
+
+1. Copy the **current full PR head SHA** from PR #65, not a previous report. Check whether the Cloudflare bot's latest deployment comment identifies that commit. If not, mark the hosted preview **STALE/BLOCKED**, and use the exact-head Actions artifact locally instead.
+2. Open the immutable deployment URL in a normal browser, then `/review.html`. Record HTTP/network result, browser/device, date and time. Verify the full displayed SHA equals the **current PR head** and matches `REVIEW.txt` if exposed. Do not infer SHA from a short hash in the deployment comment alone.
+3. Repeat with the development branch alias. Confirm the alias resolves to the same current SHA. A working immutable deployment does not prove the moving alias is current.
+4. Confirm `index.html` loads the real Grove workspace and expected static assets. Confirm no repository internals such as `/.github/workflows/deploy.yml`, `/tests/test_review_server_host.py`, or `/.git/config` are publicly served. A 404/403 is acceptable for those internals.
+5. In a disposable browser profile, run navigation, Seed persistence, mobile menu, backup, and offline checks below. Compare the production main site separately without writing test data there.
+6. Record PASS/FAIL/BLOCKED in the durable PR checklist with tested full SHA and observations. **Only verified exact-head browser evidence** can close the hosted-preview acceptance blocker; a successful deployment bot comment alone cannot.
 
 ## End-to-end acceptance
 
