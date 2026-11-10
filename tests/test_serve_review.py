@@ -168,6 +168,35 @@ class ServeReviewTests(unittest.TestCase):
                 server.shutdown()
                 thread.join(timeout=3)
 
+    def test_http_encoded_traversal_cannot_read_outside_artifact(self):
+        # Even a verified artifact should not expose neighboring local files.
+        outside = self.root.parent / "private-review-neighbor.txt"
+        outside.write_text("never expose neighboring files")
+        self.addCleanup(lambda: outside.unlink(missing_ok=True))
+        handler = functools.partial(serve_review.ReviewHandler, directory=str(self.root))
+        with http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                for path in (
+                    "/../private-review-neighbor.txt",
+                    "/%2e%2e/private-review-neighbor.txt",
+                    "/%2e%2e%2fprivate-review-neighbor.txt",
+                ):
+                    with self.subTest(path=path):
+                        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+                        try:
+                            connection.request("GET", path)
+                            response = connection.getresponse()
+                            body = response.read()
+                            self.assertNotEqual(response.status, 200)
+                            self.assertNotIn(b"never expose neighboring files", body)
+                        finally:
+                            connection.close()
+            finally:
+                server.shutdown()
+                thread.join(timeout=3)
+
     def test_expected_sha_rejects_stale_artifact(self):
         with mock.patch.object(serve_review.subprocess, "run") as verify, mock.patch.object(
             serve_review.http.server, "ThreadingHTTPServer"
