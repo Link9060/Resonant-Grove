@@ -56,18 +56,15 @@ test('review artifact manifest hashes every file and verifies hashes before uplo
   assert.ok(verify>=0 && upload>verify,'integrity verification must precede artifact upload');
 });
 
-test('CI downloads the uploaded artifact and verifies extracted hidden files and hashes',()=>{
-  assert.match(workflow,/uses: actions\/download-artifact@v4/);
-  assert.match(workflow,/path: restored-preview\//);
-  assert.match(workflow,/test -f restored-preview\/\.nojekyll/);
-  assert.match(workflow,/\(cd restored-preview && sha256sum --check SHA256SUMS\.txt\)/);
-  assert.match(workflow,/python3 restored-preview\/scripts\/verify_review_artifact\.py restored-preview/);
-  assert.match(workflow,/diff -u preview\/SHA256SUMS\.txt restored-preview\/SHA256SUMS\.txt/);
-  assert.match(workflow,/find restored-preview -type f/);
+test('CI verifies assembled exact-head artifact before upload without a same-run download race',()=>{
+  assert.match(workflow,/name: Verify assembled review artifact and HTTP behavior/);
+  assert.match(workflow,/python3 scripts\/verify_review_artifact\.py preview/);
+  assert.match(workflow,/python3 scripts\/smoke_review_http\.py preview "\$GROVE_SOURCE_SHA"/);
+  assert.doesNotMatch(workflow,/uses: actions\/download-artifact@v4/);
+  const verify=workflow.indexOf('python3 scripts/verify_review_artifact.py preview');
+  const smoke=workflow.indexOf('python3 scripts/smoke_review_http.py preview');
   const upload=workflow.indexOf('uses: actions/upload-artifact@v4');
-  const download=workflow.indexOf('uses: actions/download-artifact@v4');
-  const verify=workflow.indexOf('cd restored-preview && sha256sum --check SHA256SUMS.txt');
-  assert.ok(upload>=0 && download>upload && verify>download);
+  assert.ok(verify>=0 && smoke>verify && upload>smoke,'verification and smoke check must precede upload');
 });
 
 test('downloaded artifact includes a self-contained portable integrity verifier',()=>{
@@ -75,14 +72,14 @@ test('downloaded artifact includes a self-contained portable integrity verifier'
   assert.match(workflow,/mkdir -p preview\/docs preview\/scripts/);
   assert.match(workflow,/cp scripts\/verify_review_artifact\.py preview\/scripts\/verify_review_artifact\.py/);
   assert.match(workflow,/test -s preview\/scripts\/verify_review_artifact\.py/);
-  assert.match(workflow,/python3 restored-preview\/scripts\/verify_review_artifact\.py restored-preview/);
+  assert.match(workflow,/python3 scripts\/verify_review_artifact\.py preview/);
   assert.match(guide,/python3 scripts\/verify_review_artifact\.py \./);
   assert.match(guide,/before serving/);
 });
 
 test('downloaded review build receives an actual loopback HTTP smoke check',()=>{
   const smoke=readFileSync(new URL('../scripts/smoke_review_http.py',import.meta.url),'utf8');
-  assert.match(workflow,/python3 scripts\/smoke_review_http\.py restored-preview "\$GROVE_SOURCE_SHA"/);
+  assert.match(workflow,/python3 scripts\/smoke_review_http\.py preview "\$GROVE_SOURCE_SHA"/);
   assert.match(workflow,/^\s*- 'scripts\/smoke_review_http\.py'$/m);
   assert.match(smoke,/ThreadingHTTPServer/);
   assert.match(smoke,/127\.0\.0\.1/);
