@@ -11,6 +11,11 @@ import sys
 class ReviewHandler(http.server.SimpleHTTPRequestHandler):
     """Keep review pages uncached and limit browser content sniffing."""
 
+    def list_directory(self, path):
+        """Never expose an automatic directory index from a review artifact."""
+        self.send_error(403, "Directory listing disabled")
+        return None
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, max-age=0")
         self.send_header("X-Content-Type-Options", "nosniff")
