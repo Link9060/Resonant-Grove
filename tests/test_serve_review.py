@@ -60,10 +60,10 @@ class ServeReviewTests(unittest.TestCase):
             serve_review.http.server, "ThreadingHTTPServer"
         ) as server:
             for marker in (
-                f"GROVE_PREVIEW_SHA={SHA}\\nGROVE_PREVIEW_SHA=invalid\\n",
-                f"GROVE_PREVIEW_SHA=invalid\\nGROVE_PREVIEW_SHA={SHA}\\n",
-                f"GROVE_PREVIEW_SHA={SHA}\\nGROVE_PREVIEW_SHA={SHA.upper()}\\n",
-                "GROVE_PREVIEW_SHA=invalid\\n",
+                f"GROVE_PREVIEW_SHA={SHA}\nGROVE_PREVIEW_SHA=invalid\n",
+                f"GROVE_PREVIEW_SHA=invalid\nGROVE_PREVIEW_SHA={SHA}\n",
+                f"GROVE_PREVIEW_SHA={SHA}\nGROVE_PREVIEW_SHA={SHA.upper()}\n",
+                "GROVE_PREVIEW_SHA=invalid\n",
             ):
                 with self.subTest(marker=marker):
                     (self.root / "REVIEW.txt").write_text(marker)
