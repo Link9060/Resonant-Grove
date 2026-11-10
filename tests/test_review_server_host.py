@@ -44,6 +44,21 @@ class HostHeaderTests(unittest.TestCase):
                 with self.subTest(method=method, host=host):
                     self.assertEqual(self.request(method, host)[0], 200)
 
+    def test_wrong_port_and_noncanonical_host_rejected(self):
+        for method in ("GET", "HEAD"):
+            for host in (
+                f"localhost:{self.server.server_port + 1}",
+                f"127.0.0.1:{self.server.server_port + 1}",
+                "localhost.",
+                "LOCALHOST",
+                "127.0.0.2",
+                "[::1]",
+            ):
+                with self.subTest(method=method, host=host):
+                    status, cache = self.request(method, host)
+                    self.assertEqual(status, 403)
+                    self.assertEqual(cache, "no-store, max-age=0")
+
     def test_external_host_rejected_without_leaking_contents(self):
         for method in ("GET", "HEAD"):
             for host in ("attacker.example", "attacker.example:8765", "127.0.0.1.attacker.example"):
