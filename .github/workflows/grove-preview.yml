@@ -15,6 +15,12 @@ on:
       - 'docs/ISOLATED-PREVIEW-SETUP.md'
       - '.github/workflows/grove-preview.yml'
 
+# Avoid spending free Actions minutes packaging superseded PR revisions.
+# A newer push cancels only this PR's older preview-packaging run.
+concurrency:
+  group: grove-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
