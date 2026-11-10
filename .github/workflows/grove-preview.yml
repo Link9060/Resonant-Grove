@@ -85,31 +85,20 @@ jobs:
           test -s preview/scripts/serve_review.py
           grep -Fq "<code id=\"revision\">${GROVE_SOURCE_SHA}</code>" preview/review.html
           grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" preview/REVIEW.txt
-      - name: Upload unmerged review artifact
+      - name: Verify assembled review artifact and HTTP behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Verify exact packaged bytes before upload. Same-run artifact downloads
+          # can fail with an eventual-consistency "artifact not found" error.
+          python3 scripts/verify_review_artifact.py preview
+          python3 scripts/smoke_review_http.py preview "$GROVE_SOURCE_SHA"
+          test -s preview/docs/ISOLATED-PREVIEW-SETUP.md
+          grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" preview/REVIEW.txt
+      - name: Upload verified unmerged review artifact
         uses: actions/upload-artifact@v4
         with:
           name: grove-review-${{ github.event.pull_request.head.sha }}
           path: preview/
-          # .nojekyll is included in SHA256SUMS; upload-artifact excludes hidden files by default.
           include-hidden-files: true
           retention-days: 14
-      - name: Verify downloaded review artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: grove-review-${{ github.event.pull_request.head.sha }}
-          path: restored-preview/
-      - name: Validate extracted artifact completeness
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f restored-preview/.nojekyll
-          test -s restored-preview/SHA256SUMS.txt
-          test -s restored-preview/docs/ISOLATED-PREVIEW-SETUP.md
-          (cd restored-preview && sha256sum --check SHA256SUMS.txt)
-          # Reject extra files, duplicate manifest paths, symlinks and traversal as well as tampering.
-          python3 restored-preview/scripts/verify_review_artifact.py restored-preview
-          diff -u preview/SHA256SUMS.txt restored-preview/SHA256SUMS.txt
-          test "$(find preview -type f | wc -l)" -eq "$(find restored-preview -type f | wc -l)"
-          grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" restored-preview/REVIEW.txt
-          # Exercise the actual extracted site over a loopback HTTP server, not only file hashes.
-          python3 scripts/smoke_review_http.py restored-preview "$GROVE_SOURCE_SHA"
