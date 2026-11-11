@@ -77,3 +77,18 @@ test('unserializable workspace fails safely without cloud sync and can recover',
   assert.equal(save(), true);
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
 });
+
+test('storage failure remains authoritative even if error-screen rendering fails', () => {
+  const { save, events } = harness({ failStorage: true, failRender: true });
+  assert.equal(save(), false);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'toast', 'render']);
+  assert.equal(events.some(e => e[0] === 'cloud'), false);
+});
+
+test('recovery after storage quota failure saves and schedules sync', () => {
+  const { save, events } = harness({ failStorage: true });
+  assert.equal(save(), false);
+  const recovered = harness();
+  assert.equal(recovered.save(), true);
+  assert.deepEqual(recovered.events.map(e => e[0]), ['storage', 'render', 'cloud']);
+});
