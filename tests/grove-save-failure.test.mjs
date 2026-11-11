@@ -288,3 +288,32 @@ test('notification UI failures never change save result or suppress cloud recove
   assert.deepEqual(events, ['storage-failed', 'toast', 'render']);
   assert.equal(events.includes('cloud'), false);
 });
+
+
+test('serialization failure with broken notification UI retains last-good data and never syncs', () => {
+  const events = [];
+  const stored = new Map();
+  const db = { version: 1, seeds: [{ id: 'baseline' }], transactions: [], activity: [] };
+  const save = runInNewContext(
+    '(function(localStorage,window,render,toast,db){const KEY="grove-test";' +
+    saveSource + ';return save;})'
+  )(
+    { setItem(key, value) { events.push('storage'); stored.set(key, value); } },
+    { GroveCloud: { scheduleSave() { events.push('cloud'); } } },
+    () => { events.push('render'); },
+    () => { events.push('toast'); throw Error('Notification UI unavailable'); },
+    db
+  );
+  assert.equal(save(), true);
+  const baseline = stored.get('grove-test');
+  db.seeds.push({ id: 'bad', goal: 1n });
+  events.length = 0;
+  assert.equal(save(), false);
+  assert.equal(stored.get('grove-test'), baseline);
+  assert.deepEqual(events, ['toast', 'render']);
+  db.seeds[1].goal = 1;
+  events.length = 0;
+  assert.equal(save(), true);
+  assert.deepEqual(events, ['storage', 'render', 'cloud']);
+  assert.deepEqual(JSON.parse(stored.get('grove-test')).seeds.map(s => s.id), ['baseline', 'bad']);
+});
