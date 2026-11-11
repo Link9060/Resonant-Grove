@@ -265,3 +265,26 @@ test('throwing GroveCloud property getter preserves local save and permits later
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
   assert.deepEqual(JSON.parse(stored.get('grove-test')), workspace);
 });
+
+test('notification UI failures never change save result or suppress cloud recovery', () => {
+  const script = '(function(localStorage,window,render,toast,db){const KEY="grove-test";' +
+    saveSource + ';return save;})';
+  const db = { version: 1, seeds: [{ id: 'retained' }], transactions: [], activity: [] };
+  const events = [];
+  const toast = () => { events.push('toast'); throw Error('Toast UI unavailable'); };
+  const render = () => { events.push('render'); throw Error('Render unavailable'); };
+  const window = { GroveCloud: { scheduleSave() { events.push('cloud'); throw Error('Cloud unavailable'); } } };
+  const localStorage = { setItem() { events.push('storage'); } };
+  const save = runInNewContext(script)(localStorage, window, render, toast, db);
+  assert.equal(save(), true);
+  assert.deepEqual(events, ['storage', 'render', 'toast', 'cloud', 'toast']);
+
+  const failedSave = runInNewContext(script)(
+    { setItem() { events.push('storage-failed'); throw Error('Quota'); } },
+    window, render, toast, db
+  );
+  events.length = 0;
+  assert.equal(failedSave(), false);
+  assert.deepEqual(events, ['storage-failed', 'toast', 'render']);
+  assert.equal(events.includes('cloud'), false);
+});
