@@ -316,3 +316,24 @@ test('workspace collection boundaries accept the maximum without silently droppi
   assert.equal(normalize({...empty(),seeds:[{id:'seed-steps',steps}]}).seeds[0].steps.length,100);
   assert.throws(()=>normalize({...empty(),seeds:[{id:'seed-steps',steps:[...steps,{id:'step-101',text:'Extra'}]}]}),/invalid records/);
 });
+
+
+test('activity logging retains newest 1000 entries without making backups unrestorable', () => {
+  const logStart = source.indexOf('  function log(type,title,description) {');
+  const logEnd = source.indexOf('\n  function total(type)', logStart);
+  assert.ok(logStart >= 0 && logEnd > logStart, 'real activity logger must be present');
+  const createLogger = runInNewContext(
+    '(function(db){const uid=(()=>{let n=0;return ()=>\'log-\'+(++n)})();' +
+    'const now=()=>\'2026-11-10T00:00:00Z\';' +
+    source.slice(logStart, logEnd) + ';return log;})'
+  );
+  const workspace = empty();
+  const log = createLogger(workspace);
+  for (let i=0;i<1002;i++) log('note','Entry '+i,'Recorded');
+  assert.equal(workspace.activity.length,1000);
+  assert.equal(workspace.activity[0].title,'Entry 1001');
+  assert.equal(workspace.activity.at(-1).title,'Entry 2');
+  const restored = normalize(workspace);
+  assert.equal(restored.activity.length,1000);
+  assert.equal(restored.activity[0].title,'Entry 1001');
+});
