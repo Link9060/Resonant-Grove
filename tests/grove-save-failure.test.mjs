@@ -183,3 +183,25 @@ test('failed serialization preserves the last successfully stored workspace snap
   assert.deepEqual(JSON.parse(stored.get('grove-test')).seeds.map(s => s.id), ['last-good-seed', 'unserializable-seed']);
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
 });
+
+
+test('quota failure preserves last-good snapshot and later recovery synchronizes', () => {
+  const { save, workspace, stored, events, controls } = harness();
+  workspace.seeds.push({ id: 'before-quota' });
+  assert.equal(save(), true);
+  const baseline = stored.get('grove-test');
+
+  controls.failStorage = true;
+  workspace.seeds.push({ id: 'during-quota' });
+  events.length = 0;
+  assert.equal(save(), false);
+  assert.equal(stored.get('grove-test'), baseline);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'toast', 'render']);
+  assert.equal(events.some(e => e[0] === 'cloud'), false);
+
+  controls.failStorage = false;
+  events.length = 0;
+  assert.equal(save(), true);
+  assert.deepEqual(JSON.parse(stored.get('grove-test')).seeds.map(s => s.id), ['before-quota', 'during-quota']);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
+});
