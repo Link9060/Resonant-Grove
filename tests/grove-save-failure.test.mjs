@@ -130,3 +130,21 @@ test('BigInt serialization failure does not overwrite storage or schedule cloud 
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
   assert.deepEqual(JSON.parse(events[0][2]), workspace);
 });
+
+
+test('simultaneous render and cloud failures preserve successful local save', () => {
+  const { save, events, workspace, controls } = harness({ failRender: true, failCloud: true });
+  workspace.seeds.push({ id: 'saved-despite-ui-and-cloud-errors' });
+  assert.equal(save(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'toast', 'cloud', 'toast']);
+  assert.deepEqual(JSON.parse(events[0][2]), workspace);
+  assert.match(events[2][1], /Saved locally/);
+  assert.match(events[4][1], /Saved locally/);
+
+  controls.failRender = false;
+  controls.failCloud = false;
+  events.length = 0;
+  assert.equal(save(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
+  assert.deepEqual(JSON.parse(events[0][2]), workspace);
+});
