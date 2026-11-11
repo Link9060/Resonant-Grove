@@ -10,7 +10,7 @@ const end = source.indexOf('\n  function log(type,title,description)', start);
 assert.ok(start >= 0 && end > start, 'real Grove save function must exist');
 const saveSource = source.slice(start, end);
 
-function harness({ failStorage = false, failRender = false, failCloud = false } = {}) {
+function harness({ failStorage = false, failRender = false, failCloud = false, cloudUnavailable = false } = {}) {
   const events = [];
   const controls = { failStorage, failRender, failCloud };
   const workspace = { version: 1, seeds: [], transactions: [], activity: [] };
@@ -24,6 +24,7 @@ function harness({ failStorage = false, failRender = false, failCloud = false } 
     events.push(['cloud']);
     if (controls.failCloud) throw Error('Cloud scheduling failed');
   } } };
+  if (cloudUnavailable) delete window.GroveCloud;
   const render = () => {
     events.push(['render']);
     if (controls.failRender) throw Error('Render failed');
@@ -147,4 +148,14 @@ test('simultaneous render and cloud failures preserve successful local save', ()
   assert.equal(save(), true);
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
   assert.deepEqual(JSON.parse(events[0][2]), workspace);
+});
+
+
+test('local persistence works when optional Grove Cloud is unavailable', () => {
+  const { save, events, workspace } = harness({ cloudUnavailable: true });
+  workspace.seeds.push({ id: 'offline-only-seed' });
+  assert.equal(save(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render']);
+  assert.deepEqual(JSON.parse(events[0][2]), workspace);
+  assert.equal(events.some(e => e[0] === 'toast' || e[0] === 'cloud'), false);
 });
