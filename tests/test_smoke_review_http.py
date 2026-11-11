@@ -193,6 +193,38 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         (self.root / "font.woff2").write_bytes(b"fixture font")
         module.smoke(self.root, SHA)
 
+    def test_css_font_html_fallback_fails(self):
+        (self.root / "styles.css").write_text(
+            "@font-face { src: url(font.woff2); }", encoding="utf-8"
+        )
+        (self.root / "font.woff2").write_text("<html>fallback</html>", encoding="utf-8")
+        original_guess_type = module.http.server.SimpleHTTPRequestHandler.guess_type
+
+        def html_fallback(handler, path):
+            if path.endswith("font.woff2"):
+                return "text/html"
+            return original_guess_type(handler, path)
+
+        with patch.object(module.http.server.SimpleHTTPRequestHandler, "guess_type", html_fallback):
+            with self.assertRaisesRegex(AssertionError, "Wrong content type for CSS asset"):
+                module.smoke(self.root, SHA)
+
+    def test_css_image_html_fallback_fails(self):
+        (self.root / "styles.css").write_text(
+            "body { background: url(background.svg); }", encoding="utf-8"
+        )
+        (self.root / "background.svg").write_text("<html>fallback</html>", encoding="utf-8")
+        original_guess_type = module.http.server.SimpleHTTPRequestHandler.guess_type
+
+        def html_fallback(handler, path):
+            if path.endswith("background.svg"):
+                return "text/html"
+            return original_guess_type(handler, path)
+
+        with patch.object(module.http.server.SimpleHTTPRequestHandler, "guess_type", html_fallback):
+            with self.assertRaisesRegex(AssertionError, "Wrong content type for CSS asset"):
+                module.smoke(self.root, SHA)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
