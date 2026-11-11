@@ -347,11 +347,12 @@
       if(!title)return toast('A seed needs a name.',true);
       const payload={title,description:safeString(data.get('description'),1000).trim(),category:safeString(data.get('category'),60).trim()||'Experiment',status:allowedStatuses.includes(data.get('status'))?data.get('status'):'idea',goal:Math.max(0,Number(data.get('goal'))||0)};
       if(id){const s=db.seeds.find(x=>x.id===id);if(!s)return;Object.assign(s,payload);log('update','Seed updated',s.title);}
-      else {const s={id:uid(),...payload,created:now(),steps:[]};db.seeds.unshift(s);log('seed','A new seed was planted',s.title);}
+      else {if(db.seeds.length>=500)return toast('Seed limit reached (500). Archive or remove a Seed before adding another.',true);const s={id:uid(),...payload,created:now(),steps:[]};db.seeds.unshift(s);log('seed','A new seed was planted',s.title);}
       save();closeModal();navigate('seeds');toast(id?'Seed updated':'Seed planted');
     } else if(form.id==='transactionForm') {
       const amount=Math.round(Number(data.get('amount'))*100)/100;
       if(!Number.isFinite(amount)||amount<=0||amount>999999999)return toast('Enter a valid positive amount.',true);
+      if(db.transactions.length>=10000)return toast('Transaction limit reached (10,000). Export a backup before reducing records.',true);
       const type=data.get('type')==='expense'?'expense':'income';
       const description=safeString(data.get('description'),300).trim();if(!description)return;
       const seedId=String(data.get('seedId')||'');
@@ -360,6 +361,7 @@
       save();closeModal();toast(type==='income'?'Income added':'Expense added');
     } else if(form.id==='taskForm') {
       const s=db.seeds.find(x=>x.id===String(data.get('seedId')));if(!s)return;
+      if(s.steps.length>=100)return toast('Step limit reached (100 per Seed). Remove a step before adding another.',true);
       const step=safeString(data.get('text'),300).trim();if(!step)return;
       s.steps.push({id:uid(),text:step,done:false});log('task','New step added',step);
       save();showSeedDetail(s.id);toast('Step added');
