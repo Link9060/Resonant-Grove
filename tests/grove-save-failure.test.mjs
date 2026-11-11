@@ -63,3 +63,17 @@ test('cloud scheduling failure does not falsely report failed local persistence'
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud', 'toast']);
   assert.match(events[3][1], /Saved locally/);
 });
+
+test('unserializable workspace fails safely without cloud sync and can recover', () => {
+  const { save, events, workspace } = harness();
+  workspace.circular = workspace;
+  assert.equal(save(), false);
+  assert.deepEqual(events.map(e => e[0]), ['toast', 'render']);
+  assert.match(events[0][1], /Could not save/);
+  assert.equal(events[0][2], true);
+
+  delete workspace.circular;
+  events.length = 0;
+  assert.equal(save(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
+});
