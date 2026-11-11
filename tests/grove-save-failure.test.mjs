@@ -12,12 +12,14 @@ const saveSource = source.slice(start, end);
 
 function harness({ failStorage = false, failRender = false, failCloud = false, cloudUnavailable = false } = {}) {
   const events = [];
+  const stored = new Map();
   const controls = { failStorage, failRender, failCloud };
   const workspace = { version: 1, seeds: [], transactions: [], activity: [] };
   const localStorage = {
     setItem(key, value) {
       events.push(['storage', key, value]);
       if (controls.failStorage) throw Error('Quota exceeded');
+      stored.set(key, value);
     }
   };
   const window = { GroveCloud: { scheduleSave() {
@@ -34,7 +36,7 @@ function harness({ failStorage = false, failRender = false, failCloud = false, c
     '(function(localStorage,window,render,toast,db){const KEY="grove-test";' +
     saveSource + ';return save;})'
   )(localStorage, window, render, toast, workspace);
-  return { save, events, workspace, controls };
+  return { save, events, workspace, controls, stored };
 }
 
 test('successful local save renders and schedules cloud synchronization', () => {
@@ -158,4 +160,26 @@ test('local persistence works when optional Grove Cloud is unavailable', () => {
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render']);
   assert.deepEqual(JSON.parse(events[0][2]), workspace);
   assert.equal(events.some(e => e[0] === 'toast' || e[0] === 'cloud'), false);
+});
+
+
+test('failed serialization preserves the last successfully stored workspace snapshot', () => {
+  const { save, workspace, stored, events } = harness();
+  workspace.seeds.push({ id: 'last-good-seed' });
+  assert.equal(save(), true);
+  const lastGood = stored.get('grove-test');
+  assert.ok(lastGood, 'baseline snapshot was written');
+
+  workspace.seeds.push({ id: 'unserializable-seed', goal: 1n });
+  events.length = 0;
+  assert.equal(save(), false);
+  assert.equal(stored.get('grove-test'), lastGood, 'failed save must not overwrite prior snapshot');
+  assert.deepEqual(events.map(e => e[0]), ['toast', 'render']);
+  assert.deepEqual(JSON.parse(stored.get('grove-test')).seeds.map(s => s.id), ['last-good-seed']);
+
+  workspace.seeds[1].goal = 1;
+  events.length = 0;
+  assert.equal(save(), true);
+  assert.deepEqual(JSON.parse(stored.get('grove-test')).seeds.map(s => s.id), ['last-good-seed', 'unserializable-seed']);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
 });
