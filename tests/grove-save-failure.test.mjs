@@ -205,3 +205,27 @@ test('quota failure preserves last-good snapshot and later recovery synchronizes
   assert.deepEqual(JSON.parse(stored.get('grove-test')).seeds.map(s => s.id), ['before-quota', 'during-quota']);
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
 });
+
+
+test('throwing cloud scheduler getter cannot undo a successful local save', () => {
+  const { save, events, workspace, stored } = harness();
+  workspace.seeds.push({ id: 'saved-before-cloud-getter-error' });
+  // A partially initialized integration can throw while reading scheduleSave.
+  // Use a dedicated harness-like VM invocation to avoid modifying shared globals.
+  const sourceScript = '(function(localStorage,window,render,toast,db){const KEY="grove-test";' +
+    saveSource + ';return save;})';
+  const browserWindow = { GroveCloud: Object.defineProperty({}, 'scheduleSave', {
+    get() { throw new Error('Cloud integration not initialized'); }
+  }) };
+  const isolatedSave = runInNewContext(sourceScript)(
+    { setItem(key, value) { stored.set(key, value); events.push(['storage']); } },
+    browserWindow,
+    () => events.push(['render']),
+    (message, error) => events.push(['toast', message, error]),
+    workspace
+  );
+  assert.equal(isolatedSave(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'toast']);
+  assert.deepEqual(JSON.parse(stored.get('grove-test')), workspace);
+  assert.match(events[2][1], /cloud sync could not be scheduled/i);
+});
