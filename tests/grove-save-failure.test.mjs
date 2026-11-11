@@ -97,3 +97,20 @@ test('recovery on the same workspace after storage quota failure saves and sched
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
   assert.deepEqual(JSON.parse(events[0][2]), workspace);
 });
+
+
+test('cloud scheduling failure recovers on the same workspace without losing local changes', () => {
+  const { save, events, workspace, controls } = harness({ failCloud: true });
+  workspace.seeds.push({ id: 'offline-seed' });
+  assert.equal(save(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud', 'toast']);
+  assert.deepEqual(JSON.parse(events[0][2]), workspace);
+  assert.match(events[3][1], /Saved locally/);
+
+  controls.failCloud = false;
+  workspace.seeds.push({ id: 'synced-seed' });
+  events.length = 0;
+  assert.equal(save(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
+  assert.deepEqual(JSON.parse(events[0][2]), workspace);
+});
