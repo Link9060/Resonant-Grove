@@ -1,6 +1,6 @@
 # Isolated development preview: owner setup (Phase 1)
 
-**Status: not deployed.** This document is a setup proposal, not permission to create an account, connect a provider, publish a site, or change production.
+**Status: Cloudflare deployment reported, browser verification outstanding.** The Cloudflare bot on [PR #65](https://github.com/Link9060/Resonant-Grove/pull/65) reports development deployments, but a bot success message is not proof that a browser can reach the site or that its content matches the latest PR SHA. This document does not authorize a new deployment, provider connection, or production change.
 
 ## Safety requirements
 
@@ -37,4 +37,12 @@ The first command must pass integrity and file-allowlist checks; the second serv
 6. On every subsequent commit, repeat exact-head verification. Mark prior URLs and artifacts stale until verified again.
 7. Record the URL, SHA, provider, evidence, test results and blockers in PR #65's durable review queue. Never mark acceptance approved merely because a deployment or CI succeeds.
 
-**Current blocker:** no authorized isolated branch-hosting destination or verified URL is configured. Until one exists, report **Preview unavailable** and use the exact-head downloadable Actions artifact for local testing only.
+**Current blocker:** Cloudflare has reported development deployments, but independent DNS/HTTP access and deployed-content identity have not been verified for the current PR head. Do not describe the provider as unconfigured without checking the PR deployment status. Until an accessible URL is confirmed at the exact SHA, report **Preview unavailable** and use the exact-head downloadable Actions artifact for local testing only.
+
+### Troubleshooting an already reported Cloudflare deployment
+
+1. Read the latest Cloudflare bot comment and GitHub deployment/check records for the PR. Capture the reported deployment URL and commit SHA without assuming either is current.
+2. Compare that SHA with the current PR head. A prior-head success is **stale** after any new commit.
+3. From an independently network-connected browser, open the deployment URL and inspect HTTP response, the review page, and application assets. If DNS fails only in the worker runtime, record that as a **verification-environment limitation**, not proof that Cloudflare hosting is broken.
+4. Verify the provider's deployment metadata associates the URL with the exact head and verify the served allowlisted asset set. A manually rendered SHA string alone does not establish content identity.
+5. Record observed result, date, tested SHA, URL, and remaining blockers in the PR. If any evidence is missing, leave manual browser acceptance untested. Never redeploy, modify credentials, or promote production merely to resolve a verification limitation.
