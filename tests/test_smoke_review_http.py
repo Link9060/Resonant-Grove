@@ -225,6 +225,32 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, "Wrong content type for CSS asset"):
                 module.smoke(self.root, SHA)
 
+    def test_css_raster_image_html_fallback_fails(self):
+        original_guess_type = module.http.server.SimpleHTTPRequestHandler.guess_type
+        for extension in ("png", "jpg", "jpeg", "webp", "gif"):
+            with self.subTest(extension=extension):
+                filename = "background." + extension
+                (self.root / "styles.css").write_text(
+                    "body { background: url(" + filename + "); }", encoding="utf-8"
+                )
+                (self.root / filename).write_text("<html>fallback</html>", encoding="utf-8")
+
+                def html_fallback(handler, path):
+                    if path.endswith(filename):
+                        return "text/html"
+                    return original_guess_type(handler, path)
+
+                with patch.object(module.http.server.SimpleHTTPRequestHandler, "guess_type", html_fallback):
+                    with self.assertRaisesRegex(AssertionError, "Wrong content type for CSS asset"):
+                        module.smoke(self.root, SHA)
+
+    def test_css_raster_image_valid_mime_passes(self):
+        (self.root / "styles.css").write_text(
+            "body { background: url(background.png?v=1); }", encoding="utf-8"
+        )
+        (self.root / "background.png").write_bytes(b"fixture image")
+        module.smoke(self.root, SHA)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
