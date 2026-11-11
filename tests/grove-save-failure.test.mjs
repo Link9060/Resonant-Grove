@@ -12,27 +12,28 @@ const saveSource = source.slice(start, end);
 
 function harness({ failStorage = false, failRender = false, failCloud = false } = {}) {
   const events = [];
+  const controls = { failStorage, failRender, failCloud };
   const workspace = { version: 1, seeds: [], transactions: [], activity: [] };
   const localStorage = {
     setItem(key, value) {
       events.push(['storage', key, value]);
-      if (failStorage) throw Error('Quota exceeded');
+      if (controls.failStorage) throw Error('Quota exceeded');
     }
   };
   const window = { GroveCloud: { scheduleSave() {
     events.push(['cloud']);
-    if (failCloud) throw Error('Cloud scheduling failed');
+    if (controls.failCloud) throw Error('Cloud scheduling failed');
   } } };
   const render = () => {
     events.push(['render']);
-    if (failRender) throw Error('Render failed');
+    if (controls.failRender) throw Error('Render failed');
   };
   const toast = (message, error) => events.push(['toast', message, error]);
   const save = runInNewContext(
     '(function(localStorage,window,render,toast,db){const KEY="grove-test";' +
     saveSource + ';return save;})'
   )(localStorage, window, render, toast, workspace);
-  return { save, events, workspace };
+  return { save, events, workspace, controls };
 }
 
 test('successful local save renders and schedules cloud synchronization', () => {
@@ -85,10 +86,14 @@ test('storage failure remains authoritative even if error-screen rendering fails
   assert.equal(events.some(e => e[0] === 'cloud'), false);
 });
 
-test('recovery after storage quota failure saves and schedules sync', () => {
-  const { save, events } = harness({ failStorage: true });
+test('recovery on the same workspace after storage quota failure saves and schedules sync', () => {
+  const { save, events, workspace, controls } = harness({ failStorage: true });
   assert.equal(save(), false);
-  const recovered = harness();
-  assert.equal(recovered.save(), true);
-  assert.deepEqual(recovered.events.map(e => e[0]), ['storage', 'render', 'cloud']);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'toast', 'render']);
+  controls.failStorage = false;
+  workspace.seeds.push({ id: 'recovered-seed' });
+  events.length = 0;
+  assert.equal(save(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
+  assert.deepEqual(JSON.parse(events[0][2]), workspace);
 });
