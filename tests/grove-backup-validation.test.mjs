@@ -344,7 +344,7 @@ test('activity rollover retains existing journal entries until the 1000-entry bo
   const logEnd = source.indexOf('\n  function total(type)', logStart);
   assert.ok(logStart >= 0 && logEnd > logStart, 'real activity logger must be present');
   const createLogger = runInNewContext(
-    '(function(db){const uid=()=>\'new-entry-id\';const now=()=>\'2026-11-11T00:00:00Z\';' +
+    '(function(db){let nextId=0;const uid=()=>\'new-entry-\'+(++nextId);const now=()=>\'2026-11-11T00:00:00Z\';' +
     source.slice(logStart,logEnd) + ';return log;})'
   );
   const workspace = {...empty(), activity:Array.from({length:999},(_,i)=>({id:'old-'+i,type:'note',title:'Old '+i}))};
