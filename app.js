@@ -100,17 +100,22 @@
   }
   let db = read(), view = 'overview', filter = 'all';
   function save() {
+    // Notification UI is best-effort: its failure must not change persistence results.
+    const warn = (message) => {
+      try { toast(message, true); }
+      catch (notificationError) { /* Preserve the authoritative save outcome. */ }
+    };
     try { localStorage.setItem(KEY,JSON.stringify(db)); }
     catch (error) {
-      toast('Could not save. Check browser storage.',true);
+      warn('Could not save. Check browser storage.');
       try { render(); }
       catch (renderError) { /* Storage failure remains authoritative; never schedule cloud sync. */ }
       return false;
     }
     try { render(); }
-    catch (error) { toast('Saved locally, but the workspace could not be refreshed.', true); }
+    catch (error) { warn('Saved locally, but the workspace could not be refreshed.'); }
     try { window.GroveCloud?.scheduleSave?.(); }
-    catch (error) { toast('Saved locally, but cloud sync could not be scheduled.', true); }
+    catch (error) { warn('Saved locally, but cloud sync could not be scheduled.'); }
     return true;
   }
   function log(type,title,description) {
