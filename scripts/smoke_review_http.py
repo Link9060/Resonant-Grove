@@ -116,6 +116,16 @@ def smoke(directory: Path, expected_sha: str) -> None:
             with urllib.request.urlopen(base + "/" + asset, timeout=5) as response:
                 if response.status != 200 or not response.read():
                     raise AssertionError(f"Missing or empty CSS asset: {asset}")
+                # Static hosts may serve HTML fallbacks with HTTP 200.
+                suffix = Path(asset).suffix.lower()
+                expected_mime = {
+                    ".svg": ("image/svg+xml",),
+                    ".woff": ("font/woff", "application/font-woff"),
+                    ".woff2": ("font/woff2", "application/font-woff2"),
+                    ".css": ("text/css",),
+                }.get(suffix)
+                if expected_mime and response.headers.get_content_type() not in expected_mime:
+                    raise AssertionError(f"Wrong content type for CSS asset: {asset}")
         print(f"PASS: loopback HTTP serves review build for {expected_sha} ({len(parser.paths) + len(css_assets)} linked assets)")
     finally:
         server.shutdown()
