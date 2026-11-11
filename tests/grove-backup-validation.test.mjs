@@ -337,3 +337,26 @@ test('activity logging retains newest 1000 entries without making backups unrest
   assert.equal(restored.activity.length,1000);
   assert.equal(restored.activity[0].title,'Entry 1001');
 });
+
+
+test('activity rollover retains existing journal entries until the 1000-entry boundary', () => {
+  const logStart = source.indexOf('  function log(type,title,description) {');
+  const logEnd = source.indexOf('\n  function total(type)', logStart);
+  assert.ok(logStart >= 0 && logEnd > logStart, 'real activity logger must be present');
+  const createLogger = runInNewContext(
+    '(function(db){const uid=()=>\'new-entry-id\';const now=()=>\'2026-11-11T00:00:00Z\';' +
+    source.slice(logStart,logEnd) + ';return log;})'
+  );
+  const workspace = {...empty(), activity:Array.from({length:999},(_,i)=>({id:'old-'+i,type:'note',title:'Old '+i}))};
+  const log = createLogger(workspace);
+  log('note','Newest','First new entry');
+  assert.equal(workspace.activity.length,1000);
+  assert.equal(workspace.activity[0].title,'Newest');
+  assert.equal(workspace.activity.at(-1).title,'Old 998');
+  assert.equal(normalize(workspace).activity.length,1000);
+  log('note','Newest again','Second new entry');
+  assert.equal(workspace.activity.length,1000);
+  assert.equal(workspace.activity[0].title,'Newest again');
+  assert.equal(workspace.activity.at(-1).title,'Old 997');
+  assert.equal(normalize(workspace).activity.length,1000);
+});
