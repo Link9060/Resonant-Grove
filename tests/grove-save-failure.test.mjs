@@ -229,3 +229,39 @@ test('throwing cloud scheduler getter cannot undo a successful local save', () =
   assert.deepEqual(JSON.parse(stored.get('grove-test')), workspace);
   assert.match(events[2][1], /cloud sync could not be scheduled/i);
 });
+
+
+test('throwing GroveCloud property getter preserves local save and permits later recovery', () => {
+  const { save, workspace, stored, events } = harness();
+  workspace.seeds.push({ id: 'saved-with-cloud-unavailable' });
+  const browserWindow = {};
+  Object.defineProperty(browserWindow, 'GroveCloud', {
+    configurable: true,
+    get() { throw new Error('Cloud bootstrap failed'); }
+  });
+  const isolatedSave = runInNewContext(
+    '(function(localStorage,window,render,toast,db){const KEY="grove-test";' +
+    saveSource + ';return save;})'
+  )(
+    { setItem(key, value) { stored.set(key, value); events.push(['storage']); } },
+    browserWindow,
+    () => events.push(['render']),
+    (message, error) => events.push(['toast', message, error]),
+    workspace
+  );
+  events.length = 0;
+  assert.equal(isolatedSave(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'toast']);
+  assert.deepEqual(JSON.parse(stored.get('grove-test')), workspace);
+  assert.match(events[2][1], /cloud sync could not be scheduled/i);
+
+  Object.defineProperty(browserWindow, 'GroveCloud', {
+    configurable: true,
+    value: { scheduleSave() { events.push(['cloud']); } }
+  });
+  workspace.seeds.push({ id: 'saved-after-cloud-recovery' });
+  events.length = 0;
+  assert.equal(isolatedSave(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
+  assert.deepEqual(JSON.parse(stored.get('grove-test')), workspace);
+});
