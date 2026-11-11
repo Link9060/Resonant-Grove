@@ -177,6 +177,22 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         )
         module.smoke(self.root, SHA)
 
+    def test_missing_unquoted_css_font_fails(self):
+        (self.root / "styles.css").write_text(
+            "@font-face { src: url(missing-font.woff2?v=2) format('woff2'); }",
+            encoding="utf-8",
+        )
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
+
+    def test_existing_unquoted_css_font_passes(self):
+        (self.root / "styles.css").write_text(
+            "@font-face { src: url(font.woff2?v=2) format('woff2'); }",
+            encoding="utf-8",
+        )
+        (self.root / "font.woff2").write_bytes(b"fixture font")
+        module.smoke(self.root, SHA)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
