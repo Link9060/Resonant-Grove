@@ -298,3 +298,21 @@ test('transaction Seed references reject whitespace-only values while preserving
   assert.equal(normalize({...empty(),transactions:[{type:'income',amount:1,seedId:' seed-a '}]}).transactions[0].seedId,' seed-a ');
   assert.equal(normalize({...empty(),transactions:[{type:'income',amount:1}]}).transactions[0].seedId,'');
 });
+
+
+test('workspace collection boundaries accept the maximum without silently dropping records', () => {
+  const seeds = Array.from({length:500},(_,i)=>({id:'seed-'+i,title:'Seed '+i,steps:[]}));
+  const transactions = Array.from({length:10000},(_,i)=>({id:'tx-'+i,type:'income',amount:1,seedId:''}));
+  const activity = Array.from({length:1000},(_,i)=>({id:'activity-'+i,type:'note',title:'Entry '+i}));
+  const atLimit = normalize({...empty(),seeds,transactions,activity});
+  assert.equal(atLimit.seeds.length,500);
+  assert.equal(atLimit.transactions.length,10000);
+  assert.equal(atLimit.activity.length,1000);
+  for (const section of ['seeds','transactions','activity']) {
+    const overLimit = {...empty(),[section]:[...atLimit[section],atLimit[section][0]]};
+    assert.throws(()=>normalize(overLimit),/workspace limits/);
+  }
+  const steps = Array.from({length:100},(_,i)=>({id:'step-'+i,text:'Step '+i,done:false}));
+  assert.equal(normalize({...empty(),seeds:[{id:'seed-steps',steps}]}).seeds[0].steps.length,100);
+  assert.throws(()=>normalize({...empty(),seeds:[{id:'seed-steps',steps:[...steps,{id:'step-101',text:'Extra'}]}]}),/invalid records/);
+});
