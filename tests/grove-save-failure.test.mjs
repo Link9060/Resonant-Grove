@@ -114,3 +114,19 @@ test('cloud scheduling failure recovers on the same workspace without losing loc
   assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
   assert.deepEqual(JSON.parse(events[0][2]), workspace);
 });
+
+
+test('BigInt serialization failure does not overwrite storage or schedule cloud sync', () => {
+  const { save, events, workspace } = harness();
+  workspace.seeds.push({ id: 'bad-seed', goal: 1n });
+  assert.equal(save(), false);
+  assert.deepEqual(events.map(e => e[0]), ['toast', 'render']);
+  assert.match(events[0][1], /Could not save/);
+  assert.equal(events.some(e => e[0] === 'storage' || e[0] === 'cloud'), false);
+
+  workspace.seeds[0].goal = 1;
+  events.length = 0;
+  assert.equal(save(), true);
+  assert.deepEqual(events.map(e => e[0]), ['storage', 'render', 'cloud']);
+  assert.deepEqual(JSON.parse(events[0][2]), workspace);
+});
