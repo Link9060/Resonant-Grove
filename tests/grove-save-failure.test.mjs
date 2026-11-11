@@ -317,3 +317,40 @@ test('serialization failure with broken notification UI retains last-good data a
   assert.deepEqual(events, ['storage', 'render', 'cloud']);
   assert.deepEqual(JSON.parse(stored.get('grove-test')).seeds.map(s => s.id), ['baseline', 'bad']);
 });
+
+
+test('browser storage access denied before write reports failure without cloud sync', () => {
+  const events = [];
+  const db = { version: 1, seeds: [{ id: 'retained' }], transactions: [], activity: [] };
+  const context = {
+    db,
+    window: { GroveCloud: { scheduleSave() { events.push('cloud'); } } },
+    render() { events.push('render'); },
+    toast(message, error) { events.push(['toast', message, error]); }
+  };
+  Object.defineProperty(context, 'localStorage', {
+    configurable: true,
+    get() { throw Error('SecurityError: storage access denied'); }
+  });
+  const save = runInNewContext(
+    '(function(){const KEY="grove-test";' + saveSource + ';return save;})()',
+    context
+  );
+  assert.equal(save(), false);
+  assert.deepEqual(events.map(e => Array.isArray(e) ? e[0] : e), ['toast', 'render']);
+  assert.match(events[0][1], /Could not save/);
+  assert.equal(events[0][2], true);
+  assert.equal(events.includes('cloud'), false);
+
+  // Storage can become available later without rebuilding the workspace.
+  const stored = new Map();
+  Object.defineProperty(context, 'localStorage', {
+    configurable: true,
+    value: { setItem(key, value) { events.push('storage'); stored.set(key, value); } }
+  });
+  db.seeds.push({ id: 'recovered' });
+  events.length = 0;
+  assert.equal(save(), true);
+  assert.deepEqual(events, ['storage', 'render', 'cloud']);
+  assert.deepEqual(JSON.parse(stored.get('grove-test')).seeds.map(s => s.id), ['retained', 'recovered']);
+});
