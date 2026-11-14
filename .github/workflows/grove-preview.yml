@@ -1,0 +1,110 @@
+name: Grove development preview package
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '*.html'
+      - '*.js'
+      - '*.css'
+      - 'tests/**'
+      - 'scripts/verify_review_artifact.py'
+      - 'scripts/smoke_review_http.py'
+      - 'scripts/serve_review.py'
+      - 'docs/PHASE1-ACCEPTANCE.md'
+      - 'docs/ISOLATED-PREVIEW-SETUP.md'
+      - '.github/workflows/grove-preview.yml'
+
+# Avoid spending free Actions minutes packaging superseded PR revisions.
+# A newer push cancels only this PR's older preview-packaging run.
+concurrency:
+  group: grove-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GROVE_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Validate source
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Fail closed if the checked-out tree differs from the source SHA used for review.
+          actual_sha="$(git rev-parse HEAD)"
+          test "$actual_sha" = "$GROVE_SOURCE_SHA" || { echo "Source revision mismatch: $actual_sha" >&2; exit 1; }
+          for file in app.js autonomous-grove.js grove-agent-desk.js grove-scout-feed.js grove-seed-feed.js grove-build-feed.js grove-cloud.js; do
+            node --check "$file"
+          done
+          node --test tests/*.test.mjs
+          python3 -m unittest discover -s tests -p 'test_*.py'
+          python3 -m py_compile scripts/serve_review.py
+      - name: Assemble standalone preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p preview
+          for file in index.html styles.css app.js favicon.svg autonomous-grove.js autonomous-grove.css grove-agent-desk.js grove-agent-desk.css grove-scout-feed.js grove-seed-feed.js grove-build-feed.js grove-cloud.js grove-cloud.css; do
+            test -s "$file"
+            cp "$file" preview/
+          done
+          mkdir -p preview/docs preview/scripts
+          cp docs/PHASE1-ACCEPTANCE.md preview/docs/PHASE1-ACCEPTANCE.md
+          cp docs/ISOLATED-PREVIEW-SETUP.md preview/docs/ISOLATED-PREVIEW-SETUP.md
+          cp scripts/verify_review_artifact.py preview/scripts/verify_review_artifact.py
+          cp scripts/serve_review.py preview/scripts/serve_review.py
+          touch preview/.nojekyll
+          # Stamp the exact tested source revision into every downloadable build.
+          # This is an offline artifact only; it does not deploy to production.
+          printf '%s\n' "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" "GROVE_PREVIEW_PR=${{ github.event.pull_request.number }}" "GROVE_PREVIEW_RUN=${GITHUB_RUN_ID}" > preview/REVIEW.txt
+          # Render the verified SHA directly. Never derive the displayed revision from a URL fragment.
+          cat > preview/review.html <<EOF
+          <!doctype html>
+          <html lang="en">
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Grove Review Build</title></head>
+          <body><main style="font:16px system-ui;max-width:640px;margin:8vh auto;padding:24px">
+          <h1>Grove review build</h1>
+          <p>This is an unmerged development build, not the production website.</p>
+          <p>Source commit: <code id="revision">${GROVE_SOURCE_SHA}</code></p>
+          <p><a href="./index.html">Open Grove development build</a></p>
+          <p>Review changes before approving. Data is stored locally in your browser; use a separate browser profile for testing.</p>
+          </main></body></html>
+          EOF
+          printf '%s\n' 'This is an artifact, NOT a hosted preview URL. Serve the extracted directory with a local HTTP server.' >> preview/REVIEW.txt
+          # Publish a deterministic integrity manifest for the exact downloadable review build.
+          # Reviewers can verify every packaged file after extracting the artifact.
+          (cd preview && find . -type f ! -name SHA256SUMS.txt -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
+          (cd preview && sha256sum --check SHA256SUMS.txt)
+          test -s preview/SHA256SUMS.txt
+          test -s preview/review.html
+          test -s preview/docs/PHASE1-ACCEPTANCE.md
+          test -s preview/docs/ISOLATED-PREVIEW-SETUP.md
+          test -s preview/scripts/verify_review_artifact.py
+          test -s preview/scripts/serve_review.py
+          grep -Fq "<code id=\"revision\">${GROVE_SOURCE_SHA}</code>" preview/review.html
+          grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" preview/REVIEW.txt
+      - name: Verify assembled review artifact and HTTP behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Verify exact packaged bytes before upload. Same-run artifact downloads
+          # can fail with an eventual-consistency "artifact not found" error.
+          python3 scripts/verify_review_artifact.py preview
+          python3 scripts/smoke_review_http.py preview "$GROVE_SOURCE_SHA"
+          test -s preview/docs/ISOLATED-PREVIEW-SETUP.md
+          grep -Fq "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" preview/REVIEW.txt
+      - name: Upload verified unmerged review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: grove-review-${{ github.event.pull_request.head.sha }}
+          path: preview/
+          include-hidden-files: true
+          retention-days: 14

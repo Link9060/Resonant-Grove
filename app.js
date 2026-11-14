@@ -42,7 +42,35 @@
   };
   const safeString = (s, max=400) => String(s == null ? '' : s).slice(0,max);
   function normalize(raw) {
-    if (!raw || !Array.isArray(raw.seeds) || !Array.isArray(raw.transactions) || !Array.isArray(raw.activity)) throw Error('Unrecognized Grove backup');
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !Array.isArray(raw.seeds) || !Array.isArray(raw.transactions) || !Array.isArray(raw.activity)) throw Error('Unrecognized Grove backup');
+    // Reject unsupported schemas and malformed records before replacing the current workspace.
+    // Silently slicing oversized backups would irreversibly discard imported records.
+    if (raw.version !== 1) throw Error('Unsupported Grove backup version');
+    if (raw.seeds.length > 500 || raw.transactions.length > 10000 || raw.activity.length > 1000) throw Error('Backup exceeds Grove workspace limits');
+    const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+    // IDs and timestamps must never become coerced object strings during restore.
+    // Explicit empty identifiers are invalid: only omitted legacy IDs may be generated.
+    const optionalText = value => value === undefined || (typeof value === 'string' && value.trim().length > 0 && value.length <= 90);
+    // Created timestamps are stored at 50 characters, unlike 90-character identifiers.
+    // Validate separately so restore cannot silently truncate timestamps.
+    // Explicit empty timestamps are invalid: only omitted legacy timestamps may default.
+    const optionalTimestamp = value => value === undefined || (typeof value === 'string' && value.trim().length > 0 && value.length <= 50);
+    // Imported text must not be silently shortened; reject values beyond display/storage limits.
+    const boundedText = (value, max) => value === undefined || (typeof value === 'string' && value.length <= max);
+    // Reject overlong IDs before normalization truncates them: otherwise distinct
+    // identifiers sharing the first 90 characters would become identical.
+    if (!raw.seeds.every(s => record(s) && optionalText(s.id) && optionalTimestamp(s.created) && (s.steps === undefined || (Array.isArray(s.steps) && s.steps.every(t => record(t) && optionalText(t.id)))) && boundedText(s.title,100) && boundedText(s.description,1000) && boundedText(s.category,60) && (s.status === undefined || allowedStatuses.includes(s.status)) && (s.goal === undefined || (typeof s.goal === 'number' && Number.isFinite(s.goal) && s.goal >= 0 && s.goal <= 999999999)) && (s.steps === undefined || (Array.isArray(s.steps) && s.steps.length <= 100 && s.steps.every(t => record(t) && ((t.done === undefined || typeof t.done === 'boolean') && boundedText(t.text,300)))))) ||
+        !raw.transactions.every(t => record(t) && optionalText(t.id) && (t.seedId === '' || optionalText(t.seedId)) && optionalTimestamp(t.created) && boundedText(t.description,300) && (t.type === 'income' || t.type === 'expense') && Number.isFinite(t.amount) && t.amount > 0 && t.amount <= 999999999) || !raw.activity.every(a => record(a) && optionalText(a.id) && optionalTimestamp(a.created) && boundedText(a.title,150) && boundedText(a.description,500) && (a.type === undefined || ['seed','finance','note','start','task','update'].includes(a.type)))) throw Error('Backup contains invalid records');
+    // Duplicate explicit IDs make edits, task toggles and transaction attribution ambiguous.
+    // Reject them before importing; legacy missing IDs can still be generated.
+    const uniqueIds = items => {
+      const ids = items.map(item => item.id).filter(id => typeof id === 'string' && id.length > 0);
+      return new Set(ids).size === ids.length;
+    };
+    if (!uniqueIds(raw.seeds) || !uniqueIds(raw.transactions) || !uniqueIds(raw.activity) ||
+        raw.seeds.some(seed => !uniqueIds(seed.steps || []))) {
+      throw Error('Backup contains duplicate identifiers');
+    }
     return {
       version:1,
       seeds:raw.seeds.slice(0,500).map(s => ({
@@ -54,7 +82,7 @@
       transactions:raw.transactions.slice(0,10000).map(t=>({
         id:safeString(t.id||uid(),90),type:t.type==='expense'?'expense':'income',amount:Math.max(0,Math.min(999999999,Number(t.amount)||0)),
         description:safeString(t.description,300),seedId:safeString(t.seedId,90),created:safeString(t.created||now(),50)
-      })).filter(t=>t.amount>0),
+      })),
       activity:raw.activity.slice(0,1000).map(a=>({
         id:safeString(a.id||uid(),90),type:['seed','finance','note','start','task','update'].includes(a.type)?a.type:'note',
         title:safeString(a.title,150),description:safeString(a.description,500),created:safeString(a.created||now(),50)
@@ -72,10 +100,23 @@
   }
   let db = read(), view = 'overview', filter = 'all';
   function save() {
+    // Notification UI is best-effort: its failure must not change persistence results.
+    const warn = (message) => {
+      try { toast(message, true); }
+      catch (notificationError) { /* Preserve the authoritative save outcome. */ }
+    };
     try { localStorage.setItem(KEY,JSON.stringify(db)); }
-    catch (error) { toast('Could not save. Check browser storage.',true); }
-    render();
-    window.GroveCloud?.scheduleSave?.();
+    catch (error) {
+      warn('Could not save. Check browser storage.');
+      try { render(); }
+      catch (renderError) { /* Storage failure remains authoritative; never schedule cloud sync. */ }
+      return false;
+    }
+    try { render(); }
+    catch (error) { warn('Saved locally, but the workspace could not be refreshed.'); }
+    try { window.GroveCloud?.scheduleSave?.(); }
+    catch (error) { warn('Saved locally, but cloud sync could not be scheduled.'); }
+    return true;
   }
   function log(type,title,description) {
     db.activity.unshift({id:uid(),type,title,description,created:now()});
@@ -176,7 +217,7 @@
     renderMetrics();renderOverviewSeeds();renderActivities();renderKeeper();renderSeeds();renderTransactions();renderChart();refreshIcons();
   }
   const viewNames={overview:'Overview',seeds:'My Seeds',treasury:'Treasury',autonomous:'Agent Desk',activity:'Activity',settings:'Settings'};
-  function closeMenu() {$('sidebar').classList.remove('open');$('mobileShade').classList.remove('show');}
+  function closeMenu() {$('sidebar').classList.remove('open');$('mobileShade').classList.remove('show');$('menuButton').setAttribute('aria-expanded','false');}
   function navigate(target) {
     if(!viewNames[target]) target='overview';
     view=target;
@@ -184,7 +225,11 @@
     document.querySelectorAll('[data-view]').forEach(v=>v.classList.toggle('active',v.classList.contains('nav-link')&&v.dataset.view===target));
     $('breadcrumb').textContent=viewNames[target];
     if (location.hash.slice(1)!==target) history.replaceState(null,'','#'+target);
-    closeMenu();window.scrollTo({top:0,behavior:'instant'});refreshIcons();
+    const wasMobileMenuOpen=window.innerWidth<=720&&$('sidebar').classList.contains('open');
+    closeMenu();
+    // Do not leave keyboard focus inside a sidebar that has just become hidden.
+    if(wasMobileMenuOpen)$('menuButton').focus({preventScroll:true});
+    window.scrollTo({top:0,behavior:'instant'});refreshIcons();
   }
   function modal(markup) {
     $('modalContent').innerHTML=markup;
@@ -307,11 +352,12 @@
       if(!title)return toast('A seed needs a name.',true);
       const payload={title,description:safeString(data.get('description'),1000).trim(),category:safeString(data.get('category'),60).trim()||'Experiment',status:allowedStatuses.includes(data.get('status'))?data.get('status'):'idea',goal:Math.max(0,Number(data.get('goal'))||0)};
       if(id){const s=db.seeds.find(x=>x.id===id);if(!s)return;Object.assign(s,payload);log('update','Seed updated',s.title);}
-      else {const s={id:uid(),...payload,created:now(),steps:[]};db.seeds.unshift(s);log('seed','A new seed was planted',s.title);}
+      else {if(db.seeds.length>=500)return toast('Seed limit reached (500). Archive or remove a Seed before adding another.',true);const s={id:uid(),...payload,created:now(),steps:[]};db.seeds.unshift(s);log('seed','A new seed was planted',s.title);}
       save();closeModal();navigate('seeds');toast(id?'Seed updated':'Seed planted');
     } else if(form.id==='transactionForm') {
       const amount=Math.round(Number(data.get('amount'))*100)/100;
       if(!Number.isFinite(amount)||amount<=0||amount>999999999)return toast('Enter a valid positive amount.',true);
+      if(db.transactions.length>=10000)return toast('Transaction limit reached (10,000). Export a backup before reducing records.',true);
       const type=data.get('type')==='expense'?'expense':'income';
       const description=safeString(data.get('description'),300).trim();if(!description)return;
       const seedId=String(data.get('seedId')||'');
@@ -320,6 +366,7 @@
       save();closeModal();toast(type==='income'?'Income added':'Expense added');
     } else if(form.id==='taskForm') {
       const s=db.seeds.find(x=>x.id===String(data.get('seedId')));if(!s)return;
+      if(s.steps.length>=100)return toast('Step limit reached (100 per Seed). Remove a step before adding another.',true);
       const step=safeString(data.get('text'),300).trim();if(!step)return;
       s.steps.push({id:uid(),text:step,done:false});log('task','New step added',step);
       save();showSeedDetail(s.id);toast('Step added');
@@ -339,10 +386,21 @@
     }catch(err){toast('Could not import this backup: '+err.message,true);}
     finally{e.target.value='';}
   });
-  $('menuButton').addEventListener('click',()=>{$('sidebar').classList.toggle('open');$('mobileShade').classList.toggle('show');});
+  $('menuButton').addEventListener('click',()=>{const open=$('sidebar').classList.toggle('open');$('mobileShade').classList.toggle('show',open);$('menuButton').setAttribute('aria-expanded',String(open));if(open)$('sidebar').querySelector('.nav-link')?.focus();});
   $('mobileShade').addEventListener('click',closeMenu);
+  // Clear mobile-only navigation state when returning to desktop width.
+  window.addEventListener('resize',()=>{if(window.innerWidth>720)closeMenu();});
   $('modalBackdrop').addEventListener('click',(e)=>{if(e.target===$('modalBackdrop'))closeModal();});
-  document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){closeModal();closeMenu();}});
+  document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){const menuWasOpen=$('sidebar').classList.contains('open');closeModal();closeMenu();if(menuWasOpen)$('menuButton').focus();}});
+  // Keep keyboard traversal inside the open mobile navigation until it is dismissed.
+  document.addEventListener('keydown',(e)=>{
+    if(e.key!=='Tab'||window.innerWidth>720||!$('sidebar').classList.contains('open')||$('modalBackdrop').classList.contains('open'))return;
+    const links=[...$('sidebar').querySelectorAll('a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.getClientRects().length);
+    if(!links.length)return;
+    const first=links[0],last=links[links.length-1],active=document.activeElement;
+    if(e.shiftKey&&(active===first||!$('sidebar').contains(active))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&(active===last||!$('sidebar').contains(active))){e.preventDefault();first.focus();}
+  });
   window.addEventListener('hashchange',()=>navigate(location.hash.replace('#','')));
   window.GroveWorkspace = {
     get: () => db,
