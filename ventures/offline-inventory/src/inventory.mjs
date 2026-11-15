@@ -26,3 +26,17 @@ export function removeItem(worksheet, id) {
   if (!current.items.some(row => row.id === id)) throw Error('Unknown item');
   return createWorksheet(current.items.filter(row => row.id !== id));
 }
+
+// Export a deterministic, spreadsheet-safe CSV snapshot. No filesystem or network I/O.
+// Prefix formula-like names with a literal apostrophe to avoid spreadsheet execution.
+export function toCsv(worksheet) {
+  const current = createWorksheet(worksheet?.items);
+  const cell = value => {
+    const raw = String(value);
+    const safe = /^[\s]*[=+@-]/.test(raw) ? "'" + raw : raw;
+    return '"' + safe.replaceAll('"', '""') + '"';
+  };
+  return ['id,name,count', ...current.items.map(item =>
+    [item.id, item.name, item.count].map(cell).join(',')
+  )].join('\r\n') + '\r\n';
+}
