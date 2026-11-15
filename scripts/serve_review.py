@@ -35,6 +35,15 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
             return
         super().do_HEAD()
 
+    def send_head(self):
+        """Never serve a symlink that resolves outside the verified artifact root."""
+        root = Path(self.directory).resolve()
+        target = Path(self.translate_path(self.path)).resolve()
+        if not target.is_relative_to(root):
+            self.send_error(403, "Path outside review artifact rejected")
+            return None
+        return super().send_head()
+
     def list_directory(self, path):
         """Never expose an automatic directory index from a review artifact."""
         self.send_error(403, "Directory listing disabled")
