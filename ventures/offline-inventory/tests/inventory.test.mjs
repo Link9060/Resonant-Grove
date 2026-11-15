@@ -117,3 +117,24 @@ test('P2-INV-011 rejects non-string identifiers instead of regex-coercing them',
   assert.equal(sheet.items[0].id, '123');
   assert.equal(typeof sheet.items[0].id, 'string');
 });
+
+test('P2-INV-012 full-capacity CSV export remains deterministic after replacement', async () => {
+  const {toCsv} = await import('../src/inventory.mjs');
+  const original = createWorksheet(Array.from({length:100}, (_, i) => ({
+    id:'part-'+i, name:'Part '+i, count:1000000
+  })));
+  const originalCsv = toCsv(original);
+  assert.equal(originalCsv.split('\r\n').length,102);
+  assert.equal(originalCsv.split('\r\n')[1],'"part-0","Part 0","1000000"');
+  const changed = addItem(removeItem(original,'part-0'), {
+    id:'replacement', name:'Nuts, "large"', count:7
+  });
+  const csv = toCsv(changed);
+  assert.equal(changed.items.length,100);
+  assert.equal(changed.total,99000007);
+  assert.equal(csv.split('\r\n').length,102);
+  assert.ok(csv.includes('"replacement","Nuts, ""large""","7"\r\n'));
+  assert.equal(toCsv(changed),csv);
+  assert.equal(toCsv(original),originalCsv);
+  assert.equal(original.total,100000000);
+});
