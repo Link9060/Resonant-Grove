@@ -152,6 +152,31 @@ class HostHeaderTests(unittest.TestCase):
                 finally:
                     conn.close()
 
+    def test_encoded_symlink_escape_is_rejected(self):
+        # Percent-encoded URLs must not bypass the artifact-root restriction.
+        outside = tempfile.TemporaryDirectory()
+        self.addCleanup(outside.cleanup)
+        secret = Path(outside.name) / "outside-secret.txt"
+        secret.write_text("encoded external secret", encoding="utf-8")
+        link = Path(self.tmp.name) / "encoded escape.txt"
+        try:
+            link.symlink_to(secret)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlink creation unavailable on this platform")
+        for method in ("GET", "HEAD"):
+            for path in ("/encoded%20escape.txt", "/encoded%20escape.txt?download=1"):
+                with self.subTest(method=method, path=path):
+                    conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                    try:
+                        conn.request(method, path, headers={"Host": "localhost"})
+                        response = conn.getresponse()
+                        body = response.read()
+                        self.assertEqual(response.status, 403)
+                        self.assertNotIn(b"encoded external secret", body)
+                        self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                    finally:
+                        conn.close()
+
     def test_external_host_rejected_without_leaking_contents(self):
         for method in ("GET", "HEAD"):
             for host in ("attacker.example", "attacker.example:8765", "127.0.0.1.attacker.example"):
