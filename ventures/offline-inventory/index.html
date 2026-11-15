@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Offline Inventory Worksheet | Local Demo</title>
+<style>body{font:16px system-ui;max-width:760px;margin:3rem auto;padding:0 1rem;background:#f8f8f8;color:#171717}input,button{font:inherit;padding:.55rem}input{max-width:180px}button{cursor:pointer}form{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #ccc;padding:.7rem;text-align:left}output{display:block;margin:1rem 0;color:#7a1c1c}small{color:#555}</style>
+</head>
+<body><main><h1>Offline inventory worksheet</h1>
+<p>Local demonstration only. No accounts, tracking, storage, uploads or network requests. Refresh resets the sample worksheet.</p>
+<form id="add"><label>Item ID <input id="id" required pattern="[a-z0-9-]{1,40}" maxlength="40" placeholder="e.g. screws"></label><label>Name <input id="name" required maxlength="80" placeholder="e.g. Screws"></label><label>Quantity <input id="count" required type="number" min="0" max="1000000" step="1" value="0"></label><button>Add item</button></form>
+<output id="message" role="status" aria-live="polite"></output>
+<table><caption>Sample inventory, editable in memory</caption><thead><tr><th scope="col">Item</th><th scope="col">ID</th><th scope="col">Quantity</th><th scope="col">Action</th></tr></thead><tbody id="rows"></tbody></table>
+<p><strong>Total units: <span id="total">0</span></strong></p><small>All figures are fictional fixtures. This is not a launched product.</small></main>
+<script type="module">
+import {createWorksheet,addItem,setCount} from './src/inventory.mjs';
+let worksheet=createWorksheet([{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}]);
+const rows=document.querySelector('#rows'),message=document.querySelector('#message');
+function render(){
+ rows.replaceChildren();
+ for(const item of worksheet.items){
+  const tr=document.createElement('tr');
+  for(const value of [item.name,item.id,String(item.count)]){const td=document.createElement('td');td.textContent=value;tr.append(td);}
+  const td=document.createElement('td'),button=document.createElement('button');
+  button.type='button';button.textContent='Set quantity';button.setAttribute('aria-label','Set quantity for '+item.name);
+  button.addEventListener('click',()=>{
+   const raw=prompt('New whole-number quantity for '+item.name,String(item.count));
+   if(raw===null)return;
+   try{if(!/^(0|[1-9][0-9]*)$/.test(raw))throw Error('Enter a whole number');worksheet=setCount(worksheet,item.id,Number(raw));message.textContent='Quantity updated';render();}
+   catch(error){message.textContent=error.message;}
+  });
+  td.append(button);tr.append(td);rows.append(tr);
+ }
+ document.querySelector('#total').textContent=String(worksheet.total);
+}
+document.querySelector('#add').addEventListener('submit',event=>{
+ event.preventDefault();
+ try{
+  worksheet=addItem(worksheet,{id:document.querySelector('#id').value,name:document.querySelector('#name').value,count:Number(document.querySelector('#count').value)});
+  message.textContent='Item added';event.target.reset();render();
+ }catch(error){message.textContent=error.message;}
+});
+render();
+</script></body></html>
