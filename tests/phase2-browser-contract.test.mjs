@@ -37,13 +37,13 @@ test('P2-CONTRACT-004 boundary totals and max row limit', () => {
 });
 
 test('P2-CONTRACT-006 CSV export stays local and uses tested serializer', () => {
-  assert.match(page, /import\\s*\\{\\s*removeItem\\s*,\\s*toCsv\\s*\\}\\s*from/);
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*\}\s*from/);
   assert.match(page, /id="export-csv"/);
-  assert.match(page, /querySelector\\('#export-csv'\\)\\.addEventListener\\('click'/);
-  assert.match(page, /toCsv\\(worksheet\\)/);
-  assert.match(page, /new Blob\\(\\[csv\\]/);
-  assert.match(page, /URL\\.createObjectURL\\(blob\\)/);
-  assert.match(page, /link\\.download='inventory-snapshot\\.csv'/);
-  assert.match(page, /URL\\.revokeObjectURL\\(url\\)/);
-  assert.doesNotMatch(page, /\\bfetch\\s*\\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage/i);
+  assert.match(page, /querySelector\('#export-csv'\)\.addEventListener\('click'/);
+  assert.match(page, /toCsv\(worksheet\)/);
+  assert.match(page, /new Blob\(\[csv\]/);
+  assert.match(page, /URL\.createObjectURL\(blob\)/);
+  assert.match(page, /link\.download='inventory-snapshot\.csv'/);
+  assert.match(page, /URL\.revokeObjectURL\(url\)/);
+  assert.doesNotMatch(page, /\bfetch\s*\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage/i);
 });
