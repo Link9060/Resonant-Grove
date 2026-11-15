@@ -12,11 +12,11 @@ test('P2-CONTRACT-001 browser demo imports the tested inventory core', () => {
   assert.match(page, /addEventListener\(['"]click['"]/);
 });
 test('P2-CONTRACT-005 removal control is wired to immutable inventory core', () => {
-  assert.match(page, /import\\s*\\{\\s*removeItem\\s*\\}\\s*from\\s*['"]\\.\\/src\\/inventory\\.mjs['"]/);
-  assert.match(page, /remove\\.addEventListener\\(['"]click['"]/);
-  assert.match(page, /worksheet\\s*=\\s*removeItem\\(worksheet,\\s*item\\.id\\)/);
-  assert.match(page, /remove\\.setAttribute\\(['"]aria-label['"],\\s*['"]Remove /);
-  assert.match(page, /td\\.append\\(button,\\s*remove\\)/);
+  assert.match(page, /import\s*\{\s*removeItem\s*\}\s*from\s*['"]\.\/src\/inventory\.mjs['"]/);
+  assert.match(page, /remove\.addEventListener\(['"]click['"]/);
+  assert.match(page, /worksheet\s*=\s*removeItem\(worksheet,\s*item\.id\)/);
+  assert.match(page, /remove\.setAttribute\(['"]aria-label['"],\s*['"]Remove /);
+  assert.match(page, /td\.append\(button,\s*remove\)/);
 });
 test('P2-CONTRACT-002 local-only page contains no remote scripts or external actions', () => {
   assert.doesNotMatch(page, /<script[^>]+src\s*=|<form[^>]+action\s*=|https?:\/\/|\bfetch\s*\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage/i);
