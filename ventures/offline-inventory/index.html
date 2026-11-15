@@ -12,6 +12,7 @@
 <p><strong>Total units: <span id="total">0</span></strong></p><small>All figures are fictional fixtures. This is not a launched product.</small></main>
 <script type="module">
 import {createWorksheet,addItem,setCount} from './src/inventory.mjs';
+import {removeItem} from './src/inventory.mjs';
 let worksheet=createWorksheet([{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}]);
 const rows=document.querySelector('#rows'),message=document.querySelector('#message');
 function render(){
@@ -27,7 +28,14 @@ function render(){
    try{if(!/^(0|[1-9][0-9]*)$/.test(raw))throw Error('Enter a whole number');worksheet=setCount(worksheet,item.id,Number(raw));message.textContent='Quantity updated';render();}
    catch(error){message.textContent=error.message;}
   });
-  td.append(button);tr.append(td);rows.append(tr);
+  const remove=document.createElement('button');
+  remove.type='button';remove.textContent='Remove';
+  remove.setAttribute('aria-label','Remove '+item.name);
+  remove.addEventListener('click',()=>{
+   try{worksheet=removeItem(worksheet,item.id);message.textContent='Item removed';render();}
+   catch(error){message.textContent=error.message;}
+  });
+  td.append(button,remove);tr.append(td);rows.append(tr);
  }
  document.querySelector('#total').textContent=String(worksheet.total);
 }
