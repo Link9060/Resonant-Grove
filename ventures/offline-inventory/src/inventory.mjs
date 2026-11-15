@@ -21,3 +21,8 @@ export function addItem(worksheet, item) {
   const current = createWorksheet(worksheet?.items);
   return createWorksheet([...current.items, item]);
 }
+export function removeItem(worksheet, id) {
+  const current = createWorksheet(worksheet?.items);
+  if (!current.items.some(row => row.id === id)) throw Error('Unknown item');
+  return createWorksheet(current.items.filter(row => row.id !== id));
+}
