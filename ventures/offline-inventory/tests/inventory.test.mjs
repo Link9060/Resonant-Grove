@@ -32,3 +32,16 @@ test('P2-INV-005 removal updates totals without mutating source', () => {
   assert.throws(() => removeItem(original,'missing'), /Unknown item/);
   assert.equal(removeItem(updated,'nuts').total,0);
 });
+
+test('P2-INV-006 worksheet snapshots do not retain caller-owned row objects', () => {
+  const source = [{id:'bolts',name:' Bolts ',count:3}];
+  const worksheet = createWorksheet(source);
+  source[0].count = 999;
+  source[0].name = 'Changed';
+  source.push({id:'nuts',name:'Nuts',count:5});
+  assert.deepEqual(worksheet.items, [{id:'bolts',name:'Bolts',count:3}]);
+  assert.equal(worksheet.total,3);
+  const updated = setCount(worksheet,'bolts',4);
+  assert.equal(worksheet.items[0].count,3);
+  assert.equal(updated.items[0].count,4);
+});
