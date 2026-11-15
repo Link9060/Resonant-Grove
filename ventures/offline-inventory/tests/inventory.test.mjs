@@ -56,3 +56,19 @@ test('P2-INV-007 rejects unsafe numeric coercion and keeps previous state', () =
   assert.equal(setCount(original,'bolts',1000000).total,1000000);
   assert.equal(setCount(original,'bolts',0).total,0);
 });
+
+test('P2-INV-008 removal frees capacity and preserves independent snapshots', () => {
+  const source = createWorksheet(Array.from({length:100}, (_, i) => ({
+    id:'part-'+i, name:'Part '+i, count:1000000
+  })));
+  const reduced = removeItem(source,'part-0');
+  assert.equal(reduced.items.length,99);
+  assert.equal(reduced.total,99000000);
+  const restored = addItem(reduced,{id:'replacement',name:'Replacement',count:2});
+  assert.equal(restored.items.length,100);
+  assert.equal(restored.total,99000002);
+  assert.equal(source.items.length,100);
+  assert.equal(source.total,100000000);
+  assert.equal(reduced.items.length,99);
+  assert.throws(() => removeItem(reduced,'part-0'), /Unknown item/);
+});
