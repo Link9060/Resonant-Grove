@@ -96,10 +96,13 @@ test('P2-INV-010 CSV formula-prefix boundary cases remain inert text', async () 
   const lines = csv.trimEnd().split('\r\n');
   assert.equal(lines.length, names.length + 1);
   for (let i=0; i<names.length; i++) {
-    const expected = i < 5 ? "'" + names[i] : names[i];
+    // createWorksheet normalizes surrounding whitespace before CSV serialization.
+    const normalized = names[i].trim();
+    const expected = i < 5 ? "'" + normalized : normalized;
     const escaped = expected.replaceAll('"', '""');
     assert.equal(lines[i+1], '"row-'+i+'","'+escaped+'","'+i+'"');
   }
   assert.equal(sheet.items[0].name, '=1+1');
+  assert.equal(sheet.items[4].name, '=1+1'); // whitespace normalized by schema
   assert.equal(toCsv(sheet), csv);
 });
