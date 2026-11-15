@@ -45,3 +45,14 @@ test('P2-INV-006 worksheet snapshots do not retain caller-owned row objects', ()
   assert.equal(worksheet.items[0].count,3);
   assert.equal(updated.items[0].count,4);
 });
+
+test('P2-INV-007 rejects unsafe numeric coercion and keeps previous state', () => {
+  const original = createWorksheet([{id:'bolts',name:'Bolts',count:3}]);
+  for (const value of ['4', NaN, Infinity, -1, 1.5, 1000001, Number.MAX_SAFE_INTEGER, null]) {
+    assert.throws(() => setCount(original,'bolts',value), /Invalid count/);
+    assert.throws(() => addItem(original,{id:'extra',name:'Extra',count:value}));
+  }
+  assert.deepEqual(original, {schemaVersion:1,items:[{id:'bolts',name:'Bolts',count:3}],total:3});
+  assert.equal(setCount(original,'bolts',1000000).total,1000000);
+  assert.equal(setCount(original,'bolts',0).total,0);
+});
