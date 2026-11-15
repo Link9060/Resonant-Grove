@@ -47,3 +47,13 @@ test('P2-CONTRACT-006 CSV export stays local and uses tested serializer', () => 
   assert.match(page, /URL\.revokeObjectURL\(url\)/);
   assert.doesNotMatch(page, /\bfetch\s*\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage/i);
 });
+
+test('P2-CONTRACT-007 add-item quantity rejects blank and noncanonical numeric text before coercion', () => {
+  assert.match(page, /const rawCount=document\.querySelector\('#count'\)\.value/);
+  assert.match(page, /if\(!\/\^\(0\|\[1-9\]\[0-9\]\*\)\$\/\.test\(rawCount\)\)throw Error/);
+  assert.match(page, /count:Number\(rawCount\)/);
+  for (const invalid of ['', ' ', '1e2', '1.5', '-1', '+2', '01', 'Infinity']) {
+    assert.equal(/^(0|[1-9][0-9]*)$/.test(invalid), false, invalid);
+  }
+  for (const valid of ['0', '1', '1000000']) assert.equal(/^(0|[1-9][0-9]*)$/.test(valid), true, valid);
+});
