@@ -128,6 +128,30 @@ class HostHeaderTests(unittest.TestCase):
                 finally:
                     conn.close()
 
+    def test_directory_symlink_escape_is_rejected(self):
+        # Directory symlinks with an index must not expose external content.
+        outside = tempfile.TemporaryDirectory()
+        self.addCleanup(outside.cleanup)
+        external = Path(outside.name)
+        (external / "index.html").write_text("external directory secret", encoding="utf-8")
+        link = Path(self.tmp.name) / "external-dir"
+        try:
+            link.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("directory symlink creation unavailable on this platform")
+        for method in ("GET", "HEAD"):
+            with self.subTest(method=method):
+                conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                try:
+                    conn.request(method, "/external-dir/", headers={"Host": "localhost"})
+                    response = conn.getresponse()
+                    body = response.read()
+                    self.assertEqual(response.status, 403)
+                    self.assertNotIn(b"external directory secret", body)
+                    self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                finally:
+                    conn.close()
+
     def test_external_host_rejected_without_leaking_contents(self):
         for method in ("GET", "HEAD"):
             for host in ("attacker.example", "attacker.example:8765", "127.0.0.1.attacker.example"):
