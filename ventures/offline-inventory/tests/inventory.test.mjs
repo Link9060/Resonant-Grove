@@ -87,3 +87,19 @@ test('P2-INV-009 deterministic spreadsheet-safe CSV with no worksheet mutation',
   assert.equal(toCsv(createWorksheet([])), 'id,name,count\r\n');
   assert.throws(() => toCsv({items:[{id:'bad',name:'X',count:-1}]}));
 });
+
+test('P2-INV-010 CSV formula-prefix boundary cases remain inert text', async () => {
+  const {toCsv} = await import('../src/inventory.mjs');
+  const names = ['=1+1', '+SUM(1,2)', '-2+3', '@SUM(1,2)', '  =1+1', 'Ordinary', "O'Brien"];
+  const sheet = createWorksheet(names.map((name, i) => ({id:'row-'+i,name,count:i})));
+  const csv = toCsv(sheet);
+  const lines = csv.trimEnd().split('\r\n');
+  assert.equal(lines.length, names.length + 1);
+  for (let i=0; i<names.length; i++) {
+    const expected = i < 5 ? "'" + names[i] : names[i];
+    const escaped = expected.replaceAll('"', '""');
+    assert.equal(lines[i+1], '"row-'+i+'","'+escaped+'","'+i+'"');
+  }
+  assert.equal(sheet.items[0].name, '=1+1');
+  assert.equal(toCsv(sheet), csv);
+});
