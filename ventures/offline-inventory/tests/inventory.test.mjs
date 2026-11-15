@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createWorksheet, addItem, setCount} from '../src/inventory.mjs';
+import {createWorksheet, addItem, setCount, removeItem} from '../src/inventory.mjs';
 test('P2-INV-001 deterministic local totals', () => {
   const a = createWorksheet([{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}]);
   assert.equal(a.total,8); assert.deepEqual(createWorksheet(a.items),a);
@@ -22,4 +22,13 @@ test('P2-INV-004 invalid updates never mutate worksheet', () => {
   const a=createWorksheet([{id:'a',name:'Item',count:2}]);
   assert.throws(()=>setCount(a,'missing',4)); assert.throws(()=>setCount(a,'a',Infinity));
   assert.equal(a.total,2);
+});
+test('P2-INV-005 removal updates totals without mutating source', () => {
+  const original = createWorksheet([{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}]);
+  const updated = removeItem(original,'bolts');
+  assert.deepEqual(updated.items.map(row => row.id), ['nuts']);
+  assert.equal(updated.total,5);
+  assert.equal(original.total,8);
+  assert.throws(() => removeItem(original,'missing'), /Unknown item/);
+  assert.equal(removeItem(updated,'nuts').total,0);
 });
