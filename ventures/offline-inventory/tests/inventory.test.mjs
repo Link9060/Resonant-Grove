@@ -106,3 +106,14 @@ test('P2-INV-010 CSV formula-prefix boundary cases remain inert text', async () 
   assert.equal(sheet.items[4].name, '=1+1'); // whitespace normalized by schema
   assert.equal(toCsv(sheet), csv);
 });
+
+
+test('P2-INV-011 rejects non-string identifiers instead of regex-coercing them', () => {
+  for (const id of [123, 0, 12n, ['abc'], {toString: () => 'abc'}, null, undefined]) {
+    assert.throws(() => createWorksheet([{id, name:'Part', count:1}]), /Invalid inventory row/);
+    assert.throws(() => addItem(createWorksheet([]), {id, name:'Part', count:1}), /Invalid inventory row/);
+  }
+  const sheet = createWorksheet([{id:'123', name:'Part', count:1}]);
+  assert.equal(sheet.items[0].id, '123');
+  assert.equal(typeof sheet.items[0].id, 'string');
+});
