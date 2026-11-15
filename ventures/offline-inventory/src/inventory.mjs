@@ -5,7 +5,7 @@ export function createWorksheet(rows = []) {
   if (!Array.isArray(rows) || rows.length > 100) throw Error('Invalid inventory rows');
   const ids = new Set();
   const items = rows.map((row, index) => {
-    if (!row || typeof row !== 'object' || !/^[a-z0-9-]{1,40}$/.test(row.id ?? '') || ids.has(row.id) || !validName(row.name) || !validCount(row.count)) throw Error('Invalid inventory row ' + index);
+    if (!row || typeof row !== 'object' || typeof row.id !== 'string' || !/^[a-z0-9-]{1,40}$/.test(row.id) || ids.has(row.id) || !validName(row.name) || !validCount(row.count)) throw Error('Invalid inventory row ' + index);
     ids.add(row.id);
     return {id: row.id, name: row.name.trim(), count: row.count};
   });
