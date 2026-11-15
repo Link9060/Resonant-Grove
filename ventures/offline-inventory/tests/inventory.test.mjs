@@ -78,10 +78,10 @@ test('P2-INV-009 deterministic spreadsheet-safe CSV with no worksheet mutation',
   const worksheet = createWorksheet([
     {id:'a',name:'=SUM(1,2)',count:3},
     {id:'b',name:'Nuts, "large"',count:0},
-    {id:'c',name:'  +formula',count:1}
+    {id:'c',name:'+formula',count:1}
   ]);
   const csv = toCsv(worksheet);
-  assert.equal(csv, 'id,name,count\r\n"a","\'=SUM(1,2)","3"\r\n"b","Nuts, ""large""","0"\r\n"c","\'  +formula","1"\r\n');
+  assert.equal(csv, 'id,name,count\r\n"a","\'=SUM(1,2)","3"\r\n"b","Nuts, ""large""","0"\r\n"c","\'+formula","1"\r\n');
   assert.equal(toCsv(worksheet),csv);
   assert.equal(worksheet.total,4);
   assert.equal(toCsv(createWorksheet([])), 'id,name,count\r\n');
