@@ -9,10 +9,11 @@
 <form id="add"><label>Item ID <input id="id" required pattern="[a-z0-9-]{1,40}" maxlength="40" placeholder="e.g. screws"></label><label>Name <input id="name" required maxlength="80" placeholder="e.g. Screws"></label><label>Quantity <input id="count" required type="number" min="0" max="1000000" step="1" value="0"></label><button>Add item</button></form>
 <output id="message" role="status" aria-live="polite"></output>
 <table><caption>Sample inventory, editable in memory</caption><thead><tr><th scope="col">Item</th><th scope="col">ID</th><th scope="col">Quantity</th><th scope="col">Action</th></tr></thead><tbody id="rows"></tbody></table>
+<p><button id="export-csv" type="button">Download CSV snapshot</button></p>
 <p><strong>Total units: <span id="total">0</span></strong></p><small>All figures are fictional fixtures. This is not a launched product.</small></main>
 <script type="module">
 import {createWorksheet,addItem,setCount} from './src/inventory.mjs';
-import {removeItem} from './src/inventory.mjs';
+import {removeItem,toCsv} from './src/inventory.mjs';
 let worksheet=createWorksheet([{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}]);
 const rows=document.querySelector('#rows'),message=document.querySelector('#message');
 function render(){
@@ -45,6 +46,18 @@ document.querySelector('#add').addEventListener('submit',event=>{
   worksheet=addItem(worksheet,{id:document.querySelector('#id').value,name:document.querySelector('#name').value,count:Number(document.querySelector('#count').value)});
   message.textContent='Item added';event.target.reset();render();
  }catch(error){message.textContent=error.message;}
+});
+document.querySelector('#export-csv').addEventListener('click',()=>{
+ try {
+  const csv=toCsv(worksheet);
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;link.download='inventory-snapshot.csv';
+  document.body.append(link);
+  try {link.click();message.textContent='CSV snapshot prepared locally';}
+  finally {link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ } catch(error) {message.textContent='CSV export failed: '+error.message;}
 });
 render();
 </script></body></html>
