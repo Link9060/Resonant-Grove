@@ -84,6 +84,26 @@ class HostHeaderTests(unittest.TestCase):
                     self.assertIn(b" 403 ", response.split(b"\r\n", 1)[0])
                     self.assertNotIn(b"review test", response)
 
+    def test_directory_listing_is_disabled(self):
+        # A directory without index.html must not disclose artifact filenames.
+        (Path(self.tmp.name) / "private").mkdir()
+        (Path(self.tmp.name) / "private" / "secret.txt").write_text("not listed", encoding="utf-8")
+        for method in ("GET", "HEAD"):
+            with self.subTest(method=method):
+                conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                try:
+                    conn.request(method, "/private/", headers={"Host": "localhost"})
+                    response = conn.getresponse()
+                    body = response.read()
+                    self.assertEqual(response.status, 403)
+                    self.assertNotIn(b"secret.txt", body)
+                    self.assertEqual(response.getheader("X-Content-Type-Options"), "nosniff")
+                    self.assertEqual(response.getheader("X-Frame-Options"), "DENY")
+                    self.assertEqual(response.getheader("Referrer-Policy"), "no-referrer")
+                    self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                finally:
+                    conn.close()
+
     def test_external_host_rejected_without_leaking_contents(self):
         for method in ("GET", "HEAD"):
             for host in ("attacker.example", "attacker.example:8765", "127.0.0.1.attacker.example"):
