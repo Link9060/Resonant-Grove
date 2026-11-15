@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createWorksheet, addItem, setCount} from '../ventures/offline-inventory/src/inventory.mjs';
+import {createWorksheet, addItem, setCount} from '../src/inventory.mjs';
 test('P2-INV-001 deterministic local totals', () => {
   const a = createWorksheet([{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}]);
   assert.equal(a.total,8); assert.deepEqual(createWorksheet(a.items),a);
