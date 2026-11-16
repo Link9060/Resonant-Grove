@@ -11,18 +11,25 @@ export function createWorksheet(rows = []) {
   });
   return {schemaVersion: 1, items, total: items.reduce((sum, row) => sum + row.count, 0)};
 }
+/** Reject incompatible or corrupted snapshots rather than silently dropping metadata. */
+function readWorksheet(worksheet) {
+  if (!worksheet || worksheet.schemaVersion !== 1 || !Array.isArray(worksheet.items)) throw Error('Invalid worksheet schema');
+  const checked = createWorksheet(worksheet.items);
+  if (worksheet.total !== checked.total) throw Error('Invalid worksheet total');
+  return checked;
+}
 export function setCount(worksheet, id, count) {
   if (!validCount(count)) throw Error('Invalid count');
-  const current = createWorksheet(worksheet?.items);
+  const current = readWorksheet(worksheet);
   if (!current.items.some(row => row.id === id)) throw Error('Unknown item');
   return createWorksheet(current.items.map(row => row.id === id ? {...row, count} : row));
 }
 export function addItem(worksheet, item) {
-  const current = createWorksheet(worksheet?.items);
+  const current = readWorksheet(worksheet);
   return createWorksheet([...current.items, item]);
 }
 export function removeItem(worksheet, id) {
-  const current = createWorksheet(worksheet?.items);
+  const current = readWorksheet(worksheet);
   if (!current.items.some(row => row.id === id)) throw Error('Unknown item');
   return createWorksheet(current.items.filter(row => row.id !== id));
 }
@@ -30,7 +37,7 @@ export function removeItem(worksheet, id) {
 
 /** Rename a row without changing its stable ID, count, or caller-owned snapshot. */
 export function renameItem(worksheet, id, name) {
-  const current = createWorksheet(worksheet?.items);
+  const current = readWorksheet(worksheet);
   if (!current.items.some(row => row.id === id)) throw Error('Unknown item');
   if (!validName(name)) throw Error('Invalid item name');
   return createWorksheet(current.items.map(row => row.id === id ? {...row, name} : row));
@@ -39,7 +46,7 @@ export function renameItem(worksheet, id, name) {
 // Export a deterministic, spreadsheet-safe CSV snapshot. No filesystem or network I/O.
 // Prefix formula-like names with a literal apostrophe to avoid spreadsheet execution.
 export function toCsv(worksheet) {
-  const current = createWorksheet(worksheet?.items);
+  const current = readWorksheet(worksheet);
   const cell = value => {
     const raw = String(value);
     const safe = /^[\s]*[=+@-]/.test(raw) ? "'" + raw : raw;
