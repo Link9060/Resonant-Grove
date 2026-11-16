@@ -65,7 +65,8 @@ document.querySelector('#add').addEventListener('submit',event=>{
 document.querySelector('#reset-worksheet').addEventListener('click',()=>{
  if(!confirm('Discard local changes and restore the sample worksheet?'))return;
  worksheet=createWorksheet(sampleRows);
- message.textContent='Sample worksheet restored';
+ document.querySelector('#search').value='';
+ message.textContent='Sample worksheet restored; search cleared';
  render();
 });
 document.querySelector('#export-csv').addEventListener('click',()=>{
