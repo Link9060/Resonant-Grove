@@ -67,3 +67,12 @@ test('P2-CONTRACT-008 rename control uses local immutable core and accessible la
   assert.match(page, /worksheet=renameItem\(worksheet,item\.id,nextName\)/);
   assert.match(page, /td\.append\(button,rename,remove\)/);
 });
+
+
+test('P2-CONTRACT-009 removal requires explicit confirmation before mutation', () => {
+  assert.match(page, /remove\.addEventListener\('click',\(\)=>\{/);
+  assert.match(page, /if\(!confirm\('Remove '\+item\.name\+' from this worksheet\?'\)\)return;/);
+  const confirmIndex = page.indexOf("if(!confirm('Remove '+item.name+' from this worksheet?'))return;");
+  const removeIndex = page.indexOf('worksheet=removeItem(worksheet,item.id)');
+  assert.ok(confirmIndex >= 0 && removeIndex > confirmIndex, 'confirmation must precede removal');
+});
