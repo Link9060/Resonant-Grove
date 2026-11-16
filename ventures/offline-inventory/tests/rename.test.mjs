@@ -20,3 +20,14 @@ test('P2-INV-013 rejects invalid names and missing IDs without mutation', () => 
   assert.throws(()=>renameItem(original,'unknown','Valid'), /Unknown item/);
   assert.deepEqual(original.items,[{id:'bolts',name:'Bolts',count:3}]);
 });
+
+// P2-INV-014: reject invisible directional formatting and DEL in user-visible labels.
+test('P2-INV-014 names reject bidi controls and DEL across creation and rename', () => {
+  const sheet=createWorksheet([{id:'bolts',name:'Bolts',count:3}]);
+  for(const character of ['\\u007f','\\u202a','\\u202e','\\u2066','\\u2069'].map(value=>JSON.parse('"'+value+'"'))) {
+    assert.throws(()=>createWorksheet([{id:'bad',name:'Visible'+character+'Label',count:1}]), /Invalid inventory row/);
+    assert.throws(()=>renameItem(sheet,'bolts','Visible'+character+'Label'), /Invalid item name/);
+  }
+  assert.deepEqual(sheet.items,[{id:'bolts',name:'Bolts',count:3}]);
+  assert.equal(renameItem(sheet,'bolts','Écrous').items[0].name,'Écrous');
+});
