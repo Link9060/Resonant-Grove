@@ -22,3 +22,18 @@ test('P2-INV-017 multi-step offline inventory workflow preserves prior snapshots
   assert.throws(()=>removeItem(removed,'bolts'),/Unknown item/);
   assert.deepEqual(removed.items,[{id:'nuts',name:'Hex nuts',count:5}]);
 });
+
+test('P2-INV-021 repeated fixture reset is deterministic after edits', () => {
+  const fixtures = [{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}];
+  const initial = createWorksheet(fixtures);
+  const modified = renameItem(setCount(addItem(initial,{id:'washers',name:'Washers',count:2}),'bolts',10),'nuts','Hex nuts');
+  const reset = createWorksheet(fixtures);
+  const resetAgain = createWorksheet(fixtures);
+  assert.deepEqual(reset, initial);
+  assert.deepEqual(resetAgain, reset);
+  assert.equal(reset.total, 8);
+  assert.equal(modified.total, 17);
+  assert.equal(toCsv(reset), toCsv(initial));
+  assert.equal(reset.items.length, 2);
+  assert.deepEqual(fixtures, [{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}]);
+});
