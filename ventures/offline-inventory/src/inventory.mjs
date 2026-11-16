@@ -1,5 +1,5 @@
 /** Pure, offline inventory worksheet core. No persistence, network, or customer data. */
-const validName = value => typeof value === 'string' && value.trim().length >= 1 && value.trim().length <= 80 && !/[<>\u0000-\u001f]/.test(value);
+const validName = value => typeof value === 'string' && value.trim().length >= 1 && value.trim().length <= 80 && !/[<>\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/.test(value);
 const validCount = value => Number.isSafeInteger(value) && value >= 0 && value <= 1000000;
 export function createWorksheet(rows = []) {
   if (!Array.isArray(rows) || rows.length > 100) throw Error('Invalid inventory rows');
