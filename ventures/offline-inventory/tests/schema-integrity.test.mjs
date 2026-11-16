@@ -16,3 +16,24 @@ test('P2-INV-015 rejects incompatible or corrupted worksheet snapshots', () => {
   assert.equal(renameItem(valid,'bolts','Hex bolts').items[0].name,'Hex bolts');
   assert.equal(valid.total,3);
 });
+
+test('P2-INV-016 rejects corrupted rows even when the reported total matches', () => {
+  const original = createWorksheet([{id:'bolts',name:'Bolts',count:3}]);
+  const corrupt = [
+    {...original,items:[{id:'bolts',name:'Bolts',count:'3'}]},
+    {...original,items:[{id:'bolts',name:'Bolts',count:3},{id:'bolts',name:'Duplicate',count:0}]},
+    {...original,items:[{id:123,name:'Bolts',count:3}]},
+    {...original,items:[{id:'bolts',name:'<script>',count:3}]},
+    {...original,items:[{id:'bolts',name:'Bolts',count:3.5}],total:3.5}
+  ];
+  for (const snapshot of corrupt) {
+    for (const operation of [
+      () => addItem(snapshot,{id:'nuts',name:'Nuts',count:1}),
+      () => setCount(snapshot,'bolts',4),
+      () => removeItem(snapshot,'bolts'),
+      () => renameItem(snapshot,'bolts','Hex bolts'),
+      () => toCsv(snapshot)
+    ]) assert.throws(operation, /Invalid inventory row/);
+  }
+  assert.deepEqual(original,createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
+});
