@@ -20,7 +20,13 @@ let worksheet=createWorksheet(sampleRows);
 const rows=document.querySelector('#rows'),message=document.querySelector('#message');
 function render(){
  rows.replaceChildren();
- for(const item of searchItems(worksheet,document.querySelector('#search').value)){
+ const matches=searchItems(worksheet,document.querySelector('#search').value);
+ if(matches.length===0){
+  const empty=document.createElement('tr'),cell=document.createElement('td');
+  cell.colSpan=4;cell.textContent=worksheet.items.length===0?'No items in this worksheet.':'No matching items. Clear the search to see all items.';
+  empty.append(cell);rows.append(empty);
+ }
+ for(const item of matches){
   const tr=document.createElement('tr');
   for(const value of [item.name,item.id,String(item.count)]){const td=document.createElement('td');td.textContent=value;tr.append(td);}
   const td=document.createElement('td'),button=document.createElement('button');
