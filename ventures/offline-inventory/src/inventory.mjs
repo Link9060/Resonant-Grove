@@ -27,6 +27,15 @@ export function removeItem(worksheet, id) {
   return createWorksheet(current.items.filter(row => row.id !== id));
 }
 
+
+/** Rename a row without changing its stable ID, count, or caller-owned snapshot. */
+export function renameItem(worksheet, id, name) {
+  const current = createWorksheet(worksheet?.items);
+  if (!current.items.some(row => row.id === id)) throw Error('Unknown item');
+  if (!validName(name)) throw Error('Invalid item name');
+  return createWorksheet(current.items.map(row => row.id === id ? {...row, name} : row));
+}
+
 // Export a deterministic, spreadsheet-safe CSV snapshot. No filesystem or network I/O.
 // Prefix formula-like names with a literal apostrophe to avoid spreadsheet execution.
 export function toCsv(worksheet) {
