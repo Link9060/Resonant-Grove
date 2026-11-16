@@ -42,6 +42,13 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
         if not target.is_relative_to(root):
             self.send_error(403, "Path outside review artifact rejected")
             return None
+        # The base handler can serve an index symlink after this check.
+        if target.is_dir():
+            for index in ("index.html", "index.htm"):
+                candidate = target / index
+                if candidate.is_file() and not candidate.resolve().is_relative_to(root):
+                    self.send_error(403, "Directory index outside review artifact rejected")
+                    return None
         return super().send_head()
 
     def list_directory(self, path):
