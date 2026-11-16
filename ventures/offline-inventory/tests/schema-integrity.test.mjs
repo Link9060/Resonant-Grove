@@ -37,3 +37,14 @@ test('P2-INV-016 rejects corrupted rows even when the reported total matches', (
   }
   assert.deepEqual(original,createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
 });
+
+test('P2-INV-018 rejects invisible directional marks without blocking ordinary Unicode', () => {
+  const original = createWorksheet([{id:'bolts',name:'Bolts',count:3}]);
+  for (const mark of ['\u061c','\u200e','\u200f']) {
+    assert.throws(() => createWorksheet([{id:'bad',name:'Part'+mark+'A',count:1}]), /Invalid inventory row/);
+    assert.throws(() => renameItem(original,'bolts','Part'+mark+'A'), /Invalid item name/);
+    assert.throws(() => addItem(original,{id:'bad',name:'Part'+mark+'A',count:1}), /Invalid inventory row/);
+  }
+  assert.equal(renameItem(original,'bolts','Pièces').items[0].name,'Pièces');
+  assert.deepEqual(original,createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
+});
