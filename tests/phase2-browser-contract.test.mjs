@@ -76,3 +76,14 @@ test('P2-CONTRACT-009 removal requires explicit confirmation before mutation', (
   const removeIndex = page.indexOf('worksheet=removeItem(worksheet,item.id)');
   assert.ok(confirmIndex >= 0 && removeIndex > confirmIndex, 'confirmation must precede removal');
 });
+
+
+test('P2-CONTRACT-010 reset requires confirmation and restores original fixture', () => {
+  assert.match(page, /id="reset-worksheet"/);
+  assert.match(page, /const sampleRows=\[\{id:'bolts',name:'Bolts',count:3\},\{id:'nuts',name:'Nuts',count:5\}\]/);
+  assert.match(page, /worksheet=createWorksheet\(sampleRows\)/);
+  const resetHandler = page.slice(page.indexOf("querySelector('#reset-worksheet').addEventListener"));
+  assert.match(resetHandler, /if\(!confirm\('Discard local changes and restore the sample worksheet\?'\)\)return;/);
+  assert.ok(resetHandler.indexOf("if(!confirm(") < resetHandler.indexOf('worksheet=createWorksheet(sampleRows)'), 'confirmation precedes mutation');
+  assert.match(resetHandler, /message.textContent='Sample worksheet restored';\s*render\(\)/);
+});
