@@ -176,6 +176,31 @@ class HostHeaderTests(unittest.TestCase):
                 finally:
                     conn.close()
 
+    def test_index_htm_symlink_escape_is_rejected(self):
+        # The fallback index.htm path must receive the same containment check.
+        outside = tempfile.TemporaryDirectory()
+        self.addCleanup(outside.cleanup)
+        secret = Path(outside.name) / "outside-index.htm"
+        secret.write_text("external fallback index secret", encoding="utf-8")
+        directory = Path(self.tmp.name) / "linked-fallback-index"
+        directory.mkdir()
+        try:
+            (directory / "index.htm").symlink_to(secret)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlink creation unavailable on this platform")
+        for method in ("GET", "HEAD"):
+            with self.subTest(method=method):
+                conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                try:
+                    conn.request(method, "/linked-fallback-index/", headers={"Host": "localhost"})
+                    response = conn.getresponse()
+                    body = response.read()
+                    self.assertEqual(response.status, 403)
+                    self.assertNotIn(b"external fallback index secret", body)
+                    self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                finally:
+                    conn.close()
+
     def test_encoded_symlink_escape_is_rejected(self):
         # Percent-encoded URLs must not bypass the artifact-root restriction.
         outside = tempfile.TemporaryDirectory()
