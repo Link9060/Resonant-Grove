@@ -56,3 +56,11 @@ export function toCsv(worksheet) {
     [item.id, item.name, item.count].map(cell).join(',')
   )].join('\r\n') + '\r\n';
 }
+
+/** Return a read-only search result snapshot without changing inventory or totals. */
+export function searchItems(worksheet, query) {
+  const current = readWorksheet(worksheet);
+  if (typeof query !== 'string' || query.length > 80 || /[\u0000-\u001f\u007f]/.test(query)) throw Error('Invalid search');
+  const needle = query.trim().toLocaleLowerCase('en');
+  return current.items.filter(item => (item.name + ' ' + item.id).toLocaleLowerCase('en').includes(needle));
+}
