@@ -48,3 +48,14 @@ test('P2-INV-018 rejects invisible directional marks without blocking ordinary U
   assert.equal(renameItem(original,'bolts','Pièces').items[0].name,'Pièces');
   assert.deepEqual(original,createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
 });
+
+test('P2-INV-019 rejects Unicode line separators in labels and preserves original snapshot', () => {
+  const original = createWorksheet([{id:'bolts',name:'Bolts',count:3}]);
+  for (const separator of ['\u0085','\u2028','\u2029']) {
+    assert.throws(() => createWorksheet([{id:'bad',name:'Part'+separator+'A',count:1}]), /Invalid inventory row/);
+    assert.throws(() => addItem(original,{id:'bad',name:'Part'+separator+'A',count:1}), /Invalid inventory row/);
+    assert.throws(() => renameItem(original,'bolts','Part'+separator+'A'), /Invalid item name/);
+  }
+  assert.equal(renameItem(original,'bolts','Pièces').items[0].name,'Pièces');
+  assert.deepEqual(original,createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
+});
