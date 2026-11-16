@@ -117,3 +117,11 @@ test('P2-CONTRACT-013 empty search results render an accessible table row withou
   assert.match(page, /empty\.append\(cell\);rows\.append\(empty\)/);
   assert.match(page, /querySelector\('#total'\)\.textContent=String\(worksheet\.total\)/);
 });
+
+
+test('P2-CONTRACT-014 search announces visible and total row counts accessibly', () => {
+  assert.match(page, /id="search"[^>]+aria-describedby="search-count"/);
+  assert.match(page, /id="search-count" role="status" aria-live="polite"/);
+  assert.match(page, /querySelector\('#search-count'\)\.textContent=matches\.length\+' of '\+worksheet\.items\.length\+' items shown'/);
+  assert.match(page, /querySelector\('#search'\)\.addEventListener\('input',render\)/);
+});
