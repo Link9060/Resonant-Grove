@@ -7,19 +7,20 @@
 <body><main><h1>Offline inventory worksheet</h1>
 <p>Local demonstration only. No accounts, tracking, storage, uploads or network requests. Refresh resets the sample worksheet.</p>
 <form id="add"><label>Item ID <input id="id" required pattern="[a-z0-9-]{1,40}" maxlength="40" placeholder="e.g. screws"></label><label>Name <input id="name" required maxlength="80" placeholder="e.g. Screws"></label><label>Quantity <input id="count" required type="number" min="0" max="1000000" step="1" value="0"></label><button>Add item</button></form>
+<label for="search">Find item <input id="search" type="search" maxlength="80" placeholder="Name or ID"></label>
 <output id="message" role="status" aria-live="polite"></output>
 <table><caption>Sample inventory, editable in memory</caption><thead><tr><th scope="col">Item</th><th scope="col">ID</th><th scope="col">Quantity</th><th scope="col">Action</th></tr></thead><tbody id="rows"></tbody></table>
 <p><button id="export-csv" type="button">Download CSV snapshot</button> <button id="reset-worksheet" type="button">Reset sample worksheet</button></p>
 <p><strong>Total units: <span id="total">0</span></strong></p><small>All figures are fictional fixtures. This is not a launched product.</small></main>
 <script type="module">
 import {createWorksheet,addItem,setCount} from './src/inventory.mjs';
-import {removeItem,toCsv,renameItem} from './src/inventory.mjs';
+import {removeItem,toCsv,renameItem,searchItems} from './src/inventory.mjs';
 const sampleRows=[{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}];
 let worksheet=createWorksheet(sampleRows);
 const rows=document.querySelector('#rows'),message=document.querySelector('#message');
 function render(){
  rows.replaceChildren();
- for(const item of worksheet.items){
+ for(const item of searchItems(worksheet,document.querySelector('#search').value)){
   const tr=document.createElement('tr');
   for(const value of [item.name,item.id,String(item.count)]){const td=document.createElement('td');td.textContent=value;tr.append(td);}
   const td=document.createElement('td'),button=document.createElement('button');
@@ -51,6 +52,7 @@ function render(){
  }
  document.querySelector('#total').textContent=String(worksheet.total);
 }
+document.querySelector('#search').addEventListener('input',render);
 document.querySelector('#add').addEventListener('submit',event=>{
  event.preventDefault();
  try{
