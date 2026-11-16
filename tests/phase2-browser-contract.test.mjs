@@ -12,11 +12,11 @@ test('P2-CONTRACT-001 browser demo imports the tested inventory core', () => {
   assert.match(page, /addEventListener\(['"]click['"]/);
 });
 test('P2-CONTRACT-005 removal control is wired to immutable inventory core', () => {
-  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*\}\s*from\s*['"]\.\/src\/inventory\.mjs['"]/);
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*\}\s*from\s*['"]\.\/src\/inventory\.mjs['"]/);
   assert.match(page, /remove\.addEventListener\(['"]click['"]/);
   assert.match(page, /worksheet\s*=\s*removeItem\(worksheet,\s*item\.id\)/);
   assert.match(page, /remove\.setAttribute\(['"]aria-label['"],\s*['"]Remove /);
-  assert.match(page, /td\.append\(button,\s*remove\)/);
+  assert.match(page, /td\.append\(button,\s*rename,\s*remove\)/);
 });
 test('P2-CONTRACT-002 local-only page contains no remote scripts or external actions', () => {
   assert.doesNotMatch(page, /<script[^>]+src\s*=|<form[^>]+action\s*=|https?:\/\/|\bfetch\s*\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage/i);
@@ -37,7 +37,7 @@ test('P2-CONTRACT-004 boundary totals and max row limit', () => {
 });
 
 test('P2-CONTRACT-006 CSV export stays local and uses tested serializer', () => {
-  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*\}\s*from/);
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*\}\s*from/);
   assert.match(page, /id="export-csv"/);
   assert.match(page, /querySelector\('#export-csv'\)\.addEventListener\('click'/);
   assert.match(page, /toCsv\(worksheet\)/);
@@ -56,4 +56,14 @@ test('P2-CONTRACT-007 add-item quantity rejects blank and noncanonical numeric t
     assert.equal(/^(0|[1-9][0-9]*)$/.test(invalid), false, invalid);
   }
   for (const valid of ['0', '1', '1000000']) assert.equal(/^(0|[1-9][0-9]*)$/.test(valid), true, valid);
+});
+
+
+test('P2-CONTRACT-008 rename control uses local immutable core and accessible labeling', () => {
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*\}\s*from/);
+  assert.match(page, /rename\.setAttribute\('aria-label','Rename '\+item\.name\)/);
+  assert.match(page, /rename\.addEventListener\('click'/);
+  assert.match(page, /if\(nextName===null\)return/);
+  assert.match(page, /worksheet=renameItem\(worksheet,item\.id,nextName\)/);
+  assert.match(page, /td\.append\(button,rename,remove\)/);
 });
