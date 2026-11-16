@@ -37,7 +37,7 @@ test('P2-CONTRACT-004 boundary totals and max row limit', () => {
 });
 
 test('P2-CONTRACT-006 CSV export stays local and uses tested serializer', () => {
-  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*\}\s*from/);
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*\}\s*from/);
   assert.match(page, /id="export-csv"/);
   assert.match(page, /querySelector\('#export-csv'\)\.addEventListener\('click'/);
   assert.match(page, /toCsv\(worksheet\)/);
@@ -60,7 +60,7 @@ test('P2-CONTRACT-007 add-item quantity rejects blank and noncanonical numeric t
 
 
 test('P2-CONTRACT-008 rename control uses local immutable core and accessible labeling', () => {
-  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*\}\s*from/);
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*\}\s*from/);
   assert.match(page, /rename\.setAttribute\('aria-label','Rename '\+item\.name\)/);
   assert.match(page, /rename\.addEventListener\('click'/);
   assert.match(page, /if\(nextName===null\)return/);
@@ -96,4 +96,13 @@ test('P2-CONTRACT-011 confirmed reset clears active search before rendering fixt
   const clear = handler.indexOf("document.querySelector('#search').value=''");
   const render = handler.indexOf('render()');
   assert.ok(confirmation >= 0 && reset > confirmation && clear > reset && render > clear);
+});
+
+
+test('P2-CONTRACT-012 search input filters displayed rows only, not totals or CSV', () => {
+  assert.match(page, /<input id="search" type="search"/);
+  assert.match(page, /querySelector\('#search'\)\.addEventListener\('input',render\)/);
+  assert.match(page, /for\(const item of searchItems\(worksheet,document\.querySelector\('#search'\)\.value\)\)/);
+  assert.match(page, /querySelector\('#total'\)\.textContent=String\(worksheet\.total\)/);
+  assert.match(page, /const csv=toCsv\(worksheet\)/);
 });
