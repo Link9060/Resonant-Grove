@@ -12,7 +12,7 @@ test('P2-CONTRACT-001 browser demo imports the tested inventory core', () => {
   assert.match(page, /addEventListener\(['"]click['"]/);
 });
 test('P2-CONTRACT-005 removal control is wired to immutable inventory core', () => {
-  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*\}\s*from\s*['"]\.\/src\/inventory\.mjs['"]/);
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*\}\s*from\s*['"]\.\/src\/inventory\.mjs['"]/);
   assert.match(page, /remove\.addEventListener\(['"]click['"]/);
   assert.match(page, /worksheet\s*=\s*removeItem\(worksheet,\s*item\.id\)/);
   assert.match(page, /remove\.setAttribute\(['"]aria-label['"],\s*['"]Remove /);
@@ -85,5 +85,15 @@ test('P2-CONTRACT-010 reset requires confirmation and restores original fixture'
   const resetHandler = page.slice(page.indexOf("querySelector('#reset-worksheet').addEventListener"));
   assert.match(resetHandler, /if\(!confirm\('Discard local changes and restore the sample worksheet\?'\)\)return;/);
   assert.ok(resetHandler.indexOf("if(!confirm(") < resetHandler.indexOf('worksheet=createWorksheet(sampleRows)'), 'confirmation precedes mutation');
-  assert.match(resetHandler, /message.textContent='Sample worksheet restored';\s*render\(\)/);
+  assert.match(resetHandler, /message.textContent='Sample worksheet restored; search cleared';\s*render\(\)/);
+});
+
+
+test('P2-CONTRACT-011 confirmed reset clears active search before rendering fixtures', () => {
+  const handler = page.slice(page.indexOf("querySelector('#reset-worksheet').addEventListener"), page.indexOf("querySelector('#export-csv').addEventListener"));
+  const confirmation = handler.indexOf("if(!confirm(");
+  const reset = handler.indexOf('worksheet=createWorksheet(sampleRows)');
+  const clear = handler.indexOf("document.querySelector('#search').value=''");
+  const render = handler.indexOf('render()');
+  assert.ok(confirmation >= 0 && reset > confirmation && clear > reset && render > clear);
 });
