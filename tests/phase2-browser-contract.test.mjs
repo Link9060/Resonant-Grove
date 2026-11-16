@@ -102,7 +102,18 @@ test('P2-CONTRACT-011 confirmed reset clears active search before rendering fixt
 test('P2-CONTRACT-012 search input filters displayed rows only, not totals or CSV', () => {
   assert.match(page, /<input id="search" type="search"/);
   assert.match(page, /querySelector\('#search'\)\.addEventListener\('input',render\)/);
-  assert.match(page, /for\(const item of searchItems\(worksheet,document\.querySelector\('#search'\)\.value\)\)/);
+  assert.match(page, /const matches=searchItems\(worksheet,document\.querySelector\('#search'\)\.value\)/);
+  assert.match(page, /for\(const item of matches\)/);
   assert.match(page, /querySelector\('#total'\)\.textContent=String\(worksheet\.total\)/);
   assert.match(page, /const csv=toCsv\(worksheet\)/);
+});
+
+
+test('P2-CONTRACT-013 empty search results render an accessible table row without changing totals', () => {
+  assert.match(page, /if\(matches\.length===0\)/);
+  assert.match(page, /cell\.colSpan=4/);
+  assert.match(page, /No matching items\. Clear the search to see all items\./);
+  assert.match(page, /No items in this worksheet\./);
+  assert.match(page, /empty\.append\(cell\);rows\.append\(empty\)/);
+  assert.match(page, /querySelector\('#total'\)\.textContent=String\(worksheet\.total\)/);
 });
