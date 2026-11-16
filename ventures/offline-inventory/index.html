@@ -42,6 +42,7 @@ function render(){
   remove.type='button';remove.textContent='Remove';
   remove.setAttribute('aria-label','Remove '+item.name);
   remove.addEventListener('click',()=>{
+   if(!confirm('Remove '+item.name+' from this worksheet?'))return;
    try{worksheet=removeItem(worksheet,item.id);message.textContent='Item removed';render();}
    catch(error){message.textContent=error.message;}
   });
