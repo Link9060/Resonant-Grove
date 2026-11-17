@@ -1,16 +1,16 @@
 /* Grove Cloud: Supabase Auth + owner-scoped workspace sync. Public publishable key only. */
 (() => {
   'use strict';
-  const URL = 'https://bzjudqhjrbwglxdfbkmj.supabase.co';
-  const KEY = 'sb_publishable_wVnTPMs0hUuWdt1_LGMIYQ_D-aXveMV';
+  const URL = 'https://cnorozrjugxpanpfmssa.supabase.co';
+  const KEY = 'sb_publishable_yVNPiB7opT0WRvBfKTZ2BA_s5bOQLRg';
   const sdk = window.supabase;
-  const client = sdk?.createClient?.(URL, KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  const client = sdk?.createClient?.(URL, KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce', storageKey: 'sb-cnorozrjugxpanpfmssa-auth-token' } });
   const toolbar = document.querySelector('.topbar-right');
   if (!toolbar || !window.GroveWorkspace || !window.GroveExplorer) return;
 
   const button = document.createElement('button');
   button.type = 'button'; button.className = 'grove-cloud-toggle';
-  button.textContent = 'Cloud sign in';
+  button.textContent = 'ARROW cloud sign in';
   toolbar.prepend(button);
   const panel = document.createElement('section');
   panel.className = 'grove-cloud-panel';
@@ -18,7 +18,7 @@
   panel.setAttribute('aria-label', 'Grove cloud account');
   panel.innerHTML = `
     <div class="grove-cloud-heading"><strong>Grove Cloud</strong><button type="button" id="groveCloudClose" aria-label="Close cloud account">×</button></div>
-    <p class="grove-cloud-hint">One account, your Grove on every device. Local data stays available offline.</p>
+    <p class="grove-cloud-hint">Use your ARROW / Relay account. Sign in through Relay on link9060.github.io first if your session is not recognized. Local data remains available offline.</p>
     <form id="groveCloudForm">
       <label for="groveCloudEmail">Email</label><input id="groveCloudEmail" type="email" autocomplete="email" required />
       <label for="groveCloudPassword">Password</label><input id="groveCloudPassword" type="password" autocomplete="current-password" required minlength="6" />
@@ -43,6 +43,10 @@
     el('groveCloudForm').hidden = Boolean(user);
     el('groveCloudSignedIn').hidden = !user;
     el('groveCloudConflict').hidden = !pending;
+    el('groveCloudUseRemote').hidden = !!pending && !pending.workspace;
+    el('groveCloudUseRemote').disabled = !!pending && !pending.workspace;
+    el('groveCloudConflict').querySelector('strong').textContent = pending && !pending.workspace ? 'Start your ARROW Grove workspace' : 'Two Grove copies found';
+    el('groveCloudConflict').querySelector('p').textContent = pending && !pending.workspace ? 'No ARROW cloud copy exists yet. Upload this device only after checking your original data or using the migration tool. Nothing is uploaded automatically.' : 'Choose which data to use. Nothing is overwritten until you choose.';
     el('groveCloudUser').textContent = user?.email || '';
     button.textContent = !client ? 'Cloud unavailable' : !user ? 'Cloud sign in' : pending ? 'Choose sync copy' : ready ? 'Cloud connected' : 'Cloud connecting';
     const indicator = document.querySelector('.local-indicator');
@@ -89,9 +93,10 @@
     if (scopedId !== currentUserId) return;
     if (error) { message('Could not load cloud workspace: ' + error.message); return; }
     if (!data) {
-      ready = true; ui();
-      message('Creating your cloud workspace...');
-      await upload();
+      // Never turn an empty local browser state into an automatic cloud overwrite.
+      pending = { workspace: null, explorer: null };
+      ui();
+      message('No ARROW cloud copy yet. Verify the old data before selecting Upload this device.');
     } else {
       const local = localCopy();
       if (JSON.stringify(data.workspace) === JSON.stringify(local.workspace)
@@ -131,7 +136,7 @@
   el('groveCloudSignout').addEventListener('click', async () => {
     clearTimeout(timer);
     if (dirty) await upload();
-    const { error } = await client.auth.signOut();
+    const { error } = await client.auth.signOut({ scope: 'local' });
     if (error) message(error.message);
     else void activate(null);
   });

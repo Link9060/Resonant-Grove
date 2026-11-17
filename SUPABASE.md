@@ -2,20 +2,24 @@
 
 Grove optionally syncs the full local workspace and idea explorer to Supabase. **Local browser storage still works without an account or an internet connection.**
 
-## Deployed connection
+## Historical live connection
 
-- Project: `bzjudqhjrbwglxdfbkmj` (existing RAVIN Supabase project).
+The live Grove site still uses the original RAVIN Supabase project. **This migration branch must not be deployed until the old cloud workspace has been backed up and/or copied.**
+
+## Destination prepared in the ARROW/Relay project
+
+- Destination project: `cnorozrjugxpanpfmssa` (ARROW/Relay Supabase project).
 - Table: `public.grove_workspaces` (owner-specific JSON workspace + explorer snapshot).
-- Auth: Supabase email/password sign-in, registration, and Google OAuth sign-in **when Google is configured**.
+- Auth: the existing ARROW/Relay account, reusing its browser session when Grove and Relay run on the same GitHub Pages origin. Email/password or Google provider availability depends on ARROW's authentication configuration.
 - This integration uses only a public Supabase **publishable key** in browser code. It must never use a service-role or secret key.
 
-The SQL migration `grove_array_owner_scoped_storage` has already been applied to that project. RLS is enabled, with four owner-only policies for each table. Anonymous clients have no table SELECT permission.
+A separate `grove_array_relay_owner_scoped_storage` migration has been applied to ARROW/Relay. The original project's data has **not** been copied automatically. RLS is enabled, with four owner-only policies for each table. Anonymous clients have no table SELECT permission.
 
 ## Using it
 
 1. Open the live Grove site and click **Cloud sign in**.
 2. Sign in using a Supabase account belonging to this project (or create an account).
-3. If there is no existing cloud workspace, Grove uploads the current local workspace automatically.
+3. If there is no destination workspace, Grove does not upload anything automatically. Use the migration tool at `/migration/`, or verify the local copy and choose **Upload this device** explicitly.
 4. If this device and the cloud have different workspaces, you **must explicitly choose** to load the cloud copy or upload the device copy. This avoids silent overwrites.
 5. After choosing, edits to seeds, transactions, journal, and explorer drafts automatically sync on a short debounce.
 
@@ -45,3 +49,7 @@ Grove still does **not** have payment processing, payouts, bank credentials, sch
 The database was verified with SQL after the migration: RLS true, anonymous SELECT false, and four owner-only policies on `grove_workspaces`.
 
 End-to-end browser sign-in and cross-device synchronization still need a test with a real user account.
+
+## Branch-specific caveats
+
+The transfer tool is staged at `migration/` and copies old user-owned rows to the verified ARROW user without deleting old content. Always export backups first. If Relay is on a different web origin than Grove, authentication storage cannot be shared across origins and a separate sign-in may be necessary. Before activating this branch on `main`, test ARROW sign-in, cloud conflict handling, and the transferred data in the browser. Live ARRAY mission execution still depends on the old RAVIN API and must be addressed separately.
