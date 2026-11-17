@@ -141,5 +141,5 @@ test('P2-INV-031 rejects inherited or missing worksheet header fields', () => {
     ]) assert.throws(operation, /Invalid worksheet schema/);
   }
   assert.deepEqual(original, createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
-  assert.equal(toCsv(original), 'id,name,count\\r\\n"bolts","Bolts","3"\\r\\n');
+  assert.equal(toCsv(original), 'id,name,count\r\n"bolts","Bolts","3"\r\n');
 });
