@@ -2,10 +2,10 @@
 const validName = value => typeof value === 'string' && value.trim().length >= 1 && value.trim().length <= 80 && !/[<>\u0000-\u001f\u007f\u0085\u061c\u200e\u200f\u2028\u2029\u202a-\u202e\u2066-\u2069]/.test(value);
 const validCount = value => Number.isSafeInteger(value) && value >= 0 && value <= 1000000;
 export function createWorksheet(rows = []) {
-  if (!Array.isArray(rows) || rows.length > 100 || Object.keys(rows).some(key => !/^(0|[1-9]\d*)$/.test(key) || Number(key) >= rows.length) || Array.from({length: rows.length}, (_, i) => Object.hasOwn(rows, i)).includes(false)) throw Error('Invalid inventory rows');
+  if (!Array.isArray(rows) || rows.length > 100 || Reflect.ownKeys(rows).filter(key => key !== 'length').some(key => typeof key !== 'string' || !/^(0|[1-9]\d*)$/.test(key) || Number(key) >= rows.length) || Array.from({length: rows.length}, (_, i) => Object.hasOwn(rows, i)).includes(false)) throw Error('Invalid inventory rows');
   const ids = new Set();
   const items = rows.map((row, index) => {
-    if (!row || typeof row !== 'object' || Array.isArray(row) || Object.keys(row).some(key => !['id', 'name', 'count'].includes(key)) || !['id', 'name', 'count'].every(key => Object.hasOwn(row, key)) || typeof row.id !== 'string' || !/^[a-z0-9-]{1,40}$/.test(row.id) || ids.has(row.id) || !validName(row.name) || !validCount(row.count)) throw Error('Invalid inventory row ' + index);
+    if (!row || typeof row !== 'object' || Array.isArray(row) || Reflect.ownKeys(row).some(key => !['id', 'name', 'count'].includes(key)) || !['id', 'name', 'count'].every(key => Object.hasOwn(row, key)) || typeof row.id !== 'string' || !/^[a-z0-9-]{1,40}$/.test(row.id) || ids.has(row.id) || !validName(row.name) || !validCount(row.count)) throw Error('Invalid inventory row ' + index);
     ids.add(row.id);
     return {id: row.id, name: row.name.trim(), count: row.count};
   });
@@ -14,7 +14,7 @@ export function createWorksheet(rows = []) {
 /** Reject incompatible or corrupted snapshots rather than silently dropping metadata. */
 function readWorksheet(worksheet) {
   if (!worksheet || typeof worksheet !== 'object' || Array.isArray(worksheet) || !['schemaVersion', 'items', 'total'].every(key => Object.hasOwn(worksheet, key)) || worksheet.schemaVersion !== 1 || !Array.isArray(worksheet.items)) throw Error('Invalid worksheet schema');
-  if (Object.keys(worksheet).some(key => !['schemaVersion', 'items', 'total'].includes(key))) throw Error('Invalid worksheet metadata');
+  if (Reflect.ownKeys(worksheet).some(key => !['schemaVersion', 'items', 'total'].includes(key))) throw Error('Invalid worksheet metadata');
   if (worksheet.items.some(row => !row || typeof row !== 'object' || Object.keys(row).some(key => !['id', 'name', 'count'].includes(key)))) throw Error('Invalid inventory row metadata');
   const checked = createWorksheet(worksheet.items);
   if (worksheet.total !== checked.total) throw Error('Invalid worksheet total');
