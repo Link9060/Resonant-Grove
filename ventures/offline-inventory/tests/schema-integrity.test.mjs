@@ -95,5 +95,5 @@ test('P2-INV-025 rejects unexpected metadata on creation and addition', () => {
   }
   assert.deepEqual(original, createWorksheet([fixture]));
   assert.deepEqual(fixture, {id:'bolts',name:'Bolts',count:3});
-  assert.equal(toCsv(original), 'id,name,count\\r\\n"bolts","Bolts","3"\\r\\n');
+  assert.equal(toCsv(original), 'id,name,count\r\n"bolts","Bolts","3"\r\n');
 });
