@@ -1,7 +1,6 @@
 /**
  * Trusted scheduled research worker. No model receives GitHub credentials.
- * A generated document is PUBLIC on GitHub and clearly labeled unverified.
- * The only write operation is creating one research issue per UTC calendar day.
+ * Research is archived in an Actions artifact, not published as a GitHub issue.
  */
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -48,13 +47,6 @@ async function queryLocalModel(prompt){
 export async function runScout(){
   if(process.env.GITHUB_REPOSITORY!==REPO)throw Error('Wrong GitHub repository.');
   const date=dayKey(new Date());
-  const title=ISSUE_PREFIX+date;
-  const history=api('repos/'+REPO+'/issues?state=all&per_page=100');
-  if(!Array.isArray(history))throw Error('Could not load current GitHub issue history.');
-  if(scoutAlreadyRecorded(history,date)){
-    note('## Grove Opportunity Scout\nThe research journal entry for '+date+' already exists. No duplicate generated.');
-    return {created:false,reason:'exists'};
-  }
   const topic=selectScoutTopic(date);
   const dry=process.env.GROVE_SCOUT_DRY_RUN==='true';
   // On first push, prove GitHub access but do NOT incur any model time or write an issue.
@@ -122,22 +114,9 @@ export async function runScout(){
     'Static prototype quality: '+qa.status+', '+qa.readinessScore+'/'+qa.readinessMax+' limited checks\n'+
     'Human review is still required; no testers or market evidence have been verified.\n',
     'utf8');
-  // Recheck after inference. A retry/race must not produce two issues.
-  const again=api('repos/'+REPO+'/issues?state=all&per_page=100');
-  if(!Array.isArray(again))throw Error('Could not recheck issue journal before publishing.');
-  if(scoutAlreadyRecorded(again,date)){note('Another run already published this UTC day. Skipping.');return {created:false,reason:'race'};}
-  const issue=api('repos/'+REPO+'/issues','POST',{title,body,labels:['grove-scout']});
-  if(typeof issue?.html_url!=='string'||!Number.isSafeInteger(issue?.number)||issue.number<1)throw Error('Github did not acknowledge the research journal issue.');
-  // Pass the specific, confirmed new journal issue to the next step.
-  // GitHub's issue LIST endpoint can lag a fresh write; GET by ID is direct.
-  if(process.env.GITHUB_ENV){
-    appendFileSync(process.env.GITHUB_ENV,'GROVE_NEW_SCOUT_ISSUE_NUMBER='+issue.number+'\n');
-  }
-  note('### New research journal entry: '+issue.html_url+
-    '\n- Research category: '+topic.name+
-    '\n- Source: '+draft.source+
-    '\n- Three candidate hypotheses, one internal Seed plan, one offline prototype and an automatic static QA report (not independently verified). No sales claims, spending, customer testing or external marketing.');
-  return {created:true,url:issue.html_url};
+  writeFileSync(outputDir+'/research-brief.md',body+'\n','utf8');
+  note('Private Actions artifact prepared; no GitHub issue published.');
+  return {created:false,reason:'private-artifact'};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
   try{await runScout();}catch(e){console.error('Grove Scout:',e instanceof Error?e.message:String(e));process.exitCode=1;}
