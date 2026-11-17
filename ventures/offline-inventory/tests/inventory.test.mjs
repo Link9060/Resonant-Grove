@@ -138,3 +138,15 @@ test('P2-INV-012 full-capacity CSV export remains deterministic after replacemen
   assert.equal(toCsv(original),originalCsv);
   assert.equal(original.total,100000000);
 });
+
+test('P2-INV-029 inherited fields cannot masquerade as explicit inventory data', () => {
+  const inherited = Object.create({id:'bolts',name:'Bolts',count:3});
+  assert.throws(() => createWorksheet([inherited]), /Invalid inventory row/);
+  const partlyInherited = Object.assign(Object.create({count:3}), {id:'bolts',name:'Bolts'});
+  assert.throws(() => createWorksheet([partlyInherited]), /Invalid inventory row/);
+  const empty = createWorksheet([]);
+  assert.throws(() => addItem(empty, inherited), /Invalid inventory row/);
+  assert.deepEqual(empty, {schemaVersion:1,items:[],total:0});
+  assert.deepEqual(createWorksheet([{id:'bolts',name:'Bolts',count:3}]).items,
+    [{id:'bolts',name:'Bolts',count:3}]);
+});
