@@ -158,3 +158,13 @@ test('P2-CONTRACT-017 canceled destructive actions announce unchanged worksheet'
   assert.ok(reset.indexOf('worksheet=createWorksheet(sampleRows)') > reset.indexOf('Reset canceled; worksheet unchanged'));
   assert.match(page, /id="message" role="status" aria-live="polite"/);
 });
+
+test('P2-CONTRACT-018 adding an item clears a stale search so the new row is visible', () => {
+  const add = page.slice(page.indexOf("querySelector('#add').addEventListener"), page.indexOf("querySelector('#reset-worksheet').addEventListener"));
+  const mutate = add.indexOf('worksheet=addItem(worksheet,');
+  const clear = add.indexOf("document.querySelector('#search').value=''");
+  const render = add.indexOf('render()');
+  assert.ok(mutate >= 0 && clear > mutate && render > clear, 'clear filter after successful add, before rendering');
+  assert.match(add, /message\.textContent='Item added; search cleared'/);
+  assert.ok(add.indexOf("catch(error)") > clear, 'failed add must not clear active search');
+});
