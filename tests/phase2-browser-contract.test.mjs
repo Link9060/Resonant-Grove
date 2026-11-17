@@ -63,7 +63,7 @@ test('P2-CONTRACT-008 rename control uses local immutable core and accessible la
   assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*,\s*toJson\s*,\s*fromJson\s*\}\s*from/);
   assert.match(page, /rename\.setAttribute\('aria-label','Rename '\+item\.name\)/);
   assert.match(page, /rename\.addEventListener\('click'/);
-  assert.match(page, /if\(nextName===null\)return/);
+  assert.match(page, /if\(nextName===null\)\{message\.textContent='Rename canceled; worksheet unchanged';return;\}/);
   assert.match(page, /worksheet=renameItem\(worksheet,item\.id,nextName\)/);
   assert.match(page, /td\.append\(button,rename,remove\)/);
 });
@@ -167,4 +167,14 @@ test('P2-CONTRACT-018 adding an item clears a stale search so the new row is vis
   assert.ok(mutate >= 0 && clear > mutate && render > clear, 'clear filter after successful add, before rendering');
   assert.match(add, /message\.textContent='Item added; search cleared'/);
   assert.ok(add.indexOf("catch(error)") > clear, 'failed add must not clear active search');
+});
+
+
+test('P2-CONTRACT-019 canceled edit prompts announce unchanged worksheet', () => {
+  const quantity = page.slice(page.indexOf("button.addEventListener('click'"), page.indexOf("const rename=document.createElement"));
+  const rename = page.slice(page.indexOf("rename.addEventListener('click'"), page.indexOf("const remove=document.createElement"));
+  assert.match(quantity, /if\(raw===null\)\{message\.textContent='Quantity edit canceled; worksheet unchanged';return;\}/);
+  assert.match(rename, /if\(nextName===null\)\{message\.textContent='Rename canceled; worksheet unchanged';return;\}/);
+  assert.ok(quantity.indexOf('Quantity edit canceled') < quantity.indexOf('worksheet=setCount'));
+  assert.ok(rename.indexOf('Rename canceled') < rename.indexOf('worksheet=renameItem'));
 });
