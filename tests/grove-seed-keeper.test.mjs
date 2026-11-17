@@ -79,15 +79,14 @@ test('workflow is bounded with dry-run push, no implicit Builder permissions or 
 });
 
 
-test('same-job handoff reads a newly created Scout issue by ID if the GitHub issues list lags',()=>{
+test('Scout does not hand off a newly published issue to Seed Keeper',()=>{
   const scout=readFileSync('scripts/grove-opportunity-scout.mjs','utf8');
-  const keeper=readFileSync('scripts/grove-seed-keeper.mjs','utf8');
-  assert.match(scout,/Number\.isSafeInteger\(issue\?\.number\)/);
-  assert.match(scout,/GROVE_NEW_SCOUT_ISSUE_NUMBER/);
-  assert.match(scout,/appendFileSync\(process\.env\.GITHUB_ENV/);
-  assert.match(keeper,/GROVE_NEW_SCOUT_ISSUE_NUMBER/);
-  assert.match(keeper,/gh\('repos\/'\+REPO\+'\/issues\/'\+latestId\)/);
-  assert.match(keeper,/fresh\.number!==latestId/);
-  assert.match(keeper,/candidates=\[fresh,\.\.\.issues\]/);
-  assert.match(keeper,/selectWeeklySeed\(candidates,now\)/);
+  const flow=readFileSync('.github/workflows/grove-scout.yml','utf8');
+  assert.doesNotMatch(scout,/GROVE_NEW_SCOUT_ISSUE_NUMBER/);
+  assert.doesNotMatch(scout,/Number\\.isSafeInteger\\(issue\\?\\.number\\)/);
+  assert.doesNotMatch(scout,/issues','POST/);
+  assert.match(scout,/research-brief\\.md/);
+  assert.match(scout,/reason:'private-artifact'/);
+  assert.doesNotMatch(flow,/issues: write/);
+  assert.doesNotMatch(flow,/node scripts\\/grove-seed-keeper\\.mjs/);
 });
