@@ -71,7 +71,7 @@ test('P2-CONTRACT-008 rename control uses local immutable core and accessible la
 
 test('P2-CONTRACT-009 removal requires explicit confirmation before mutation', () => {
   assert.match(page, /remove\.addEventListener\('click',\(\)=>\{/);
-  assert.match(page, /if\(!confirm\('Remove '\+item\.name\+' from this worksheet\?'\)\)return;/);
+  assert.match(page, /if\(!confirm\('Remove '\+item\.name\+' from this worksheet\?'\)\)\{message\.textContent='Removal canceled; worksheet unchanged';return;\}/);
   const confirmIndex = page.indexOf("if(!confirm('Remove '+item.name+' from this worksheet?'))return;");
   const removeIndex = page.indexOf('worksheet=removeItem(worksheet,item.id)');
   assert.ok(confirmIndex >= 0 && removeIndex > confirmIndex, 'confirmation must precede removal');
@@ -83,7 +83,7 @@ test('P2-CONTRACT-010 reset requires confirmation and restores original fixture'
   assert.match(page, /const sampleRows=\[\{id:'bolts',name:'Bolts',count:3\},\{id:'nuts',name:'Nuts',count:5\}\]/);
   assert.match(page, /worksheet=createWorksheet\(sampleRows\)/);
   const resetHandler = page.slice(page.indexOf("querySelector('#reset-worksheet').addEventListener"));
-  assert.match(resetHandler, /if\(!confirm\('Discard local changes and restore the sample worksheet\?'\)\)return;/);
+  assert.match(resetHandler, /if\(!confirm\('Discard local changes and restore the sample worksheet\?'\)\)\{message\.textContent='Reset canceled; worksheet unchanged';return;\}/);
   assert.ok(resetHandler.indexOf("if(!confirm(") < resetHandler.indexOf('worksheet=createWorksheet(sampleRows)'), 'confirmation precedes mutation');
   assert.match(resetHandler, /message.textContent='Sample worksheet restored; search cleared';\s*render\(\)/);
 });
@@ -146,4 +146,15 @@ test('P2-CONTRACT-016 canceled JSON restore announces no change and clears file 
   assert.ok(cancel >= 0 && cancel < assign, 'cancel feedback precedes worksheet mutation');
   assert.match(restore, /if\(!confirm\('Replace the current worksheet with this local backup\?'\)\)\{message\.textContent='JSON restore canceled; worksheet unchanged';return;\}/);
   assert.match(restore, /finally \{input\.value='';\}/);
+});
+
+
+test('P2-CONTRACT-017 canceled destructive actions announce unchanged worksheet', () => {
+  const remove = page.slice(page.indexOf("remove.addEventListener('click'"), page.indexOf('td.append(button,rename,remove)'));
+  const reset = page.slice(page.indexOf("querySelector('#reset-worksheet').addEventListener"), page.indexOf("querySelector('#export-json').addEventListener"));
+  assert.ok(remove.indexOf("message.textContent='Removal canceled; worksheet unchanged'") >= 0);
+  assert.ok(remove.indexOf('worksheet=removeItem') > remove.indexOf('Removal canceled; worksheet unchanged'));
+  assert.ok(reset.indexOf("message.textContent='Reset canceled; worksheet unchanged'") >= 0);
+  assert.ok(reset.indexOf('worksheet=createWorksheet(sampleRows)') > reset.indexOf('Reset canceled; worksheet unchanged'));
+  assert.match(page, /id="message" role="status" aria-live="polite"/);
 });
