@@ -70,11 +70,11 @@ test('scheduled workflow has trusted main, tight quota and no payments or publis
   assert.match(workflow,/cron: '23 14 \* \* \*'/);
   assert.match(workflow,/ref: main/);
   assert.match(workflow,/contents: read/);
-  assert.match(workflow,/issues: write/);
+  assert.doesNotMatch(workflow,/issues: write/);
   assert.match(workflow,/concurrency:/);
   assert.match(workflow,/node --test tests\/grove-scout\.test\.mjs/);
-  assert.match(runner,/scoutAlreadyRecorded\(history,date\)/);
-  assert.match(runner,/scoutAlreadyRecorded\(again,date\)/);
+  assert.doesNotMatch(runner,/issues','POST/);
+  assert.match(runner,/private-artifact/);
   assert.match(runner,/GROVE_SCOUT_DRY_RUN/);
   assert.doesNotMatch(runner,/paypal|stripe|instagram\.com|\/transfers|\/payments|\/ads\b/i);
 });
@@ -83,8 +83,8 @@ test('daily Scout retries safely and preserves a no-model fallback',()=>{
   const workflow=readFileSync('.github/workflows/grove-scout.yml','utf8');
   const runner=readFileSync('scripts/grove-opportunity-scout.mjs','utf8');
   assert.match(workflow,/cron: '23 20 \* \* \*'/);
-  assert.match(workflow,/Check for an existing UTC research journal before model setup/);
-  assert.match(workflow,/GROVE_SCOUT_ALREADY_DONE=true/);
+  assert.doesNotMatch(workflow,/Check for an existing UTC research journal before model setup/);
+  assert.doesNotMatch(workflow,/GROVE_SCOUT_ALREADY_DONE=true/);
   assert.match(workflow,/GROVE_MODEL_AVAILABLE: 'false'/);
   assert.match(workflow,/continue-on-error: true/);
   assert.match(workflow,/timeout 270s ollama pull qwen2\.5:3b/);
@@ -103,9 +103,9 @@ test('authorized owner kickoff performs full research without installing an unne
   assert.match(flow,/github\.event\.issue\.user\.login == 'Link9060'/);
   assert.match(flow,/github\.event\.issue\.title == '\[GROVE-RUN\] First research batch'/);
   assert.match(flow,/github\.event_name != 'issues'/);
-  assert.match(flow,/Hand off genuine Scout research to the weekly internal Seed Keeper/);
-  assert.match(flow,/node scripts\/grove-seed-keeper\.mjs/);
-  assert.match(flow,/node --test tests\/grove-seed-keeper\.test\.mjs/);
+  assert.doesNotMatch(flow,/Hand off genuine Scout research to the weekly internal Seed Keeper/);
+  assert.doesNotMatch(flow,/node scripts\/grove-seed-keeper\.mjs/);
+  assert.doesNotMatch(flow,/node --test tests\/grove-seed-keeper\.test\.mjs/);
   assert.match(flow,/github\.event_name != 'push'/);
   assert.match(flow,/GROVE_SCOUT_DRY_RUN: \$\{\{ github.event_name == 'push' \}\}/);
 });
