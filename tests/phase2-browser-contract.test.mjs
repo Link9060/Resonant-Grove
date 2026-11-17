@@ -12,7 +12,7 @@ test('P2-CONTRACT-001 browser demo imports the tested inventory core', () => {
   assert.match(page, /addEventListener\(['"]click['"]/);
 });
 test('P2-CONTRACT-005 removal control is wired to immutable inventory core', () => {
-  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*\}\s*from\s*['"]\.\/src\/inventory\.mjs['"]/);
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*,\s*toJson\s*,\s*fromJson\s*\}\s*from\s*['"]\.\/src\/inventory\.mjs['"]/);
   assert.match(page, /remove\.addEventListener\(['"]click['"]/);
   assert.match(page, /worksheet\s*=\s*removeItem\(worksheet,\s*item\.id\)/);
   assert.match(page, /remove\.setAttribute\(['"]aria-label['"],\s*['"]Remove /);
@@ -37,7 +37,7 @@ test('P2-CONTRACT-004 boundary totals and max row limit', () => {
 });
 
 test('P2-CONTRACT-006 CSV export stays local and uses tested serializer', () => {
-  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*\}\s*from/);
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*,\s*toJson\s*,\s*fromJson\s*\}\s*from/);
   assert.match(page, /id="export-csv"/);
   assert.match(page, /querySelector\('#export-csv'\)\.addEventListener\('click'/);
   assert.match(page, /toCsv\(worksheet\)/);
@@ -60,7 +60,7 @@ test('P2-CONTRACT-007 add-item quantity rejects blank and noncanonical numeric t
 
 
 test('P2-CONTRACT-008 rename control uses local immutable core and accessible labeling', () => {
-  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*\}\s*from/);
+  assert.match(page, /import\s*\{\s*removeItem\s*,\s*toCsv\s*,\s*renameItem\s*,\s*searchItems\s*,\s*toJson\s*,\s*fromJson\s*\}\s*from/);
   assert.match(page, /rename\.setAttribute\('aria-label','Rename '\+item\.name\)/);
   assert.match(page, /rename\.addEventListener\('click'/);
   assert.match(page, /if\(nextName===null\)return/);
@@ -124,4 +124,16 @@ test('P2-CONTRACT-014 search announces visible and total row counts accessibly',
   assert.match(page, /id="search-count" role="status" aria-live="polite"/);
   assert.match(page, /querySelector\('#search-count'\)\.textContent=matches\.length\+' of '\+worksheet\.items\.length\+' items shown'/);
   assert.match(page, /querySelector\('#search'\)\.addEventListener\('input',\(\)=>\{try\{render\(\);/);
+});
+
+test('P2-CONTRACT-015 local JSON backup and confirmed restore are wired to validated core', () => {
+  assert.match(page, /id="export-json"/);
+  assert.match(page, /id="import-json" type="file"/);
+  assert.match(page, /toJson\(worksheet\)/);
+  assert.match(page, /fromJson\(await file\.text\(\)\)/);
+  assert.match(page, /if\(file\.size>65536\)throw Error/);
+  const restore = page.slice(page.indexOf("querySelector('#import-json').addEventListener"),page.indexOf("querySelector('#export-csv').addEventListener"));
+  assert.ok(restore.indexOf("if(!confirm(")>=0 && restore.indexOf('worksheet=restored')>restore.indexOf("if(!confirm("));
+  assert.match(restore, /input\.value=''/);
+  assert.match(page, /link\.download='inventory-backup\.json'/);
 });
