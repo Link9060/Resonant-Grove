@@ -36,7 +36,7 @@ function render(){
   button.addEventListener('click',()=>{
    const raw=prompt('New whole-number quantity for '+item.name,String(item.count));
    if(raw===null){message.textContent='Quantity edit canceled; worksheet unchanged';return;}
-   try{if(!/^(0|[1-9][0-9]*)$/.test(raw))throw Error('Enter a whole number');worksheet=setCount(worksheet,item.id,Number(raw));message.textContent='Quantity updated';render();}
+   try{if(!/^(0|[1-9][0-9]*)$/.test(raw))throw Error('Enter a whole number');worksheet=setCount(worksheet,item.id,Number(raw));message.textContent='Quantity updated; focus moved to search';render();document.querySelector('#search').focus();}
    catch(error){message.textContent=error.message;}
   });
   const rename=document.createElement('button');
@@ -45,7 +45,7 @@ function render(){
   rename.addEventListener('click',()=>{
    const nextName=prompt('New name for '+item.name,item.name);
    if(nextName===null){message.textContent='Rename canceled; worksheet unchanged';return;}
-   try{worksheet=renameItem(worksheet,item.id,nextName);message.textContent='Item renamed';render();}
+   try{worksheet=renameItem(worksheet,item.id,nextName);message.textContent='Item renamed; focus moved to search';render();document.querySelector('#search').focus();}
    catch(error){message.textContent=error.message;}
   });
   const remove=document.createElement('button');
