@@ -85,7 +85,7 @@ test('P2-CONTRACT-010 reset requires confirmation and restores original fixture'
   const resetHandler = page.slice(page.indexOf("querySelector('#reset-worksheet').addEventListener"));
   assert.match(resetHandler, /if\(!confirm\('Discard local changes and restore the sample worksheet\?'\)\)\{message\.textContent='Reset canceled; worksheet unchanged';return;\}/);
   assert.ok(resetHandler.indexOf("if(!confirm(") < resetHandler.indexOf('worksheet=createWorksheet(sampleRows)'), 'confirmation precedes mutation');
-  assert.match(resetHandler, /message.textContent='Sample worksheet restored; search cleared';\s*render\(\)/);
+  assert.match(resetHandler, /message.textContent='Sample worksheet restored; search cleared; focus moved to search';\s*render\(\)/);
 });
 
 
@@ -202,5 +202,21 @@ test('P2-CONTRACT-021 successful quantity and rename edits restore keyboard focu
     assert.ok(changed>=0 && rendered>changed && focused>rendered, 'focus after successful edit and rerender');
     assert.ok(handler.includes(feedback));
     assert.ok(handler.indexOf('===null')<changed, 'cancellation precedes mutation and focus');
+  }
+});
+
+
+test('P2-CONTRACT-022 confirmed reset and JSON restore restore focus after rerender', () => {
+  for (const [start,end,mutation,feedback] of [
+    ["querySelector('#reset-worksheet').addEventListener", "querySelector('#export-json').addEventListener", 'worksheet=createWorksheet(sampleRows)', 'Sample worksheet restored; search cleared; focus moved to search'],
+    ["querySelector('#import-json').addEventListener", "querySelector('#export-csv').addEventListener", 'worksheet=restored', 'JSON backup restored locally; search cleared; focus moved to search']
+  ]) {
+    const handler=page.slice(page.indexOf(start),page.indexOf(end));
+    const changed=handler.indexOf(mutation);
+    const rendered=handler.indexOf('render()',changed);
+    const focused=handler.indexOf("document.querySelector('#search').focus()",rendered);
+    assert.ok(changed>=0 && rendered>changed && focused>rendered, 'focus stable search after confirmed mutation and rerender');
+    assert.ok(handler.includes(feedback));
+    assert.ok(handler.indexOf('if(!confirm(')<changed, 'cancel precedes mutation and focus');
   }
 });
