@@ -53,7 +53,7 @@ function render(){
   remove.setAttribute('aria-label','Remove '+item.name);
   remove.addEventListener('click',()=>{
    if(!confirm('Remove '+item.name+' from this worksheet?')){message.textContent='Removal canceled; worksheet unchanged';return;}
-   try{worksheet=removeItem(worksheet,item.id);message.textContent='Item removed';render();}
+   try{worksheet=removeItem(worksheet,item.id);message.textContent='Item removed; focus moved to search';render();document.querySelector('#search').focus();}
    catch(error){message.textContent=error.message;}
   });
   td.append(button,rename,remove);tr.append(td);rows.append(tr);
