@@ -109,3 +109,18 @@ test('P2-INV-027 rejects sparse row arrays rather than silently omitting items',
   assert.equal(valid.total, 3);
   assert.equal(toCsv(valid), 'id,name,count\r\n"bolts","Bolts","3"\r\n');
 });
+
+test('P2-INV-028 rejects non-index metadata on row arrays', () => {
+  const fixture = {id:'bolts',name:'Bolts',count:3};
+  const annotated = [fixture];
+  annotated.customerEmail = 'fictional@example.invalid';
+  const hiddenIndex = [fixture];
+  hiddenIndex['01'] = {id:'ghost',name:'Ghost',count:7};
+  for (const rows of [annotated, hiddenIndex]) {
+    assert.throws(() => createWorksheet(rows), /Invalid inventory rows/);
+  }
+  const valid = createWorksheet([fixture]);
+  assert.equal(valid.total, 3);
+  assert.equal(toCsv(valid), 'id,name,count\\r\\n"bolts","Bolts","3"\\r\\n');
+  assert.deepEqual(fixture, {id:'bolts',name:'Bolts',count:3});
+});
