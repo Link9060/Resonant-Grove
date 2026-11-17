@@ -92,7 +92,7 @@ document.querySelector('#import-json').addEventListener('change',async event=>{
  try {
   if(file.size>65536)throw Error('Backup exceeds 64 KiB');
   const restored=fromJson(await file.text());
-  if(!confirm('Replace the current worksheet with this local backup?'))return;
+  if(!confirm('Replace the current worksheet with this local backup?')){message.textContent='JSON restore canceled; worksheet unchanged';return;}
   worksheet=restored;
   document.querySelector('#search').value='';
   message.textContent='JSON backup restored locally; search cleared';
