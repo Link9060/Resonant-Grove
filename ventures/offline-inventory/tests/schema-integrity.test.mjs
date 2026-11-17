@@ -124,3 +124,22 @@ test('P2-INV-028 rejects non-index metadata on row arrays', () => {
   assert.equal(toCsv(valid), 'id,name,count\r\n"bolts","Bolts","3"\r\n');
   assert.deepEqual(fixture, {id:'bolts',name:'Bolts',count:3});
 });
+
+
+test('P2-INV-031 rejects inherited or missing worksheet header fields', () => {
+  const original = createWorksheet([{id:'bolts',name:'Bolts',count:3}]);
+  const inherited = Object.create(original);
+  const missingTotal = {schemaVersion:1,items:original.items};
+  const inheritedTotal = Object.assign(Object.create({total:3}), {schemaVersion:1,items:original.items});
+  for (const snapshot of [inherited, missingTotal, inheritedTotal]) {
+    for (const operation of [
+      () => addItem(snapshot,{id:'nuts',name:'Nuts',count:1}),
+      () => setCount(snapshot,'bolts',4),
+      () => removeItem(snapshot,'bolts'),
+      () => renameItem(snapshot,'bolts','New'),
+      () => toCsv(snapshot)
+    ]) assert.throws(operation, /Invalid worksheet schema/);
+  }
+  assert.deepEqual(original, createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
+  assert.equal(toCsv(original), 'id,name,count\\r\\n"bolts","Bolts","3"\\r\\n');
+});
