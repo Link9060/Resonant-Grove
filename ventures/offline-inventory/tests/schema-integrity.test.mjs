@@ -59,3 +59,24 @@ test('P2-INV-019 rejects Unicode line separators in labels and preserves origina
   assert.equal(renameItem(original,'bolts','Pièces').items[0].name,'Pièces');
   assert.deepEqual(original,createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
 });
+
+
+test('P2-INV-024 rejects unexpected snapshot and row metadata without mutating fixtures', () => {
+  const original = createWorksheet([{id:'bolts',name:'Bolts',count:3}]);
+  const snapshots = [
+    {...original, customerEmail:'fictional@example.invalid'},
+    {...original, items:[{...original.items[0], notes:'untracked'}]},
+    {...original, items:[{...original.items[0], extra:undefined}]}
+  ];
+  for (const snapshot of snapshots) {
+    for (const operation of [
+      () => addItem(snapshot,{id:'nuts',name:'Nuts',count:1}),
+      () => setCount(snapshot,'bolts',4),
+      () => removeItem(snapshot,'bolts'),
+      () => renameItem(snapshot,'bolts','New'),
+      () => toCsv(snapshot)
+    ]) assert.throws(operation, /Invalid (worksheet|inventory row) metadata/);
+  }
+  assert.deepEqual(original,createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
+  assert.match(toCsv(original), /"bolts","Bolts","3"/);
+});
