@@ -5,7 +5,7 @@ export function createWorksheet(rows = []) {
   if (!Array.isArray(rows) || rows.length > 100 || Object.keys(rows).some(key => !/^(0|[1-9]\d*)$/.test(key) || Number(key) >= rows.length) || Array.from({length: rows.length}, (_, i) => Object.hasOwn(rows, i)).includes(false)) throw Error('Invalid inventory rows');
   const ids = new Set();
   const items = rows.map((row, index) => {
-    if (!row || typeof row !== 'object' || Array.isArray(row) || Object.keys(row).some(key => !['id', 'name', 'count'].includes(key)) || typeof row.id !== 'string' || !/^[a-z0-9-]{1,40}$/.test(row.id) || ids.has(row.id) || !validName(row.name) || !validCount(row.count)) throw Error('Invalid inventory row ' + index);
+    if (!row || typeof row !== 'object' || Array.isArray(row) || Object.keys(row).some(key => !['id', 'name', 'count'].includes(key)) || !['id', 'name', 'count'].every(key => Object.hasOwn(row, key)) || typeof row.id !== 'string' || !/^[a-z0-9-]{1,40}$/.test(row.id) || ids.has(row.id) || !validName(row.name) || !validCount(row.count)) throw Error('Invalid inventory row ' + index);
     ids.add(row.id);
     return {id: row.id, name: row.name.trim(), count: row.count};
   });
