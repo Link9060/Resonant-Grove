@@ -83,10 +83,10 @@ test('Scout does not hand off a newly published issue to Seed Keeper',()=>{
   const scout=readFileSync('scripts/grove-opportunity-scout.mjs','utf8');
   const flow=readFileSync('.github/workflows/grove-scout.yml','utf8');
   assert.doesNotMatch(scout,/GROVE_NEW_SCOUT_ISSUE_NUMBER/);
-  assert.doesNotMatch(scout,/Number\\.isSafeInteger\\(issue\\?\\.number\\)/);
-  assert.doesNotMatch(scout,/issues','POST/);
-  assert.match(scout,/research-brief\\.md/);
-  assert.match(scout,/reason:'private-artifact'/);
-  assert.doesNotMatch(flow,/issues: write/);
-  assert.doesNotMatch(flow,/node scripts\\/grove-seed-keeper\\.mjs/);
+  assert.equal(scout.includes('Number.isSafeInteger(issue?.number)'),false);
+  assert.equal(scout.includes("issues','POST"),false);
+  assert.equal(scout.includes('research-brief.md'),true);
+  assert.equal(scout.includes("reason:'private-artifact'"),true);
+  assert.equal(flow.includes('issues: write'),false);
+  assert.equal(flow.includes('node scripts/grove-seed-keeper.mjs'),false);
 });
