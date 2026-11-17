@@ -189,3 +189,18 @@ test('P2-CONTRACT-020 confirmed removal restores keyboard focus to a stable sear
   assert.match(remove, /Item removed; focus moved to search/);
   assert.ok(remove.indexOf('Removal canceled; worksheet unchanged') < mutation, 'cancel must not remove or move focus');
 });
+
+test('P2-CONTRACT-021 successful quantity and rename edits restore keyboard focus', () => {
+  for (const [start,end,mutation,feedback] of [
+    ["button.addEventListener('click'","const rename=document.createElement","worksheet=setCount(worksheet,item.id,Number(raw))","Quantity updated; focus moved to search"],
+    ["rename.addEventListener('click'","const remove=document.createElement","worksheet=renameItem(worksheet,item.id,nextName)","Item renamed; focus moved to search"]
+  ]) {
+    const handler=page.slice(page.indexOf(start),page.indexOf(end));
+    const changed=handler.indexOf(mutation);
+    const rendered=handler.indexOf('render()',changed);
+    const focused=handler.indexOf("document.querySelector('#search').focus()",rendered);
+    assert.ok(changed>=0 && rendered>changed && focused>rendered, 'focus after successful edit and rerender');
+    assert.ok(handler.includes(feedback));
+    assert.ok(handler.indexOf('===null')<changed, 'cancellation precedes mutation and focus');
+  }
+});
