@@ -178,3 +178,14 @@ test('P2-CONTRACT-019 canceled edit prompts announce unchanged worksheet', () =>
   assert.ok(quantity.indexOf('Quantity edit canceled') < quantity.indexOf('worksheet=setCount'));
   assert.ok(rename.indexOf('Rename canceled') < rename.indexOf('worksheet=renameItem'));
 });
+
+
+test('P2-CONTRACT-020 confirmed removal restores keyboard focus to a stable search input', () => {
+  const remove = page.slice(page.indexOf("remove.addEventListener('click'"), page.indexOf('td.append(button,rename,remove)'));
+  const mutation = remove.indexOf('worksheet=removeItem(worksheet,item.id)');
+  const render = remove.indexOf('render()', mutation);
+  const focus = remove.indexOf("document.querySelector('#search').focus()", render);
+  assert.ok(mutation >= 0 && render > mutation && focus > render, 'focus a persistent control after removing and rerendering the active row');
+  assert.match(remove, /Item removed; focus moved to search/);
+  assert.ok(remove.indexOf('Removal canceled; worksheet unchanged') < mutation, 'cancel must not remove or move focus');
+});
