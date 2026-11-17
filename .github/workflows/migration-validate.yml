@@ -1,0 +1,22 @@
+name: Check Grove to ARROW migration
+on:
+  push:
+    branches:
+      - "migration/**"
+  pull_request:
+    paths:
+      - "migration/**"
+      - ".github/workflows/deploy.yml"
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check migration script syntax and source boundaries
+        run: |
+          node --check migration/migrate.js
+          node -e "const fs=require('fs');const s=fs.readFileSync('migration/migrate.js','utf8');if(s.includes('service_role')||s.includes('.delete()'))process.exit(1);if(!s.includes('ignoreDuplicates: true')||!s.includes('persistSession: false'))process.exit(1)"
+          test -s migration/index.html
+          test -s migration/styles.css

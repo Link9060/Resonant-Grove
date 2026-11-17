@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#101815">
+<title>Grove + ARRAY · Account migration</title>
+<link rel="stylesheet" href="./styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js" defer></script>
+<script src="./migrate.js" defer></script>
+</head>
+<body>
+<main class="wrap">
+<div class="eyebrow">ARROW / DATA TRANSFER</div>
+<h1>Move your Grove and ARRAY history.</h1>
+<p class="intro">A one-time, owner-controlled copy from the older RAVIN database into ARROW's current database. Nothing is deleted from the old project.</p>
+<div class="warning"><b>Private account data.</b> Use only on a trusted device. Verify that you are on your own GitHub Pages website. Do not upload the downloaded backup to a public repository.</div>
+<section class="card">
+<div class="step"><span>01</span><div><h2>Connect your ARROW account</h2><p>Sign into <a href="https://link9060.github.io/Resonant-Relay/" target="_blank" rel="noopener">Relay on GitHub Pages</a> in this browser first, then return here. This transfer page can read the shared ARROW session on the same origin. Your ARROW account will own the transferred records.</p></div></div>
+<div class="actions"><button id="verifyTarget">Check ARROW account</button></div>
+<div id="targetStatus" class="status" role="status" aria-live="polite">Not checked.</div>
+</section>
+<section class="card">
+<div class="step"><span>02</span><div><h2>Access the older RAVIN account</h2><p>Your old credentials are sent directly to the old Supabase Auth server over HTTPS. This page does not save them in localStorage or transmit them to ARROW.</p></div></div>
+<form id="sourceForm">
+<label for="email">Old RAVIN email</label>
+<input id="email" name="email" type="email" required autocomplete="off" placeholder="you@example.com">
+<label for="password">Old RAVIN password</label>
+<input id="password" name="password" type="password" required autocomplete="off">
+<button id="scan" type="submit">Inspect my old data</button>
+</form>
+<div id="sourceStatus" class="status" role="status" aria-live="polite">Not connected.</div>
+</section>
+<section class="card">
+<div class="step"><span>03</span><div><h2>Review and copy</h2><p>This copies the old Grove workspace and saved ARRAY mission snapshots under your current ARROW user ID. Existing destination data is preserved; duplicate missions are skipped. No live missions are started.</p></div></div>
+<div class="counts">
+<div><span>Old Grove workspace</span><strong id="groveCount">—</strong></div>
+<div><span>Old ARRAY missions</span><strong id="missionCount">—</strong></div>
+<div><span>Grove already at destination</span><strong id="existingGrove">—</strong></div>
+<div><span>ARRAY missions at destination</span><strong id="existingMissions">—</strong></div>
+</div>
+<div class="actions"><button id="backup" disabled>Save private JSON backup</button></div>
+<label class="confirm"><input id="agree" type="checkbox"> I verified both accounts, saved a private backup, and authorize copying my data to the ARROW account shown above.</label>
+<div class="actions"><button id="copy" class="primary" disabled>Copy to ARROW</button></div>
+<div id="copyStatus" class="status" role="status" aria-live="polite">Connect both accounts to continue.</div>
+</section>
+<footer>Blueprint migration prep · Source stays intact · Account passwords never leave Supabase authentication</footer>
+</main>
+</body>
+</html>
