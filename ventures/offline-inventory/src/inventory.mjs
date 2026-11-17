@@ -14,6 +14,8 @@ export function createWorksheet(rows = []) {
 /** Reject incompatible or corrupted snapshots rather than silently dropping metadata. */
 function readWorksheet(worksheet) {
   if (!worksheet || worksheet.schemaVersion !== 1 || !Array.isArray(worksheet.items)) throw Error('Invalid worksheet schema');
+  if (Object.keys(worksheet).some(key => !['schemaVersion', 'items', 'total'].includes(key))) throw Error('Invalid worksheet metadata');
+  if (worksheet.items.some(row => !row || typeof row !== 'object' || Object.keys(row).some(key => !['id', 'name', 'count'].includes(key)))) throw Error('Invalid inventory row metadata');
   const checked = createWorksheet(worksheet.items);
   if (worksheet.total !== checked.total) throw Error('Invalid worksheet total');
   return checked;
