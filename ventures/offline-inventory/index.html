@@ -35,7 +35,7 @@ function render(){
   button.type='button';button.textContent='Set quantity';button.setAttribute('aria-label','Set quantity for '+item.name);
   button.addEventListener('click',()=>{
    const raw=prompt('New whole-number quantity for '+item.name,String(item.count));
-   if(raw===null)return;
+   if(raw===null){message.textContent='Quantity edit canceled; worksheet unchanged';return;}
    try{if(!/^(0|[1-9][0-9]*)$/.test(raw))throw Error('Enter a whole number');worksheet=setCount(worksheet,item.id,Number(raw));message.textContent='Quantity updated';render();}
    catch(error){message.textContent=error.message;}
   });
@@ -44,7 +44,7 @@ function render(){
   rename.setAttribute('aria-label','Rename '+item.name);
   rename.addEventListener('click',()=>{
    const nextName=prompt('New name for '+item.name,item.name);
-   if(nextName===null)return;
+   if(nextName===null){message.textContent='Rename canceled; worksheet unchanged';return;}
    try{worksheet=renameItem(worksheet,item.id,nextName);message.textContent='Item renamed';render();}
    catch(error){message.textContent=error.message;}
   });
