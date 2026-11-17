@@ -97,3 +97,15 @@ test('P2-INV-025 rejects unexpected metadata on creation and addition', () => {
   assert.deepEqual(fixture, {id:'bolts',name:'Bolts',count:3});
   assert.equal(toCsv(original), 'id,name,count\r\n"bolts","Bolts","3"\r\n');
 });
+
+
+test('P2-INV-027 rejects sparse row arrays rather than silently omitting items', () => {
+  const sparse = new Array(2);
+  sparse[1] = {id:'bolts',name:'Bolts',count:3};
+  for (const rows of [sparse, new Array(1)]) {
+    assert.throws(() => createWorksheet(rows), /Invalid inventory rows/);
+  }
+  const valid = createWorksheet([{id:'bolts',name:'Bolts',count:3}]);
+  assert.equal(valid.total, 3);
+  assert.equal(toCsv(valid), 'id,name,count\r\n"bolts","Bolts","3"\r\n');
+});
