@@ -66,3 +66,17 @@ export function searchItems(worksheet, query) {
   const needle = query.trim().toLocaleLowerCase('en');
   return current.items.filter(item => (item.name + ' ' + item.id).toLocaleLowerCase('en').includes(needle));
 }
+
+/** Deterministic, offline JSON backup. No browser storage or network access. */
+export function toJson(worksheet) {
+  return JSON.stringify(readWorksheet(worksheet)) + '\n';
+}
+
+/** Restore only the exact versioned worksheet shape; never trust parsed totals. */
+export function fromJson(text) {
+  if (typeof text !== 'string' || text.length > 65536) throw Error('Invalid worksheet JSON');
+  let parsed;
+  try { parsed = JSON.parse(text); }
+  catch { throw Error('Invalid worksheet JSON'); }
+  return readWorksheet(parsed);
+}
