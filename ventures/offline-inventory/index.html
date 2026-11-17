@@ -60,7 +60,7 @@ function render(){
  }
  document.querySelector('#total').textContent=String(worksheet.total);
 }
-document.querySelector('#search').addEventListener('input',render);
+document.querySelector('#search').addEventListener('input',()=>{try{render();message.textContent='';}catch(error){message.textContent=error.message;}});
 document.querySelector('#add').addEventListener('submit',event=>{
  event.preventDefault();
  try{
