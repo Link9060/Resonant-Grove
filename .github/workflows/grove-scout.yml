@@ -29,7 +29,6 @@ concurrency:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   scout:
@@ -66,30 +65,8 @@ jobs:
           node --check scripts/grove-seed-evaluator.mjs
           node --check scripts/grove-worksheet-export.mjs
           node --test tests/grove-scout.test.mjs tests/grove-prototype.test.mjs tests/grove-worksheet-export.test.mjs tests/grove-seed-evaluator.test.mjs tests/grove-prototype-qa.test.mjs
-      - name: Create daily research label if missing
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          if ! gh label list --limit 100 --json name --jq '.[].name' | grep -Fxq 'grove-scout'; then
-            gh label create grove-scout --color 4f7c51 --description 'Unverified autonomous research, never a sales or Builder instruction'
-          fi
-      # Check public journal first so the second daily window does not pull a model again.
-      # Failure to read GitHub is fatal rather than treating an unknown state as empty.
-      - name: Check for an existing UTC research journal before model setup
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          today="$(date -u +%F)"
-          titles="$(gh api "repos/$GITHUB_REPOSITORY/issues?state=all&labels=grove-scout&per_page=100" --jq '.[].title')"
-          if grep -Fxq "[GROVE-SCOUT] $today" <<< "$titles"; then
-            echo "GROVE_SCOUT_ALREADY_DONE=true" >> "$GITHUB_ENV"
-            echo "Research journal already exists for $today; expensive model preparation skipped."
-          fi
-
       - name: Prepare optional local Ollama model with strict time limits
-        if: ${{ github.event_name != 'push' && github.event_name != 'issues' && env.GROVE_SCOUT_ALREADY_DONE != 'true' }}
+        if: ${{ github.event_name != 'push' && github.event_name != 'issues' && true }}
         timeout-minutes: 9
         continue-on-error: true
         run: |
@@ -121,26 +98,13 @@ jobs:
           else
             echo "::warning::Model download timed out or failed; using fallback."
           fi
-      - name: Research safely and record one unverified journal per UTC day
+      - name: Research safely and archive a private draft
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GROVE_SCOUT_DRY_RUN: ${{ github.event_name == 'push' }}
         run: node scripts/grove-opportunity-scout.mjs
-      # Run Keeper in the same trusted job: a GITHUB_TOKEN-created Scout issue
-      # cannot be relied on to trigger a separate GitHub issue event workflow.
-      - name: Hand off genuine Scout research to the weekly internal Seed Keeper
-        if: ${{ github.event_name != 'push' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          node --check scripts/grove-seed-keeper-core.mjs
-          node --check scripts/grove-seed-keeper.mjs
-          node --test tests/grove-seed-keeper.test.mjs
-          node scripts/grove-seed-keeper.mjs
-
       - name: Archive offline printable worksheet for human review
-        if: ${{ github.event_name != 'push' && env.GROVE_SCOUT_ALREADY_DONE != 'true' }}
+        if: ${{ github.event_name != 'push' }}
         uses: actions/upload-artifact@v4
         with:
           name: grove-scout-draft-${{ github.run_id }}
