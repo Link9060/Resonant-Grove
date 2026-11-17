@@ -75,8 +75,9 @@ document.querySelector('#reset-worksheet').addEventListener('click',()=>{
  if(!confirm('Discard local changes and restore the sample worksheet?')){message.textContent='Reset canceled; worksheet unchanged';return;}
  worksheet=createWorksheet(sampleRows);
  document.querySelector('#search').value='';
- message.textContent='Sample worksheet restored; search cleared';
+ message.textContent='Sample worksheet restored; search cleared; focus moved to search';
  render();
+ document.querySelector('#search').focus();
 });
 document.querySelector('#export-json').addEventListener('click',()=>{
  try {
@@ -96,8 +97,9 @@ document.querySelector('#import-json').addEventListener('change',async event=>{
   if(!confirm('Replace the current worksheet with this local backup?')){message.textContent='JSON restore canceled; worksheet unchanged';return;}
   worksheet=restored;
   document.querySelector('#search').value='';
-  message.textContent='JSON backup restored locally; search cleared';
+  message.textContent='JSON backup restored locally; search cleared; focus moved to search';
   render();
+  document.querySelector('#search').focus();
  } catch(error) {message.textContent='JSON restore failed: '+error.message;}
  finally {input.value='';}
 });
