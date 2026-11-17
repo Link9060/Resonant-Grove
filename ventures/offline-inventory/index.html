@@ -52,7 +52,7 @@ function render(){
   remove.type='button';remove.textContent='Remove';
   remove.setAttribute('aria-label','Remove '+item.name);
   remove.addEventListener('click',()=>{
-   if(!confirm('Remove '+item.name+' from this worksheet?'))return;
+   if(!confirm('Remove '+item.name+' from this worksheet?')){message.textContent='Removal canceled; worksheet unchanged';return;}
    try{worksheet=removeItem(worksheet,item.id);message.textContent='Item removed';render();}
    catch(error){message.textContent=error.message;}
   });
@@ -71,7 +71,7 @@ document.querySelector('#add').addEventListener('submit',event=>{
  }catch(error){message.textContent=error.message;}
 });
 document.querySelector('#reset-worksheet').addEventListener('click',()=>{
- if(!confirm('Discard local changes and restore the sample worksheet?'))return;
+ if(!confirm('Discard local changes and restore the sample worksheet?')){message.textContent='Reset canceled; worksheet unchanged';return;}
  worksheet=createWorksheet(sampleRows);
  document.querySelector('#search').value='';
  message.textContent='Sample worksheet restored; search cleared';
