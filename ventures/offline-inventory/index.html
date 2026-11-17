@@ -67,7 +67,8 @@ document.querySelector('#add').addEventListener('submit',event=>{
   const rawCount=document.querySelector('#count').value;
   if(!/^(0|[1-9][0-9]*)$/.test(rawCount))throw Error('Enter a whole-number quantity');
   worksheet=addItem(worksheet,{id:document.querySelector('#id').value,name:document.querySelector('#name').value,count:Number(rawCount)});
-  message.textContent='Item added';event.target.reset();render();
+  document.querySelector('#search').value='';
+  message.textContent='Item added; search cleared';event.target.reset();render();
  }catch(error){message.textContent=error.message;}
 });
 document.querySelector('#reset-worksheet').addEventListener('click',()=>{
