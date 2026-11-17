@@ -137,3 +137,13 @@ test('P2-CONTRACT-015 local JSON backup and confirmed restore are wired to valid
   assert.match(restore, /input\.value=''/);
   assert.match(page, /link\.download='inventory-backup\.json'/);
 });
+
+
+test('P2-CONTRACT-016 canceled JSON restore announces no change and clears file input', () => {
+  const restore = page.slice(page.indexOf("querySelector('#import-json').addEventListener"), page.indexOf("querySelector('#export-csv').addEventListener"));
+  const cancel = restore.indexOf("message.textContent='JSON restore canceled; worksheet unchanged'");
+  const assign = restore.indexOf('worksheet=restored');
+  assert.ok(cancel >= 0 && cancel < assign, 'cancel feedback precedes worksheet mutation');
+  assert.match(restore, /if\(!confirm\('Replace the current worksheet with this local backup\?'\)\)\{message\.textContent='JSON restore canceled; worksheet unchanged';return;\}/);
+  assert.match(restore, /finally \{input\.value='';\}/);
+});
