@@ -101,7 +101,7 @@ test('P2-CONTRACT-011 confirmed reset clears active search before rendering fixt
 
 test('P2-CONTRACT-012 search input filters displayed rows only, not totals or CSV', () => {
   assert.match(page, /<input id="search" type="search"/);
-  assert.match(page, /querySelector\('#search'\)\.addEventListener\('input',render\)/);
+  assert.match(page, /querySelector\('#search'\)\.addEventListener\('input',\(\)=>\{try\{render\(\);/);
   assert.match(page, /const matches=searchItems\(worksheet,document\.querySelector\('#search'\)\.value\)/);
   assert.match(page, /for\(const item of matches\)/);
   assert.match(page, /querySelector\('#total'\)\.textContent=String\(worksheet\.total\)/);
@@ -123,5 +123,5 @@ test('P2-CONTRACT-014 search announces visible and total row counts accessibly',
   assert.match(page, /id="search"[^>]+aria-describedby="search-count"/);
   assert.match(page, /id="search-count" role="status" aria-live="polite"/);
   assert.match(page, /querySelector\('#search-count'\)\.textContent=matches\.length\+' of '\+worksheet\.items\.length\+' items shown'/);
-  assert.match(page, /querySelector\('#search'\)\.addEventListener\('input',render\)/);
+  assert.match(page, /querySelector\('#search'\)\.addEventListener\('input',\(\)=>\{try\{render\(\);/);
 });
