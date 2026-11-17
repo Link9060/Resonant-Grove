@@ -121,6 +121,6 @@ test('P2-INV-028 rejects non-index metadata on row arrays', () => {
   }
   const valid = createWorksheet([fixture]);
   assert.equal(valid.total, 3);
-  assert.equal(toCsv(valid), 'id,name,count\\r\\n"bolts","Bolts","3"\\r\\n');
+  assert.equal(toCsv(valid), 'id,name,count\r\n"bolts","Bolts","3"\r\n');
   assert.deepEqual(fixture, {id:'bolts',name:'Bolts',count:3});
 });
