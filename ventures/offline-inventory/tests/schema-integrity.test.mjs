@@ -80,3 +80,20 @@ test('P2-INV-024 rejects unexpected snapshot and row metadata without mutating f
   assert.deepEqual(original,createWorksheet([{id:'bolts',name:'Bolts',count:3}]));
   assert.match(toCsv(original), /"bolts","Bolts","3"/);
 });
+
+test('P2-INV-025 rejects unexpected metadata on creation and addition', () => {
+  const fixture = {id:'bolts',name:'Bolts',count:3};
+  const original = createWorksheet([fixture]);
+  const extras = [
+    {...fixture, notes:'fictional internal note'},
+    {...fixture, customerEmail:'nobody@example.invalid'},
+    {...fixture, extra:undefined}
+  ];
+  for (const row of extras) {
+    assert.throws(() => createWorksheet([row]), /Invalid inventory row/);
+    assert.throws(() => addItem(createWorksheet([]), row), /Invalid inventory row/);
+  }
+  assert.deepEqual(original, createWorksheet([fixture]));
+  assert.deepEqual(fixture, {id:'bolts',name:'Bolts',count:3});
+  assert.equal(toCsv(original), 'id,name,count\\r\\n"bolts","Bolts","3"\\r\\n');
+});
