@@ -2,26 +2,16 @@
  * Trusted scheduled research worker. No model receives GitHub credentials.
  * Research is archived in an Actions artifact, not published as a GitHub issue.
  */
-import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import {renderPrintableWorksheet} from './grove-worksheet-export.mjs';
 import {auditPrototype,preferRevisedPrototype,revisionPrompt,renderQaSummary,renderFeedbackWorksheet} from './grove-prototype-qa.mjs';
 import {evaluateScoutSeed,renderSeedEvaluation,renderSeedPlan} from './grove-seed-evaluator.mjs';
-import { dayKey, selectScoutTopic, scoutAlreadyRecorded, createScoutPrompt,
-  validateScoutDraft, curatedFallback, makeScoutBrief, ISSUE_PREFIX } from './grove-scout-core.mjs';
+import { dayKey, selectScoutTopic, createScoutPrompt,
+  validateScoutDraft, curatedFallback, makeScoutBrief } from './grove-scout-core.mjs';
 import {prototypePrompt,validatePrototype,prototypeFallback,renderPrototype} from './grove-prototype.mjs';
 
 const REPO='Link9060/Resonant-Grove';
 const MODEL='qwen2.5:3b';
-function api(path,method,payload){
-  const args=['api','--header','Accept: application/vnd.github+json'];
-  if(method)args.push('--method',method);
-  args.push(path);
-  const config={encoding:'utf8',timeout:20000,maxBuffer:1000000,env:process.env};
-  if(payload!==undefined){args.push('--input','-');config.input=JSON.stringify(payload);}
-  const result=execFileSync('gh',args,config).trim();
-  return result?JSON.parse(result):null;
-}
 function note(message){
   process.stdout.write(message+'\n');
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,message+'\n');
