@@ -61,6 +61,17 @@ class ArtifactVerificationTests(unittest.TestCase):
         manifest.write_text("0" * 64 + "  ../outside.txt\n", encoding="utf-8")
         self.assert_rejected()
 
+    def test_sensitive_path_rejected_even_with_recomputed_manifest(self):
+        for name in (".env", ".env.production", ".github/workflows/deploy.yml", ".git/config", "node_modules/pkg/index.js"):
+            with self.subTest(name=name):
+                target = self.root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("test secret", encoding="utf-8")
+                self.write_manifest()
+                self.assert_rejected()
+                target.unlink()
+                self.write_manifest()
+
     def test_symlink(self):
         (self.root / "link.txt").symlink_to(self.root / "review.html")
         self.assert_rejected()
