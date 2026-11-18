@@ -2,11 +2,11 @@
 
 Grove optionally syncs the full local workspace and idea explorer to Supabase. **Local browser storage still works without an account or an internet connection.**
 
-## Historical live connection
+## Current connection
 
-The live Grove site still uses the original RAVIN Supabase project. **This migration branch must not be deployed until the old cloud workspace has been backed up and/or copied.**
+Grove's live GitHub Pages site has switched to the ARROW/Relay Supabase project. The owner explicitly chose to begin with empty cloud storage instead of migrating old RAVIN project data. No old records were deleted.
 
-## Destination prepared in the ARROW/Relay project
+## ARROW/Relay database
 
 - Destination project: `cnorozrjugxpanpfmssa` (ARROW/Relay Supabase project).
 - Table: `public.grove_workspaces` (owner-specific JSON workspace + explorer snapshot).
@@ -50,6 +50,6 @@ The database was verified with SQL after the migration: RLS true, anonymous SELE
 
 End-to-end browser sign-in and cross-device synchronization still need a test with a real user account.
 
-## Branch-specific caveats
+## Migration status and caveats
 
-The transfer tool is staged at `migration/` and copies old user-owned rows to the verified ARROW user without deleting old content. Always export backups first. If Relay is on a different web origin than Grove, authentication storage cannot be shared across origins and a separate sign-in may be necessary. Before activating this branch on `main`, test ARROW sign-in, cloud conflict handling, and the transferred data in the browser. Live ARRAY mission execution still depends on the old RAVIN API and must be addressed separately.
+The optional transfer tool remains accessible at `/migration/` but copying old data is not required for the approved fresh start. Real-account, cross-device sign-in and sync still need end-to-end browser verification. If Relay is on a different web origin than Grove, authentication storage cannot be shared across origins and a separate sign-in may be necessary. The old RAVIN Supabase project was not deleted; Supabase currently refuses to pause it because its internal state is hibernating, despite the project listing as `ACTIVE_HEALTHY`. ARRAY's legacy RAVIN 1.1 live-mission API was intentionally disabled by default during migration.
