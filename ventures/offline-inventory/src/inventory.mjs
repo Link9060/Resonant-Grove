@@ -74,7 +74,7 @@ export function toJson(worksheet) {
 
 /** Restore only the exact versioned worksheet shape; never trust parsed totals. */
 export function fromJson(text) {
-  if (typeof text !== 'string' || text.length > 65536) throw Error('Invalid worksheet JSON');
+  if (typeof text !== 'string' || new TextEncoder().encode(text).byteLength > 65536) throw Error('Invalid worksheet JSON');
   let parsed;
   try { parsed = JSON.parse(text); }
   catch { throw Error('Invalid worksheet JSON'); }
