@@ -1,5 +1,6 @@
 /** Pure, offline inventory worksheet core. No persistence, network, or customer data. */
-const validName = value => typeof value === 'string' && value.trim().length >= 1 && value.trim().length <= 80 && !/[<>\u0000-\u001f\u007f\u0085\u061c\u200e\u200f\u2028\u2029\u202a-\u202e\u2066-\u2069]/.test(value);
+const hasUnpairedSurrogate = value => /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(value);
+const validName = value => typeof value === 'string' && !hasUnpairedSurrogate(value) && value.trim().length >= 1 && value.trim().length <= 80 && !/[<>\u0000-\u001f\u007f\u0085\u061c\u200e\u200f\u2028\u2029\u202a-\u202e\u2066-\u2069]/.test(value);
 const validCount = value => Number.isSafeInteger(value) && value >= 0 && value <= 1000000;
 export function createWorksheet(rows = []) {
   if (!Array.isArray(rows) || rows.length > 100 || Reflect.ownKeys(rows).filter(key => key !== 'length').some(key => typeof key !== 'string' || !/^(0|[1-9]\d*)$/.test(key) || Number(key) >= rows.length) || Array.from({length: rows.length}, (_, i) => Object.hasOwn(rows, i)).includes(false)) throw Error('Invalid inventory rows');
