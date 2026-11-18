@@ -23,8 +23,10 @@ Small hobby projects and volunteer teams may need to tally non-sensitive supplie
 - **P2-CONTRACT-009:** Removal in the browser requires confirmation.
 - **P2-CONTRACT-010/011:** Reset requires confirmation and clears search only when confirmed.
 - **P2-CONTRACT-012:** Search affects rendered rows but not total or CSV.
+- **P2-INV-034/035/036:** Versioned deterministic JSON backup/restore, schema integrity and UTF-8 byte-size boundary.
+- **P2-CONTRACT-015/016/022/023:** Browser backup/restore, cancellation feedback, successful reset/restore focus, and add-item focus.
 
-These IDs describe source/test contracts, **not a claim that the exact branch tests passed**.
+These IDs describe source/test contracts. A historical CI pass is not evidence for a newer commit; verify the exact current head.
 
 ## Manual browser acceptance (pending)
 - **P2-UI-001:** Add `washers` quantity 2; see total 10.
@@ -36,9 +38,12 @@ These IDs describe source/test contracts, **not a claim that the exact branch te
 - **P2-UI-007:** Search `BOLT` and `absent`; verify filtered rows, unchanged total 8, and CSV still contains both fixtures.
 - **P2-UI-008:** While search is active, cancel Reset and verify preservation; confirm Reset and verify two sample rows, total 8, and cleared search.
 - **P2-UI-009:** Download CSV, inspect header, CRLF rows, and spreadsheet-safe escaping for a name beginning with `=`.
+- **P2-UI-010:** Download JSON; add or rename a fixture item; restore the original backup and confirm. Verify original rows/total, cleared search and focus on Find item.
+- **P2-UI-011:** Cancel a valid JSON restore, then submit malformed JSON, a tampered total, and a file larger than 64 KiB. Verify unchanged worksheet and clear error/cancellation feedback. Use fictional fixtures only.
+- **P2-UI-012:** With a search hiding a new item, add it and verify search clears, row becomes visible and keyboard focus moves to Find item. Invalid add must preserve filter and focus.
 
 ## Architecture, limits and verification
-`src/inventory.mjs` is a dependency-free ES module exporting `createWorksheet`, `addItem`, `setCount`, `removeItem`, `renameItem`, `searchItems` and `toCsv`. `index.html` is a local browser interface. No persistence, collaboration, accounts, analytics, valuation, history, external API, or real customer data. Not appropriate for sensitive or mission-critical inventory.
+`src/inventory.mjs` is a dependency-free ES module exporting `createWorksheet`, `addItem`, `setCount`, `removeItem`, `renameItem`, `searchItems`, `toCsv`, `toJson` and `fromJson`. `index.html` is a local browser interface. No persistence, collaboration, accounts, analytics, valuation, history, external API, or real customer data. Not appropriate for sensitive or mission-critical inventory.
 
 From an exact checkout of `phase2/venture-engine`, run:
 ```sh
