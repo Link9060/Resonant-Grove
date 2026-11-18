@@ -12,3 +12,19 @@ test('P2-INV-038 rejects malformed UTF-16 search queries without changing worksh
   assert.deepEqual(searchItems(worksheet, '🔩'), worksheet.items);
   assert.equal(toJson(worksheet), before);
 });
+
+test('P2-INV-047 search results are detached snapshots and cannot mutate source inventory', () => {
+  const worksheet = createWorksheet([
+    {id:'bolts',name:'Bolts',count:3},
+    {id:'nuts',name:'Nuts',count:5}
+  ]);
+  const before = toJson(worksheet);
+  const matches = searchItems(worksheet, 'bol');
+  assert.equal(matches.length, 1);
+  matches[0].name = 'Altered';
+  matches[0].count = 999;
+  matches.push({id:'fake',name:'Fake',count:1});
+  assert.equal(toJson(worksheet), before);
+  assert.deepEqual(searchItems(worksheet, 'bol'), [{id:'bolts',name:'Bolts',count:3}]);
+  assert.equal(searchItems(worksheet, 'fake').length, 0);
+});
