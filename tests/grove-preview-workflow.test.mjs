@@ -1,0 +1,25 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const workflow = readFileSync('.github/workflows/grove-preview.yml', 'utf8');
+
+test('preview packages only an exact pull-request head without write credentials', () => {
+  assert.match(workflow, /pull_request:\s*\n\s*branches:\s*\[main\]/);
+  assert.match(workflow, /permissions:\s*\n\s*contents:\s*read/);
+  assert.doesNotMatch(workflow, /permissions:\s*write-all|(?:issues|contents|deployments|pages):\s*write/);
+  assert.match(workflow, /GROVE_SOURCE_SHA:\s*\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
+  assert.match(workflow, /ref:\s*\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
+  assert.match(workflow, /persist-credentials:\s*false/);
+  assert.match(workflow, /git rev-parse HEAD/);
+  assert.match(workflow, /test "\$actual_sha" = "\$GROVE_SOURCE_SHA"/);
+});
+
+test('preview remains an integrity-checked offline artifact, not a production deployment', () => {
+  assert.match(workflow, /python3 scripts\/verify_review_artifact\.py preview/);
+  assert.match(workflow, /python3 scripts\/smoke_review_http\.py preview "\$GROVE_SOURCE_SHA"/);
+  assert.match(workflow, /sha256sum --check SHA256SUMS\.txt/);
+  assert.match(workflow, /GROVE_PREVIEW_SHA=\$\{GROVE_SOURCE_SHA\}/);
+  assert.match(workflow, /actions\/upload-artifact@v4/);
+  assert.doesNotMatch(workflow, /actions\/deploy-pages|cloudflare\/wrangler-action|wrangler pages deploy|gh-pages|actions\/upload-pages-artifact/);
+});
