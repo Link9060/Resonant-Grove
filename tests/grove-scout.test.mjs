@@ -71,6 +71,12 @@ test('scheduled workflow has trusted main, tight quota and no payments or publis
   assert.match(workflow,/ref: main/);
   assert.match(workflow,/contents: read/);
   assert.doesNotMatch(workflow,/issues: write/);
+  // Guard against reintroducing a write-capable token into the offline Scout path.
+  assert.doesNotMatch(workflow,/GH_TOKEN\s*:/);
+  assert.doesNotMatch(workflow,/GITHUB_TOKEN\s*:/);
+  assert.doesNotMatch(workflow,/secrets\.GITHUB_TOKEN/);
+  assert.doesNotMatch(runner,/process\.env\.(?:GH_TOKEN|GITHUB_TOKEN)/);
+  assert.doesNotMatch(runner,/gh api|gh issue create/);
   assert.match(workflow,/concurrency:/);
   assert.match(workflow,/node --test tests\/grove-scout\.test\.mjs/);
   assert.doesNotMatch(runner,/issues','POST/);
