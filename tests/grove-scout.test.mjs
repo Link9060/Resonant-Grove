@@ -70,6 +70,10 @@ test('scheduled workflow has trusted main, tight quota and no payments or publis
   assert.match(workflow,/cron: '23 14 \* \* \*'/);
   assert.match(workflow,/ref: main/);
   assert.match(workflow,/contents: read/);
+  // Defense in depth: read-only permissions alone do not prevent checkout from persisting credentials.
+  assert.match(workflow,/persist-credentials:\s*false/);
+  assert.doesNotMatch(workflow,/permissions:\s*write-all/);
+  assert.doesNotMatch(workflow,/github\.token|secrets\s*\[\s*['"]GITHUB_TOKEN['"]\s*\]/);
   assert.doesNotMatch(workflow,/issues: write/);
   // Guard against reintroducing a write-capable token into the offline Scout path.
   assert.doesNotMatch(workflow,/GH_TOKEN\s*:/);
