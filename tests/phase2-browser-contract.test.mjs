@@ -165,7 +165,7 @@ test('P2-CONTRACT-018 adding an item clears a stale search so the new row is vis
   const clear = add.indexOf("document.querySelector('#search').value=''");
   const render = add.indexOf('render()');
   assert.ok(mutate >= 0 && clear > mutate && render > clear, 'clear filter after successful add, before rendering');
-  assert.match(add, /message\.textContent='Item added; search cleared'/);
+  assert.match(add, /message\.textContent='Item added; search cleared; focus moved to search'/);
   assert.ok(add.indexOf("catch(error)") > clear, 'failed add must not clear active search');
 });
 
