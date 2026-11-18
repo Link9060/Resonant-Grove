@@ -21,7 +21,7 @@ test('P2-INV-040 search preserves Unicode and rejects malformed surrogate querie
   const sheet = createWorksheet([{id:'cafe',name:'Café 🔩',count:3}]);
   assert.deepEqual(searchItems(sheet,'🔩'),sheet.items);
   assert.deepEqual(searchItems(sheet,'CAFÉ'),sheet.items);
-  for (const query of ['\\uD800','\\uDC00','A\\uD800B']) {
+  for (const query of ['\uD800','\uDC00','A\uD800B']) {
     assert.throws(() => searchItems(sheet,query), /Invalid search/);
   }
   assert.deepEqual(fromJson(toJson(sheet)),sheet);
