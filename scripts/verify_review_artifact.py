@@ -17,6 +17,14 @@ def verify(root: Path) -> None:
             raise ValueError(f"Symlink not permitted: {file}")
         if file.is_file() and file != manifest:
             expected.add(file.relative_to(root).as_posix())
+    # A checksum alone does not make an added file safe: reject private paths even
+    # when an attacker has recomputed the manifest after adding them.
+    forbidden_parts = {".git", ".github", "node_modules", "__pycache__", "secrets"}
+    forbidden_names = {".env", ".env.local", ".env.production", "id_rsa", "id_ed25519"}
+    for name in expected:
+        parts = Path(name).parts
+        if any(part in forbidden_parts for part in parts) or any(part in forbidden_names or part.startswith(".env.") for part in parts):
+            raise ValueError(f"Forbidden review artifact path: {name}")
     seen = set()
     for line in manifest.read_text(encoding="utf-8").splitlines():
         match = re.fullmatch(r"([0-9a-f]{64})  (.+)", line)
