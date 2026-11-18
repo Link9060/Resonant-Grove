@@ -23,3 +23,11 @@ test('preview remains an integrity-checked offline artifact, not a production de
   assert.match(workflow, /actions\/upload-artifact@v4/);
   assert.doesNotMatch(workflow, /actions\/deploy-pages|cloudflare\/wrangler-action|wrangler pages deploy|gh-pages|actions\/upload-pages-artifact/);
 });
+
+test('preview copies an explicit public asset allowlist, never the repository tree', () => {
+  assert.match(workflow, /for file in index\.html styles\.css app\.js favicon\.svg/);
+  assert.match(workflow, /cp "\$file" preview\//);
+  assert.doesNotMatch(workflow, /cp\s+-[a-zA-Z]*[rR][a-zA-Z]*\s+\.\s+preview|rsync\s+[^\n]*\.\/?\s+preview/);
+  assert.doesNotMatch(workflow, /(?:^|\s)(?:\.env|\.git\/|\.github\/|node_modules\/|secrets\.)(?:\s|$)/m);
+  assert.match(workflow, /retention-days:\s*14/);
+});
