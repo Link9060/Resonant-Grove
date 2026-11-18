@@ -19,13 +19,11 @@
   panel.innerHTML = `
     <div class="grove-cloud-heading"><strong>Grove Cloud</strong><button type="button" id="groveCloudClose" aria-label="Close cloud account">×</button></div>
     <p class="grove-cloud-hint">Use your ARROW / Relay account. Sign in through Relay on link9060.github.io first if your session is not recognized. Local data remains available offline.</p>
-    <form id="groveCloudForm">
-      <label for="groveCloudEmail">Email</label><input id="groveCloudEmail" type="email" autocomplete="email" required />
-      <label for="groveCloudPassword">Password</label><input id="groveCloudPassword" type="password" autocomplete="current-password" required minlength="6" />
-      <div class="grove-cloud-row"><button type="submit" id="groveCloudLogin">Sign in</button><button type="button" id="groveCloudSignup">Create account</button></div>
-      <button type="button" id="groveCloudGoogle" class="grove-cloud-secondary">Continue with Google</button>
-    </form>
-    <div id="groveCloudSignedIn" hidden><span id="groveCloudUser"></span><button type="button" id="groveCloudSignout">Sign out</button></div>
+    <div id="groveCloudForm" class="grove-cloud-auth">
+      <p>Your ARROW sign-in is shared with Grove when both are opened on link9060.github.io. No separate Grove password or account is needed.</p>
+      <div class="grove-cloud-row"><a class="grove-cloud-secondary" href="https://link9060.github.io/Resonant-Relay/" target="_blank" rel="noopener noreferrer">Sign in with ARROW</a><button type="button" id="groveCloudRefresh">Check sign-in</button></div>
+    </div>
+    <div id="groveCloudSignedIn" hidden><span id="groveCloudUser"></span><button type="button" id="groveCloudSignout">Sign out of ARROW here</button></div>
     <div id="groveCloudConflict" hidden><strong>Two Grove copies found</strong><p>Choose which data to use. Nothing is overwritten until you choose.</p><button type="button" id="groveCloudUseRemote">Load cloud copy</button><button type="button" id="groveCloudUseLocal">Upload this device</button></div>
     <p id="groveCloudStatus" role="status" aria-live="polite"></p>`;
   document.body.append(panel);
@@ -48,7 +46,7 @@
     el('groveCloudConflict').querySelector('strong').textContent = pending && !pending.workspace ? 'Start your ARROW Grove workspace' : 'Two Grove copies found';
     el('groveCloudConflict').querySelector('p').textContent = pending && !pending.workspace ? 'No ARROW cloud copy exists yet. Upload this device only after checking your original data or using the migration tool. Nothing is uploaded automatically.' : 'Choose which data to use. Nothing is overwritten until you choose.';
     el('groveCloudUser').textContent = user?.email || '';
-    button.textContent = !client ? 'Cloud unavailable' : !user ? 'Cloud sign in' : pending ? 'Choose sync copy' : ready ? 'Cloud connected' : 'Cloud connecting';
+    button.textContent = !client ? 'Cloud unavailable' : !user ? 'Connect ARROW' : pending ? 'Choose sync copy' : ready ? 'Cloud connected' : 'Cloud connecting';
     const indicator = document.querySelector('.local-indicator');
     if (indicator?.lastChild?.nodeType === Node.TEXT_NODE) {
       indicator.lastChild.textContent = ready ? 'Synced with cloud' : 'Saved on this device';
@@ -108,34 +106,20 @@
       ui();
     }
   }
-  async function authenticate(register) {
-    if (!client) return message('Supabase SDK failed to load. Your local data is safe.');
-    const email = el('groveCloudEmail').value.trim();
-    const password = el('groveCloudPassword').value;
-    message(register ? 'Creating your account...' : 'Signing in...');
-    const result = register
-      ? await client.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } })
-      : await client.auth.signInWithPassword({ email, password });
-    if (result.error) return message(result.error.message);
-    if (register && !result.data.session) message('Check your email to confirm your account, then sign in.');
-    else if (result.data.user) void activate(result.data.user);
-  }
   button.addEventListener('click', () => { panel.hidden = !panel.hidden; });
   el('groveCloudClose').addEventListener('click', () => { panel.hidden = true; });
-  el('groveCloudForm').addEventListener('submit', event => {
-    event.preventDefault(); void authenticate(false);
-  });
-  el('groveCloudSignup').addEventListener('click', () => { void authenticate(true); });
-  el('groveCloudGoogle').addEventListener('click', async () => {
-    if (!client) return message('Supabase SDK unavailable.');
-    const { error } = await client.auth.signInWithOAuth({
-      provider: 'google', options: { redirectTo: location.origin + location.pathname }
-    });
-    if (error) message(error.message + '. Google sign-in requires provider configuration in Supabase.');
+  el('groveCloudRefresh').addEventListener('click', async () => {
+    if (!client) return message('ARROW connection is unavailable.');
+    message('Checking your ARROW account...');
+    const { data, error } = await client.auth.getUser();
+    if (error) return message('Unable to verify ARROW sign-in: ' + error.message);
+    if (!data?.user) return message('Not signed in yet. Open ARROW/Relay on link9060.github.io, sign in, then check again.');
+    await activate(data.user);
   });
   el('groveCloudSignout').addEventListener('click', async () => {
     clearTimeout(timer);
     if (dirty) await upload();
+    // This logs out of the shared ARROW session on the current browser origin.
     const { error } = await client.auth.signOut({ scope: 'local' });
     if (error) message(error.message);
     else void activate(null);

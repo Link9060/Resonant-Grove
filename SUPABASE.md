@@ -17,15 +17,15 @@ A separate `grove_array_relay_owner_scoped_storage` migration has been applied t
 
 ## Using it
 
-1. Open the live Grove site and click **Cloud sign in**.
-2. Sign in using a Supabase account belonging to this project (or create an account).
+1. Open **https://link9060.github.io/Resonant-Relay/** on the same browser origin and sign into your ARROW account.
+2. Return to Grove and click **Connect ARROW → Check sign-in**. Grove no longer offers separate account creation.
 3. If there is no destination workspace, Grove does not upload anything automatically. Use the migration tool at `/migration/`, or verify the local copy and choose **Upload this device** explicitly.
 4. If this device and the cloud have different workspaces, you **must explicitly choose** to load the cloud copy or upload the device copy. This avoids silent overwrites.
 5. After choosing, edits to seeds, transactions, journal, and explorer drafts automatically sync on a short debounce.
 
 **Important:** Cloud sync uses a whole-workspace snapshot, not real-time per-record collaboration or offline conflict merging. Concurrent editing on two devices can overwrite changes. Use one active device at a time and export backups for important data. A browser copy remains on the device after sign-out.
 
-Google sign-in requires Google as an enabled Supabase Auth provider and these allowed redirect URLs:
+Grove uses the established ARROW/Relay sign-in flow. No new OAuth provider or direct account registration is configured by Grove. For ARROW's existing OAuth callback, use the Relay authentication settings. The following is a historical Grove redirect and is no longer required for this flow:
 
 - `https://link9060.github.io/Resonant-Grove/`
 - The local development origin if needed (for example `http://localhost:8080/`).
@@ -53,3 +53,7 @@ End-to-end browser sign-in and cross-device synchronization still need a test wi
 ## Migration status and caveats
 
 The optional transfer tool remains accessible at `/migration/` but copying old data is not required for the approved fresh start. Real-account, cross-device sign-in and sync still need end-to-end browser verification. If Relay is on a different web origin than Grove, authentication storage cannot be shared across origins and a separate sign-in may be necessary. The old RAVIN Supabase project was not deleted; Supabase currently refuses to pause it because its internal state is hibernating, despite the project listing as `ACTIVE_HEALTHY`. ARRAY's legacy RAVIN 1.1 live-mission API was intentionally disabled by default during migration.
+
+## Unified account cutover
+
+Grove's account panel now links to ARROW/Relay rather than registering new accounts directly in Supabase. `grove-cloud.js` accesses the existing same-origin ARROW session using storage key `sb-cnorozrjugxpanpfmssa-auth-token` and refreshes identity when the user selects **Check sign-in**. The sign-out control explicitly states that it signs out of the shared ARROW session on that origin. If using enterarrow.com instead of link9060.github.io, browser session storage is not shared across origins.
