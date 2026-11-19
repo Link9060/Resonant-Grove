@@ -150,3 +150,23 @@ test('P2-INV-029 inherited fields cannot masquerade as explicit inventory data',
   assert.deepEqual(createWorksheet([{id:'bolts',name:'Bolts',count:3}]).items,
     [{id:'bolts',name:'Bolts',count:3}]);
 });
+
+test('P2-INV-049 low-stock lookup is deterministic and snapshot-independent', async () => {
+  const {lowStockItems} = await import('../src/inventory.mjs');
+  const original = createWorksheet([
+    {id:'bolts',name:'Bolts',count:3},
+    {id:'nuts',name:'Nuts',count:0},
+    {id:'washers',name:'Washers',count:5}
+  ]);
+  assert.deepEqual(lowStockItems(original,3).map(row => row.id), ['bolts','nuts']);
+  assert.deepEqual(lowStockItems(original,0).map(row => row.id), ['nuts']);
+  assert.deepEqual(lowStockItems(original,5).map(row => row.id), ['bolts','nuts','washers']);
+  const matches = lowStockItems(original,3);
+  matches[0].count = 999;
+  assert.equal(original.items[0].count,3);
+  assert.equal(lowStockItems(original,3)[0].count,3);
+  for (const invalid of [-1, 1.5, NaN, Infinity, '3', 1000001]) {
+    assert.throws(() => lowStockItems(original, invalid), /Invalid stock threshold/);
+  }
+  assert.equal(original.total,8);
+});
