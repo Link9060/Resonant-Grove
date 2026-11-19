@@ -20,7 +20,8 @@ test('P2-UI-015 worksheet mutations still invalidate low-stock results', () => {
     "worksheet=restored"
   ];
   for (const mutation of mutationHandlers) {
-    const start = html.indexOf(mutation);
+    // The sample fixture is also initialized before handlers; inspect the reset mutation, not setup.
+    const start = mutation === 'worksheet=createWorksheet(sampleRows)' ? html.lastIndexOf(mutation) : html.indexOf(mutation);
     assert.notEqual(start, -1, 'Missing mutation handler: ' + mutation);
     const nextRender = html.indexOf('render();', start);
     assert.ok(nextRender !== -1 && nextRender - start < 550,
