@@ -90,3 +90,12 @@ test('Scout does not hand off a newly published issue to Seed Keeper',()=>{
   assert.equal(flow.includes('issues: write'),false);
   assert.equal(flow.includes('node scripts/grove-seed-keeper.mjs'),false);
 });
+
+
+test('weekly Seed Keeper workflow remains read-only and dry-run until owner approval',()=>{
+  const workflow=readFileSync('.github/workflows/grove-seed-keeper.yml','utf8');
+  assert.match(workflow,/permissions:\s*\n\s*contents:\s*read/);
+  assert.doesNotMatch(workflow,/issues:\s*write|permissions:\s*write-all/);
+  assert.match(workflow,/GROVE_SEED_DRY_RUN:\s*'true'/);
+  assert.match(workflow,/persist-credentials:\s*false/);
+});
