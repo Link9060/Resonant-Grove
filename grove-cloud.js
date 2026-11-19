@@ -37,6 +37,7 @@
   let timer = null;
   let inFlight = false;
   let dirty = false;
+  let accountEpoch = 0;
 
   const message = text => { el('groveCloudStatus').textContent = text; };
   function ui() {
@@ -63,10 +64,19 @@
     if (!client || !user || !ready) return;
     if (inFlight) { dirty = true; return; }
     inFlight = true; dirty = false;
+    const epoch = accountEpoch;
+    const ownerId = user.id;
     const snapshot = localCopy();
-    const { error } = await client.from('grove_workspaces').upsert({
-      owner_id: user.id, ...snapshot, updated_at: new Date().toISOString()
-    }, { onConflict: 'owner_id' });
+    let error;
+    try {
+      ({ error } = await client.from('grove_workspaces').upsert({
+        owner_id: ownerId, ...snapshot, updated_at: new Date().toISOString()
+      }, { onConflict: 'owner_id' }));
+    } catch (failure) {
+      error = failure;
+    }
+    // A previous account's request must never update this account's sync state.
+    if (epoch !== accountEpoch || ownerId !== currentUserId) return;
     inFlight = false;
     if (error) { message('Cloud save failed: ' + error.message + '. Your local copy is still saved.'); }
     else { message('Cloud saved. Your data is synchronized to this account.'); }
@@ -82,8 +92,9 @@
   async function activate(nextUser) {
     const nextId = nextUser?.id || null;
     if (nextId === currentUserId) return;
+    accountEpoch += 1;
     currentUserId = nextId; user = nextUser; ready = false; pending = null;
-    clearTimeout(timer); dirty = false;
+    clearTimeout(timer); dirty = false; inFlight = false;
     ui();
     if (!client || !user) { message('Local copy stays on this device after sign-out.'); return; }
     message('Checking for saved cloud data...');
