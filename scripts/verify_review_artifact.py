@@ -22,7 +22,7 @@ def verify(root: Path) -> None:
     forbidden_parts = {".git", ".github", "node_modules", "__pycache__", "secrets"}
     forbidden_names = {".env", ".envrc", ".npmrc", ".pypirc", ".netrc", "credentials.json", "id_rsa", "id_ed25519"}
     for name in expected:
-        parts = Path(name).parts
+        parts = tuple(part.casefold() for part in Path(name).parts)
         if any(part in forbidden_parts for part in parts) or any(part in forbidden_names or part.startswith(".env.") or part.startswith(".env_") or part.endswith(".pem") or part.endswith(".key") for part in parts):
             raise ValueError(f"Forbidden review artifact path: {name}")
     seen = set()
