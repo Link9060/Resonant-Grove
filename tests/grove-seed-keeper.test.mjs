@@ -88,11 +88,11 @@ test('Scout does not hand off a newly published issue to Seed Keeper',()=>{
   assert.equal(scout.includes('research-brief.md'),true);
   assert.equal(scout.includes("reason:'private-artifact'"),true);
   assert.equal(flow.includes('issues: write'),false);
-  assert.match(flow,/permissions:\\s*\\n\\s*contents:\\s*read/);
-  assert.doesNotMatch(flow,/permissions:\\s*write-all/);
-  assert.match(flow,/persist-credentials:\\s*false/);
-  assert.match(flow,/uses:\\s*actions\\/upload-artifact@v4/);
-  assert.match(flow,/name:\\s*grove-scout-draft-/);
+  assert.match(flow,/permissions:\s*\n\s*contents:\s*read/);
+  assert.doesNotMatch(flow,/permissions:\s*write-all/);
+  assert.match(flow,/persist-credentials:\s*false/);
+  assert.match(flow,/uses:\s*actions\/upload-artifact@v4/);
+  assert.match(flow,/name:\s*grove-scout-draft-/);
   assert.equal(flow.includes('node scripts/grove-seed-keeper.mjs'),false);
 });
 
