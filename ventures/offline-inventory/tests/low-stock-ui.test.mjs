@@ -14,3 +14,12 @@ test('P2-INV-053 low-stock UI has labeled offline controls and safe text renderi
  assert.deepEqual(lowStockItems(sheet,3).map(item=>item.id),['bolts','nuts']);
  assert.equal(sheet.total,8);
 });
+
+test('P2-UI-016 threshold edits invalidate displayed stock-check snapshots', async () => {
+ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+ const handler = html.match(/document\.querySelector\('#stock-threshold'\)\.addEventListener\('input',\(\)=>\{([\s\S]*?)\n\}\);/);
+ assert.ok(handler, 'Changing the threshold must have an input listener');
+ assert.match(handler[1], /#stock-results'\)\.replaceChildren\(\)/, 'Old results must be cleared');
+ assert.match(handler[1], /#stock-summary'\)\.textContent=/, 'The cleared state must be announced');
+ assert.match(handler[1], /check stock again/i, 'Require an explicit fresh check');
+});
