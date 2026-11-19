@@ -71,7 +71,7 @@ test('workflow is bounded with dry-run push, no implicit Builder permissions or 
   assert.match(flow,/ref: main/);
   assert.match(flow,/concurrency:/);
   assert.match(flow,/contents: read/);
-  assert.match(flow,/issues: write/);
+  assert.doesNotMatch(flow,/issues:\s*write|permissions:\s*write-all/);
   assert.match(flow,/GROVE_SEED_DRY_RUN/);
   assert.match(worker,/alreadyHasWeeklySeed\(issues,week\)/);
   assert.match(worker,/alreadyHasWeeklySeed\(recheck,week\)/);
