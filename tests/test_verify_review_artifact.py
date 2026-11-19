@@ -62,7 +62,7 @@ class ArtifactVerificationTests(unittest.TestCase):
         self.assert_rejected()
 
     def test_sensitive_path_rejected_even_with_recomputed_manifest(self):
-        for name in (".env", ".env.production", ".github/workflows/deploy.yml", ".git/config", "node_modules/pkg/index.js", ".envrc", ".env_backup", ".npmrc", ".pypirc", ".netrc", "credentials.json", "keys/server.pem", "keys/server.key"):
+        for name in (".env", ".env.production", ".github/workflows/deploy.yml", ".git/config", "node_modules/pkg/index.js", ".envrc", ".env_backup", ".npmrc", ".pypirc", ".netrc", "credentials.json", "keys/server.pem", "keys/server.key", ".ENV", ".ENV.PRODUCTION", ".GITHUB/workflows/deploy.yml", ".Git/config", "NODE_MODULES/pkg/index.js", ".NPMRC", "Credentials.JSON", "keys/SERVER.PEM", "keys/SERVER.KEY"):
             with self.subTest(name=name):
                 target = self.root / name
                 target.parent.mkdir(parents=True, exist_ok=True)
