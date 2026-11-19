@@ -16,7 +16,8 @@
 <p><strong>Total units: <span id="total">0</span></strong></p><small>All figures are fictional fixtures. This is not a launched product.</small></main>
 <script type="module">
 import {createWorksheet,addItem,setCount} from './src/inventory.mjs';
-import {removeItem,toCsv,renameItem,searchItems,toJson,fromJson,lowStockItems} from './src/inventory.mjs';
+import {removeItem,toCsv,renameItem,searchItems,toJson,fromJson} from './src/inventory.mjs';
+import {lowStockItems} from './src/inventory.mjs';
 const sampleRows=[{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}];
 let worksheet=createWorksheet(sampleRows);
 const rows=document.querySelector('#rows'),message=document.querySelector('#message');
