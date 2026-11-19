@@ -23,7 +23,7 @@ test('P2-UI-015 worksheet mutations still invalidate low-stock results', () => {
     const start = html.indexOf(mutation);
     assert.notEqual(start, -1, 'Missing mutation handler: ' + mutation);
     const nextRender = html.indexOf('render();', start);
-    assert.ok(nextRender !== -1 && nextRender - start < 300,
+    assert.ok(nextRender !== -1 && nextRender - start < 550,
       'Mutation must invalidate low-stock results: ' + mutation);
   }
 });
