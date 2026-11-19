@@ -43,6 +43,10 @@
     el('groveCloudForm').hidden = Boolean(user);
     el('groveCloudSignedIn').hidden = !user;
     el('groveCloudConflict').hidden = !pending;
+    el('groveCloudUseRemote').hidden = !!pending && !pending.workspace;
+    el('groveCloudUseRemote').disabled = !!pending && !pending.workspace;
+    el('groveCloudConflict').querySelector('strong').textContent = pending && !pending.workspace ? 'Start your Grove cloud workspace' : 'Two Grove copies found';
+    el('groveCloudConflict').querySelector('p').textContent = pending && !pending.workspace ? 'No cloud copy exists yet. Nothing is uploaded until you choose Upload this device.' : 'Choose which data to use. Nothing is overwritten until you choose.';
     el('groveCloudUser').textContent = user?.email || '';
     button.textContent = !client ? 'Cloud unavailable' : !user ? 'Cloud sign in' : pending ? 'Choose sync copy' : ready ? 'Cloud connected' : 'Cloud connecting';
     const indicator = document.querySelector('.local-indicator');
@@ -89,9 +93,10 @@
     if (scopedId !== currentUserId) return;
     if (error) { message('Could not load cloud workspace: ' + error.message); return; }
     if (!data) {
-      ready = true; ui();
-      message('Creating your cloud workspace...');
-      await upload();
+      // Never upload a local workspace to a newly connected account without an explicit choice.
+      pending = { workspace: null, explorer: null };
+      ui();
+      message('No cloud copy yet. Review your local data before choosing Upload this device.');
     } else {
       const local = localCopy();
       if (JSON.stringify(data.workspace) === JSON.stringify(local.workspace)
