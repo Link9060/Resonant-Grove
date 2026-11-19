@@ -21,6 +21,9 @@ const sampleRows=[{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count
 let worksheet=createWorksheet(sampleRows);
 const rows=document.querySelector('#rows'),message=document.querySelector('#message');
 function render(){
+ // A stock check is a point-in-time result; invalidate it after worksheet changes.
+ document.querySelector('#stock-results').replaceChildren();
+ document.querySelector('#stock-summary').textContent='Stock results cleared; check again for current quantities';
  rows.replaceChildren();
  const matches=searchItems(worksheet,document.querySelector('#search').value);
  document.querySelector('#search-count').textContent=matches.length+' of '+worksheet.items.length+' items shown';
