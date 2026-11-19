@@ -78,6 +78,11 @@ document.querySelector('#check-stock').addEventListener('click',()=>{
   summary.textContent=matches.length+' items at or below '+raw+' units';
  }catch(error){results.replaceChildren();summary.textContent='Stock check failed: '+error.message;}
 });
+document.querySelector('#stock-threshold').addEventListener('input',()=>{
+ // A changed threshold requires a fresh check; do not show results for the old value.
+ document.querySelector('#stock-results').replaceChildren();
+ document.querySelector('#stock-summary').textContent='Threshold changed; check stock again';
+});
 document.querySelector('#search').addEventListener('input',()=>{try{render(false);message.textContent='';}catch(error){message.textContent=error.message;}});
 document.querySelector('#add').addEventListener('submit',event=>{
  event.preventDefault();
