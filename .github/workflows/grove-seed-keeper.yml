@@ -19,7 +19,6 @@ concurrency:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   seed-keeper:
@@ -48,5 +47,5 @@ jobs:
       - name: Inspect research and create at most one internal plan this week
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GROVE_SEED_DRY_RUN: ${{ github.event_name == 'push' }}
+          GROVE_SEED_DRY_RUN: 'true'
         run: node scripts/grove-seed-keeper.mjs

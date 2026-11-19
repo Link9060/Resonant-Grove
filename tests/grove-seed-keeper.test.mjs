@@ -71,7 +71,7 @@ test('workflow is bounded with dry-run push, no implicit Builder permissions or 
   assert.match(flow,/ref: main/);
   assert.match(flow,/concurrency:/);
   assert.match(flow,/contents: read/);
-  assert.match(flow,/issues: write/);
+  assert.doesNotMatch(flow,/issues:\s*write|permissions:\s*write-all/);
   assert.match(flow,/GROVE_SEED_DRY_RUN/);
   assert.match(worker,/alreadyHasWeeklySeed\(issues,week\)/);
   assert.match(worker,/alreadyHasWeeklySeed\(recheck,week\)/);
@@ -79,15 +79,28 @@ test('workflow is bounded with dry-run push, no implicit Builder permissions or 
 });
 
 
-test('same-job handoff reads a newly created Scout issue by ID if the GitHub issues list lags',()=>{
+test('Scout does not hand off a newly published issue to Seed Keeper',()=>{
   const scout=readFileSync('scripts/grove-opportunity-scout.mjs','utf8');
-  const keeper=readFileSync('scripts/grove-seed-keeper.mjs','utf8');
-  assert.match(scout,/Number\.isSafeInteger\(issue\?\.number\)/);
-  assert.match(scout,/GROVE_NEW_SCOUT_ISSUE_NUMBER/);
-  assert.match(scout,/appendFileSync\(process\.env\.GITHUB_ENV/);
-  assert.match(keeper,/GROVE_NEW_SCOUT_ISSUE_NUMBER/);
-  assert.match(keeper,/gh\('repos\/'\+REPO\+'\/issues\/'\+latestId\)/);
-  assert.match(keeper,/fresh\.number!==latestId/);
-  assert.match(keeper,/candidates=\[fresh,\.\.\.issues\]/);
-  assert.match(keeper,/selectWeeklySeed\(candidates,now\)/);
+  const flow=readFileSync('.github/workflows/grove-scout.yml','utf8');
+  assert.doesNotMatch(scout,/GROVE_NEW_SCOUT_ISSUE_NUMBER/);
+  assert.equal(scout.includes('Number.isSafeInteger(issue?.number)'),false);
+  assert.equal(scout.includes("issues','POST"),false);
+  assert.equal(scout.includes('research-brief.md'),true);
+  assert.equal(scout.includes("reason:'private-artifact'"),true);
+  assert.equal(flow.includes('issues: write'),false);
+  assert.match(flow,/permissions:\s*\n\s*contents:\s*read/);
+  assert.doesNotMatch(flow,/permissions:\s*write-all/);
+  assert.match(flow,/persist-credentials:\s*false/);
+  assert.match(flow,/uses:\s*actions\/upload-artifact@v4/);
+  assert.match(flow,/name:\s*grove-scout-draft-/);
+  assert.equal(flow.includes('node scripts/grove-seed-keeper.mjs'),false);
+});
+
+
+test('weekly Seed Keeper workflow remains read-only and dry-run until owner approval',()=>{
+  const workflow=readFileSync('.github/workflows/grove-seed-keeper.yml','utf8');
+  assert.match(workflow,/permissions:\s*\n\s*contents:\s*read/);
+  assert.doesNotMatch(workflow,/issues:\s*write|permissions:\s*write-all/);
+  assert.match(workflow,/GROVE_SEED_DRY_RUN:\s*'true'/);
+  assert.match(workflow,/persist-credentials:\s*false/);
 });
