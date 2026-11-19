@@ -10,8 +10,9 @@ Small hobby projects and volunteer teams may need to tally non-sensitive supplie
 2. Add a unique lowercase alphanumeric/hyphen ID (1–40 characters), a name (1–80 trimmed characters), and an integer quantity (0–1,000,000).
 3. Set a row quantity, rename it while preserving ID and count, or remove it after confirmation. Canceling prompts leaves the worksheet unchanged.
 4. Search by name or ID (case-insensitive, maximum 80 characters). Only visible rows are filtered; the total and CSV still cover the full worksheet.
-5. Download a local CSV snapshot with spreadsheet-formula escaping. The file is generated in the browser; no server upload.
-6. Reset the sample worksheet after confirmation, which also clears the search. Cancel preserves the worksheet. Refresh also resets in-memory changes.
+5. Run **Low-stock check** with an integer threshold from 0 to 1,000,000 to list all items at or below that quantity in worksheet order. Results are snapshots, not saved alerts; changing inventory clears the previous result and requires a new check.
+6. Download a local CSV snapshot with spreadsheet-formula escaping. The file is generated in the browser; no server upload.
+7. Reset the sample worksheet after confirmation, which also clears the search. Cancel preserves the worksheet. Refresh also resets in-memory changes.
 
 ## Automated acceptance contracts
 - **P2-INV-001:** Deterministic normalized worksheet and total for identical rows.
@@ -23,6 +24,8 @@ Small hobby projects and volunteer teams may need to tally non-sensitive supplie
 - **P2-CONTRACT-009:** Removal in the browser requires confirmation.
 - **P2-CONTRACT-010/011:** Reset requires confirmation and clears search only when confirmed.
 - **P2-CONTRACT-012:** Search affects rendered rows but not total or CSV.
+- **P2-INV-049–052:** Low-stock threshold validation, ordering, snapshot isolation, full-capacity boundary and mutation lifecycle regression contracts.
+- **P2-UI-013:** Inventory rerender clears stale low-stock results.
 - **P2-INV-034/035/036:** Versioned deterministic JSON backup/restore, schema integrity and UTF-8 byte-size boundary.
 - **P2-CONTRACT-015/016/022/023:** Browser backup/restore, cancellation feedback, successful reset/restore focus, and add-item focus.
 
@@ -42,8 +45,10 @@ These IDs describe source/test contracts. A historical CI pass is not evidence f
 - **P2-UI-011:** Cancel a valid JSON restore, then submit malformed JSON, a tampered total, and a file larger than 64 KiB. Verify unchanged worksheet and clear error/cancellation feedback. Use fictional fixtures only.
 - **P2-UI-012:** With a search hiding a new item, add it and verify search clears, row becomes visible and keyboard focus moves to Find item. Invalid add must preserve filter and focus.
 
+- **P2-UI-014 (pending):** Run Low-stock check at threshold 3 on the original fixture; expect only `bolts` (3). At threshold 5 expect `bolts` and `nuts` in that order. Set `bolts` to 6; verify the old result clears, then rerun threshold 5 and expect only `nuts`. Try a negative, fractional, and over-1,000,000 threshold; verify clear error feedback and no inventory mutation. Use fictional data only.
+
 ## Architecture, limits and verification
-`src/inventory.mjs` is a dependency-free ES module exporting `createWorksheet`, `addItem`, `setCount`, `removeItem`, `renameItem`, `searchItems`, `toCsv`, `toJson` and `fromJson`. `index.html` is a local browser interface. No persistence, collaboration, accounts, analytics, valuation, history, external API, or real customer data. Not appropriate for sensitive or mission-critical inventory.
+`src/inventory.mjs` is a dependency-free ES module exporting `createWorksheet`, `addItem`, `setCount`, `removeItem`, `renameItem`, `searchItems`, `lowStockItems`, `toCsv`, `toJson` and `fromJson`. `index.html` is a local browser interface. No persistence, collaboration, accounts, analytics, valuation, history, external API, or real customer data. Not appropriate for sensitive or mission-critical inventory.
 
 From an exact checkout of `phase2/venture-engine`, run:
 ```sh
