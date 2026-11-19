@@ -28,3 +28,18 @@ test('P2-INV-047 search results are detached snapshots and cannot mutate source 
   assert.deepEqual(searchItems(worksheet, 'bol'), [{id:'bolts',name:'Bolts',count:3}]);
   assert.equal(searchItems(worksheet, 'fake').length, 0);
 });
+
+
+test('P2-INV-048 empty and ID-only searches return independent snapshots', () => {
+  const worksheet = createWorksheet([{id:'spare-bolt',name:'Fastener',count:7}]);
+  const before = toJson(worksheet);
+  const all = searchItems(worksheet, '   ');
+  const byId = searchItems(worksheet, 'SPARE-BOLT');
+  assert.deepEqual(all, [{id:'spare-bolt',name:'Fastener',count:7}]);
+  assert.deepEqual(byId, all);
+  assert.notStrictEqual(all[0], byId[0]);
+  all[0].count = 0;
+  byId[0].name = 'Changed';
+  assert.equal(toJson(worksheet), before);
+  assert.deepEqual(searchItems(worksheet, ''), [{id:'spare-bolt',name:'Fastener',count:7}]);
+});
