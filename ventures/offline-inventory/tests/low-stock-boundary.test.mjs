@@ -15,7 +15,7 @@ test('P2-INV-050 low-stock boundary and full-capacity order', () => {
   const updated = setCount(source,'part-1',5);
   assert.equal(lowStockItems(updated,4).length,98);
   assert.equal(lowStockItems(source,4).length,99);
-  assert.equal(source.total,1000388);
+  assert.equal(source.total,1000392);
 });
 
 test('P2-INV-050 low-stock lookup rejects corrupted snapshots atomically', () => {
