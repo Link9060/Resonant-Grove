@@ -81,3 +81,9 @@ export function fromJson(text) {
   catch { throw Error('Invalid worksheet JSON'); }
   return readWorksheet(parsed);
 }
+
+/** List rows at or below a safe stock threshold, preserving original row order. */
+export function lowStockItems(worksheet, threshold) {
+  if (!validCount(threshold)) throw Error('Invalid stock threshold');
+  return readWorksheet(worksheet).items.filter(item => item.count <= threshold);
+}
