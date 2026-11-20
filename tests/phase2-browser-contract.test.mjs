@@ -145,7 +145,7 @@ test('P2-CONTRACT-016 canceled JSON restore announces no change and clears file 
   const assign = restore.indexOf('worksheet=restored');
   assert.ok(cancel >= 0 && cancel < assign, 'cancel feedback precedes worksheet mutation');
   assert.match(restore, /if\(!confirm\('Replace the current worksheet with this local backup\?'\)\)\{message\.textContent='JSON restore canceled; worksheet unchanged';return;\}/);
-  assert.match(restore, /finally \{input\.value='';\}/);
+  assert.match(restore, /finally\s*\{[\s\S]*?if\(selectionVersion===restoreSelectionVersion\)input\.value='';[\s\S]*?\}/);
 });
 
 
