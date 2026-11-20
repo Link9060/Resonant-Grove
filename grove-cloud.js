@@ -50,7 +50,7 @@
     el('groveCloudConflict').querySelector('strong').textContent = pending && !pending.workspace ? 'Start your Grove cloud workspace' : 'Two Grove copies found';
     el('groveCloudConflict').querySelector('p').textContent = pending && !pending.workspace ? 'No cloud copy exists yet. Nothing is uploaded until you choose Upload this device.' : 'Choose which data to use. Nothing is overwritten until you choose.';
     el('groveCloudUser').textContent = user?.email || '';
-    button.textContent = !client ? 'Cloud unavailable' : !user ? 'Cloud sign in' : pending ? 'Choose sync copy' : ready ? 'Cloud connected' : 'Cloud connecting';
+    button.textContent = !client ? 'Cloud unavailable' : !user ? 'Cloud sign in' : pending ? 'Choose sync copy' : ready ? (dirty ? 'Cloud changes pending' : 'Cloud connected') : 'Cloud connecting';
     const indicator = document.querySelector('.local-indicator');
     if (indicator?.lastChild?.nodeType === Node.TEXT_NODE) {
       indicator.lastChild.textContent = ready ? 'Synced with cloud' : 'Saved on this device';
@@ -87,11 +87,13 @@
       message('Cloud saved. Your data is synchronized to this account.');
       if (dirty) scheduleSave();
     }
+    ui();
     return !error;
   }
   function scheduleSave() {
     if (!ready || !user) return;
     dirty = true;
+    ui();
     clearTimeout(timer);
     timer = setTimeout(() => { void upload(); }, 700);
   }
