@@ -130,7 +130,10 @@ document.querySelector('#import-json').addEventListener('change',async event=>{
   message.textContent='JSON backup restored locally; search cleared; focus moved to search';
   render();
   document.querySelector('#search').focus();
- } catch(error) {message.textContent='JSON restore failed: '+error.message;}
+ } catch(error) {
+  // Superseded reads must not overwrite feedback from the currently selected backup.
+  if(selectionVersion===restoreSelectionVersion)message.textContent='JSON restore failed: '+error.message;
+ }
  finally {
   // An older read must not clear the file input belonging to a newer selection.
   if(selectionVersion===restoreSelectionVersion)input.value='';
