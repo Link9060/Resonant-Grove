@@ -61,3 +61,11 @@ test('sign-out is blocked while an earlier upload remains in flight', () => {
   assert.match(signout, /if \(inFlight\) \{\s*message\('Cloud save is still in progress\.[^']*'\);\s*return;\s*\}/);
   assert.ok(signout.indexOf('if (inFlight)') < signout.indexOf('client.auth.signOut()'));
 });
+
+
+test('failed pending cloud save prevents sign-out while preserving local copy', () => {
+  assert.match(source, /if \(dirty && !\(await upload\(\)\)\) \{/);
+  assert.match(source, /Cloud save did not finish successfully\. Your local copy is safe/);
+  assert.match(source, /if \(dirty && !\(await upload\(\)\)\) \{[\s\S]*?return;[\s\S]*?client\.auth\.signOut\(\)/);
+  assert.match(source, /return !error;/);
+});
