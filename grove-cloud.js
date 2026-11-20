@@ -129,12 +129,16 @@
     const email = el('groveCloudEmail').value.trim();
     const password = el('groveCloudPassword').value;
     message(register ? 'Creating your account...' : 'Signing in...');
-    const result = register
-      ? await client.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } })
-      : await client.auth.signInWithPassword({ email, password });
-    if (result.error) return message(result.error.message);
-    if (register && !result.data.session) message('Check your email to confirm your account, then sign in.');
-    else if (result.data.user) void activate(result.data.user);
+    try {
+      const result = register
+        ? await client.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } })
+        : await client.auth.signInWithPassword({ email, password });
+      if (result.error) return message(result.error.message);
+      if (register && !result.data.session) message('Check your email to confirm your account, then sign in.');
+      else if (result.data.user) void activate(result.data.user);
+    } catch (failure) {
+      message('Authentication failed: ' + (failure?.message || 'Network error') + '. Your local data remains saved.');
+    }
   }
   button.addEventListener('click', () => { panel.hidden = !panel.hidden; });
   el('groveCloudClose').addEventListener('click', () => { panel.hidden = true; });
@@ -144,10 +148,14 @@
   el('groveCloudSignup').addEventListener('click', () => { void authenticate(true); });
   el('groveCloudGoogle').addEventListener('click', async () => {
     if (!client) return message('Supabase SDK unavailable.');
-    const { error } = await client.auth.signInWithOAuth({
-      provider: 'google', options: { redirectTo: location.origin + location.pathname }
-    });
-    if (error) message(error.message + '. Google sign-in requires provider configuration in Supabase.');
+    try {
+      const { error } = await client.auth.signInWithOAuth({
+        provider: 'google', options: { redirectTo: location.origin + location.pathname }
+      });
+      if (error) message(error.message + '. Google sign-in requires provider configuration in Supabase.');
+    } catch (failure) {
+      message('Google sign-in failed: ' + (failure?.message || 'Network error') + '. Your local data remains saved.');
+    }
   });
   el('groveCloudSignout').addEventListener('click', async () => {
     clearTimeout(timer);
