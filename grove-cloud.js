@@ -99,6 +99,7 @@
     if (!client || !user) { message('Local copy stays on this device after sign-out.'); return; }
     message('Checking for saved cloud data...');
     const scopedId = user.id;
+    const readEpoch = accountEpoch;
     let data, error;
     try {
       ({ data, error } = await client.from('grove_workspaces')
@@ -106,7 +107,7 @@
     } catch (failure) {
       error = failure;
     }
-    if (scopedId !== currentUserId) return;
+    if (readEpoch !== accountEpoch || scopedId !== currentUserId) return;
     if (error) { message('Could not load cloud workspace: ' + error.message); return; }
     if (!data) {
       // Never upload a local workspace to a newly connected account without an explicit choice.
