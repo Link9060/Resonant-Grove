@@ -96,7 +96,7 @@ test('sign-out lock starts before waiting for a pending workspace upload', () =>
 
 
 test('cloud toggle reflects unsaved workspace changes until upload settles', () => {
-  assert.match(source, /ready \? \(dirty \? 'Cloud changes pending' : 'Cloud connected'\)/);
+  assert.match(source, /ready \? \(\(dirty \|\| inFlight\) \? 'Cloud changes pending' : 'Cloud connected'\)/);
   const upload = source.slice(source.indexOf('async function upload()'), source.indexOf('function scheduleSave()'));
   assert.match(upload, /if \(error\) \{[\s\S]*?dirty = true;[\s\S]*?\}\s*else \{[\s\S]*?\}\s*ui\(\);\s*return !error;/);
   const schedule = source.slice(source.indexOf('function scheduleSave()'), source.indexOf('window.GroveCloud'));
@@ -107,4 +107,11 @@ test('cloud toggle reflects unsaved workspace changes until upload settles', () 
 test('local save indicator does not claim cloud sync during dirty or in-flight uploads', () => {
   assert.match(source, /indicator\.lastChild\.textContent = ready && !dirty && !inFlight \? 'Synced with cloud'/);
   assert.match(source, /'Saved on this device' \+ \(ready \? ' · Cloud changes pending' : ''\)/);
+});
+
+
+test('cloud toggle remains pending while upload is active and refreshes at upload start', () => {
+  assert.match(source, /ready \? \(\(dirty \|\| inFlight\) \? 'Cloud changes pending' : 'Cloud connected'\)/);
+  const upload = source.slice(source.indexOf('async function upload()'), source.indexOf('function scheduleSave()'));
+  assert.match(upload, /inFlight = true; dirty = false;\s*ui\(\);/);
 });
