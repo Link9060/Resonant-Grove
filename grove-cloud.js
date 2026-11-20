@@ -53,7 +53,7 @@
     button.textContent = !client ? 'Cloud unavailable' : !user ? 'Cloud sign in' : pending ? 'Choose sync copy' : ready ? (dirty ? 'Cloud changes pending' : 'Cloud connected') : 'Cloud connecting';
     const indicator = document.querySelector('.local-indicator');
     if (indicator?.lastChild?.nodeType === Node.TEXT_NODE) {
-      indicator.lastChild.textContent = ready ? 'Synced with cloud' : 'Saved on this device';
+      indicator.lastChild.textContent = ready && !dirty && !inFlight ? 'Synced with cloud' : 'Saved on this device' + (ready ? ' · Cloud changes pending' : '');
     }
   }
   const localCopy = () => ({ workspace: window.GroveWorkspace.get(), explorer: window.GroveExplorer.get() });
