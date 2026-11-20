@@ -38,6 +38,7 @@
   let inFlight = false;
   let dirty = false;
   let accountEpoch = 0;
+  let signingOut = false;
 
   const message = text => { el('groveCloudStatus').textContent = text; };
   function ui() {
@@ -165,6 +166,7 @@
     }
   });
   el('groveCloudSignout').addEventListener('click', async () => {
+    if (signingOut) return;
     // Do not sign out while a prior upload is unresolved: upload() only marks dirty
     // when inFlight, so awaiting it would not await the actual network request.
     if (inFlight) {
@@ -182,12 +184,17 @@
       message('New changes are still waiting to sync. Retry sign out after cloud saving finishes.');
       return;
     }
+    signingOut = true;
+    el('groveCloudSignout').disabled = true;
     try {
       const { error } = await client.auth.signOut();
       if (error) message('Sign out failed: ' + error.message);
       else void activate(null);
     } catch (failure) {
       message('Sign out failed: ' + (failure?.message || 'Network error') + '. Your local copy remains saved.');
+    } finally {
+      signingOut = false;
+      el('groveCloudSignout').disabled = false;
     }
   });
   el('groveCloudUseRemote').addEventListener('click', () => {
