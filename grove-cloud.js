@@ -176,6 +176,12 @@
       message('Cloud save did not finish successfully. Your local copy is safe; retry sign out after checking the connection.');
       return;
     }
+    // Edits made while the awaited upload was in flight schedule another save.
+    // Do not sign out until that newer snapshot has also been uploaded.
+    if (dirty || inFlight) {
+      message('New changes are still waiting to sync. Retry sign out after cloud saving finishes.');
+      return;
+    }
     try {
       const { error } = await client.auth.signOut();
       if (error) message('Sign out failed: ' + error.message);
