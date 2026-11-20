@@ -102,3 +102,9 @@ test('cloud toggle reflects unsaved workspace changes until upload settles', () 
   const schedule = source.slice(source.indexOf('function scheduleSave()'), source.indexOf('window.GroveCloud'));
   assert.match(schedule, /dirty = true;\s*ui\(\);/);
 });
+
+
+test('local save indicator does not claim cloud sync during dirty or in-flight uploads', () => {
+  assert.match(source, /indicator\.lastChild\.textContent = ready && !dirty && !inFlight \? 'Synced with cloud'/);
+  assert.match(source, /'Saved on this device' \+ \(ready \? ' · Cloud changes pending' : ''\)/);
+});
