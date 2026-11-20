@@ -20,3 +20,9 @@ test('rejected network uploads release the active in-flight lock', () => {
   assert.match(source, /catch \(failure\) \{\s*error = failure;/);
   assert.match(source, /if \(epoch !== accountEpoch \|\| ownerId !== currentUserId\) return;\s*inFlight = false;/);
 });
+
+test('rejected workspace fetches are handled after account isolation check', () => {
+  assert.match(source, /try \{\s*\(\{ data, error \} = await client\.from\('grove_workspaces'\)/);
+  assert.match(source, /catch \(failure\) \{\s*error = failure;\s*\}\s*if \(scopedId !== currentUserId\) return;/);
+  assert.match(source, /if \(error\) \{ message\('Could not load cloud workspace:/);
+});
