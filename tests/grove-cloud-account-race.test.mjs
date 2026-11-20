@@ -23,7 +23,8 @@ test('rejected network uploads release the active in-flight lock', () => {
 
 test('rejected workspace fetches are handled after account isolation check', () => {
   assert.match(source, /try \{\s*\(\{ data, error \} = await client\.from\('grove_workspaces'\)/);
-  assert.match(source, /catch \(failure\) \{\s*error = failure;\s*\}\s*if \(scopedId !== currentUserId\) return;/);
+  assert.match(source, /const readEpoch = accountEpoch;/);
+  assert.match(source, /if \(readEpoch !== accountEpoch \|\| scopedId !== currentUserId\) return;/);
   assert.match(source, /if \(error\) \{ message\('Could not load cloud workspace:/);
 });
 
@@ -42,4 +43,9 @@ test('rejected password and registration requests are caught without clearing lo
 test('rejected OAuth requests are caught and reported', () => {
   assert.match(source, /groveCloudGoogle'[\s\S]*?try \{\s*const \{ error \} = await client\.auth\.signInWithOAuth/);
   assert.match(source, /catch \(failure\) \{\s*message\('Google sign-in failed:/);
+});
+
+test('same-account sign-out and re-login invalidates older cloud reads', () => {
+  assert.match(source, /accountEpoch \+= 1;[\s\S]*?const readEpoch = accountEpoch;/);
+  assert.match(source, /if \(readEpoch !== accountEpoch \|\| scopedId !== currentUserId\) return;/);
 });
