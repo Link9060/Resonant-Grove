@@ -77,3 +77,11 @@ test('failed cloud upload remains dirty so a later sign-out retries persistence'
   assert.match(upload, /else \{[\s\S]*?if \(dirty\) scheduleSave\(\);/);
   assert.match(source, /if \(dirty && !\(await upload\(\)\)\) \{/);
 });
+
+
+test('duplicate sign-out clicks cannot issue concurrent auth requests', () => {
+  const signout = source.slice(source.indexOf("el('groveCloudSignout').addEventListener"));
+  assert.match(signout, /if \(signingOut\) return;/);
+  assert.match(signout, /signingOut = true;[\s\S]*?await client\.auth\.signOut\(\)/);
+  assert.match(signout, /finally \{\s*signingOut = false;\s*el\('groveCloudSignout'\)\.disabled = false;/);
+});
