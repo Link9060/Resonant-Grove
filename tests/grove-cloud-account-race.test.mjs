@@ -11,14 +11,14 @@ test('cloud uploads capture owner identity before awaiting network', () => {
 
 test('stale account uploads cannot mutate current sync state', () => {
   assert.match(source, /const epoch = accountEpoch;/);
-  assert.match(source, /if \(epoch !== accountEpoch \|\| ownerId !== currentUserId\) return;/);
+  assert.match(source, /if \(epoch !== accountEpoch \|\| ownerId !== currentUserId\) return false;/);
   assert.match(source, /accountEpoch \+= 1;/);
   assert.match(source, /dirty = false; inFlight = false;/);
 });
 
 test('rejected network uploads release the active in-flight lock', () => {
   assert.match(source, /catch \(failure\) \{\s*error = failure;/);
-  assert.match(source, /if \(epoch !== accountEpoch \|\| ownerId !== currentUserId\) return;\s*inFlight = false;/);
+  assert.match(source, /if \(epoch !== accountEpoch \|\| ownerId !== currentUserId\) return false;\s*inFlight = false;/);
 });
 
 test('rejected workspace fetches are handled after account isolation check', () => {
