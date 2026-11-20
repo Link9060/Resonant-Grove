@@ -50,7 +50,7 @@
     el('groveCloudConflict').querySelector('strong').textContent = pending && !pending.workspace ? 'Start your Grove cloud workspace' : 'Two Grove copies found';
     el('groveCloudConflict').querySelector('p').textContent = pending && !pending.workspace ? 'No cloud copy exists yet. Nothing is uploaded until you choose Upload this device.' : 'Choose which data to use. Nothing is overwritten until you choose.';
     el('groveCloudUser').textContent = user?.email || '';
-    button.textContent = !client ? 'Cloud unavailable' : !user ? 'Cloud sign in' : pending ? 'Choose sync copy' : ready ? (dirty ? 'Cloud changes pending' : 'Cloud connected') : 'Cloud connecting';
+    button.textContent = !client ? 'Cloud unavailable' : !user ? 'Cloud sign in' : pending ? 'Choose sync copy' : ready ? ((dirty || inFlight) ? 'Cloud changes pending' : 'Cloud connected') : 'Cloud connecting';
     const indicator = document.querySelector('.local-indicator');
     if (indicator?.lastChild?.nodeType === Node.TEXT_NODE) {
       indicator.lastChild.textContent = ready && !dirty && !inFlight ? 'Synced with cloud' : 'Saved on this device' + (ready ? ' · Cloud changes pending' : '');
@@ -65,6 +65,7 @@
     if (!client || !user || !ready) return false;
     if (inFlight) { dirty = true; return false; }
     inFlight = true; dirty = false;
+    ui();
     const epoch = accountEpoch;
     const ownerId = user.id;
     const snapshot = localCopy();
