@@ -115,9 +115,12 @@ document.querySelector('#export-json').addEventListener('click',()=>{
 document.querySelector('#import-json').addEventListener('change',async event=>{
  const input=event.target,file=input.files?.[0];
  if(!file)return;
+ // Capture the worksheet before asynchronous file reading; never silently overwrite newer edits.
+ const worksheetAtSelection=worksheet;
  try {
   if(file.size>65536)throw Error('Backup exceeds 64 KiB');
   const restored=fromJson(await file.text());
+  if(worksheet!==worksheetAtSelection)throw Error('Worksheet changed while reading backup; select the file again');
   if(!confirm('Replace the current worksheet with this local backup?')){message.textContent='JSON restore canceled; worksheet unchanged';return;}
   worksheet=restored;
   document.querySelector('#search').value='';
