@@ -85,3 +85,11 @@ test('duplicate sign-out clicks cannot issue concurrent auth requests', () => {
   assert.match(signout, /signingOut = true;[\s\S]*?await client\.auth\.signOut\(\)/);
   assert.match(signout, /finally \{\s*signingOut = false;\s*el\('groveCloudSignout'\)\.disabled = false;/);
 });
+
+
+test('sign-out lock starts before waiting for a pending workspace upload', () => {
+  const signout = source.slice(source.indexOf("el('groveCloudSignout').addEventListener"));
+  assert.ok(signout.indexOf('signingOut = true;') < signout.indexOf('await upload()'));
+  assert.ok(signout.indexOf("el('groveCloudSignout').disabled = true;") < signout.indexOf('await upload()'));
+  assert.match(signout, /try \{[\s\S]*?if \(dirty && !\(await upload\(\)\)\)/);
+});
