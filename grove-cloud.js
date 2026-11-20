@@ -99,8 +99,13 @@
     if (!client || !user) { message('Local copy stays on this device after sign-out.'); return; }
     message('Checking for saved cloud data...');
     const scopedId = user.id;
-    const { data, error } = await client.from('grove_workspaces')
-      .select('workspace,explorer').eq('owner_id', scopedId).maybeSingle();
+    let data, error;
+    try {
+      ({ data, error } = await client.from('grove_workspaces')
+        .select('workspace,explorer').eq('owner_id', scopedId).maybeSingle());
+    } catch (failure) {
+      error = failure;
+    }
     if (scopedId !== currentUserId) return;
     if (error) { message('Could not load cloud workspace: ' + error.message); return; }
     if (!data) {
