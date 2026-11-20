@@ -167,6 +167,9 @@
   });
   el('groveCloudSignout').addEventListener('click', async () => {
     if (signingOut) return;
+    signingOut = true;
+    el('groveCloudSignout').disabled = true;
+    try {
     // Do not sign out while a prior upload is unresolved: upload() only marks dirty
     // when inFlight, so awaiting it would not await the actual network request.
     if (inFlight) {
@@ -184,9 +187,6 @@
       message('New changes are still waiting to sync. Retry sign out after cloud saving finishes.');
       return;
     }
-    signingOut = true;
-    el('groveCloudSignout').disabled = true;
-    try {
       const { error } = await client.auth.signOut();
       if (error) message('Sign out failed: ' + error.message);
       else void activate(null);
