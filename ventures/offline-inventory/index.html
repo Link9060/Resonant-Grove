@@ -22,13 +22,13 @@ const sampleRows=[{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count
 let worksheet=createWorksheet(sampleRows);
 const rows=document.querySelector('#rows'),message=document.querySelector('#message');
 function render(invalidateStock=true){
+ // Validate before any DOM mutation; malformed search must preserve rows and stock results.
+ const matches=searchItems(worksheet,document.querySelector('#search').value);
  // Search only changes visibility, not inventory; preserve the last stock check.
  if(invalidateStock){
   document.querySelector('#stock-results').replaceChildren();
   document.querySelector('#stock-summary').textContent='Stock results cleared; check again for current quantities';
  }
- // Validate search before changing the DOM, so invalid input preserves visible rows.
- const matches=searchItems(worksheet,document.querySelector('#search').value);
  rows.replaceChildren();
  document.querySelector('#search-count').textContent=matches.length+' of '+worksheet.items.length+' items shown';
  if(matches.length===0){
