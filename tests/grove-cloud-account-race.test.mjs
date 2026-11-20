@@ -55,3 +55,9 @@ test('non-Error network rejections display a safe fallback message', () => {
   assert.match(source, /Cloud save failed: ' \+ \(error\?\.message \|\| 'Network error'\)/);
   assert.match(source, /Could not load cloud workspace: ' \+ \(error\?\.message \|\| 'Network error'\)/);
 });
+
+test('sign-out is blocked while an earlier upload remains in flight', () => {
+  const signout = source.slice(source.indexOf("el('groveCloudSignout').addEventListener"));
+  assert.match(signout, /if \(inFlight\) \{\s*message\('Cloud save is still in progress\.[^']*'\);\s*return;\s*\}/);
+  assert.ok(signout.indexOf('if (inFlight)') < signout.indexOf('client.auth.signOut()'));
+});
