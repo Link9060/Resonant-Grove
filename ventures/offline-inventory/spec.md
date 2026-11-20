@@ -29,6 +29,7 @@ Small hobby projects and volunteer teams may need to tally non-sensitive supplie
 - **P2-UI-015:** Search-only filtering preserves stock-check results while worksheet mutations invalidate them.
 - **P2-UI-016:** Editing the stock threshold clears old stock-check results until Check stock is activated again.
 - **P2-UI-017:** Invalid search input is rejected before clearing the currently visible inventory table.
+- **P2-UI-018:** Invalid search input also preserves the most recent low-stock result and its announcement; neither table nor stock snapshot changes on validation failure.
 - **P2-INV-034/035/036:** Versioned deterministic JSON backup/restore, schema integrity and UTF-8 byte-size boundary.
 - **P2-CONTRACT-015/016/022/023:** Browser backup/restore, cancellation feedback, successful reset/restore focus, and add-item focus.
 
@@ -55,6 +56,8 @@ These IDs describe source/test contracts. A historical CI pass is not evidence f
 - **P2-UI-016 (pending):** Run a threshold 3 stock check, then change the threshold to 5 without clicking Check stock. Confirm the prior list disappears and the live summary requests a fresh check. Click Check stock and verify both sample items appear. Repeat after changing the threshold to an invalid value and verify no old result remains.
 
 - **P2-UI-017 (pending):** Run a valid `BOLT` search, then enter an invalid search value (for example, paste more than 80 characters using a browser console to set the input value and dispatch an `input` event). Confirm the existing visible row is preserved, the error is announced, and the worksheet and total are unchanged. Restore a valid query and verify rendering resumes.
+
+- **P2-UI-018 (pending):** On the original fixture, run Low-stock check at threshold 5 and confirm both items appear. Search for `BOLT`, confirming only the bolts table row appears while both low-stock entries remain. Set the search input programmatically to 81 characters and dispatch an `input` event (bypassing the HTML `maxlength` limit). Confirm the invalid-search error is announced, the bolts table row remains visible, both stock results remain intact, and the worksheet total remains 8. Restore a valid search and confirm normal filtering resumes. Do not use real inventory data.
 
 ## Architecture, limits and verification
 `src/inventory.mjs` is a dependency-free ES module exporting `createWorksheet`, `addItem`, `setCount`, `removeItem`, `renameItem`, `searchItems`, `lowStockItems`, `toCsv`, `toJson` and `fromJson`. `index.html` is a local browser interface. No persistence, collaboration, accounts, analytics, valuation, history, external API, or real customer data. Not appropriate for sensitive or mission-critical inventory.
