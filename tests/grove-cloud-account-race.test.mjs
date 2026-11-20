@@ -49,3 +49,9 @@ test('same-account sign-out and re-login invalidates older cloud reads', () => {
   assert.match(source, /accountEpoch \+= 1;[\s\S]*?const readEpoch = accountEpoch;/);
   assert.match(source, /if \(readEpoch !== accountEpoch \|\| scopedId !== currentUserId\) return;/);
 });
+
+
+test('non-Error network rejections display a safe fallback message', () => {
+  assert.match(source, /Cloud save failed: ' \+ \(error\?\.message \|\| 'Network error'\)/);
+  assert.match(source, /Could not load cloud workspace: ' \+ \(error\?\.message \|\| 'Network error'\)/);
+});
