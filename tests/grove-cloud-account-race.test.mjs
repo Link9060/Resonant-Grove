@@ -93,3 +93,12 @@ test('sign-out lock starts before waiting for a pending workspace upload', () =>
   assert.ok(signout.indexOf("el('groveCloudSignout').disabled = true;") < signout.indexOf('await upload()'));
   assert.match(signout, /try \{[\s\S]*?if \(dirty && !\(await upload\(\)\)\)/);
 });
+
+
+test('cloud toggle reflects unsaved workspace changes until upload settles', () => {
+  assert.match(source, /ready \? \(dirty \? 'Cloud changes pending' : 'Cloud connected'\)/);
+  const upload = source.slice(source.indexOf('async function upload()'), source.indexOf('function scheduleSave()'));
+  assert.match(upload, /if \(error\) \{[\s\S]*?dirty = true;[\s\S]*?\}\s*else \{[\s\S]*?\}\s*ui\(\);\s*return !error;/);
+  const schedule = source.slice(source.indexOf('function scheduleSave()'), source.indexOf('window.GroveCloud'));
+  assert.match(schedule, /dirty = true;\s*ui\(\);/);
+});
