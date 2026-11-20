@@ -32,3 +32,14 @@ test('rejected sign-out requests preserve local state and report a failure', () 
   assert.match(source, /catch \(failure\) \{\s*message\('Sign out failed:/);
   assert.match(source, /Your local copy remains saved/);
 });
+
+test('rejected password and registration requests are caught without clearing local data', () => {
+  assert.match(source, /async function authenticate\(register\) \{[\s\S]*?try \{[\s\S]*?await client\.auth\.signUp\([\s\S]*?await client\.auth\.signInWithPassword\(/);
+  assert.match(source, /catch \(failure\) \{\s*message\('Authentication failed:/);
+  assert.match(source, /Your local data remains saved/);
+});
+
+test('rejected OAuth requests are caught and reported', () => {
+  assert.match(source, /groveCloudGoogle'[\s\S]*?try \{\s*const \{ error \} = await client\.auth\.signInWithOAuth/);
+  assert.match(source, /catch \(failure\) \{\s*message\('Google sign-in failed:/);
+});
