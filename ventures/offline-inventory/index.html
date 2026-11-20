@@ -131,7 +131,10 @@ document.querySelector('#import-json').addEventListener('change',async event=>{
   render();
   document.querySelector('#search').focus();
  } catch(error) {message.textContent='JSON restore failed: '+error.message;}
- finally {input.value='';}
+ finally {
+  // An older read must not clear the file input belonging to a newer selection.
+  if(selectionVersion===restoreSelectionVersion)input.value='';
+ }
 });
 document.querySelector('#export-csv').addEventListener('click',()=>{
  try {
