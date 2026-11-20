@@ -78,9 +78,14 @@
     // A previous account's request must never update this account's sync state.
     if (epoch !== accountEpoch || ownerId !== currentUserId) return false;
     inFlight = false;
-    if (error) { message('Cloud save failed: ' + (error?.message || 'Network error') + '. Your local copy is still saved.'); }
-    else { message('Cloud saved. Your data is synchronized to this account.'); }
-    if (dirty) scheduleSave();
+    if (error) {
+      // A failed upload is still unsaved work. Keep it pending for the next explicit retry.
+      dirty = true;
+      message('Cloud save failed: ' + (error?.message || 'Network error') + '. Your local copy is still saved.');
+    } else {
+      message('Cloud saved. Your data is synchronized to this account.');
+      if (dirty) scheduleSave();
+    }
     return !error;
   }
   function scheduleSave() {
