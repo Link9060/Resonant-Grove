@@ -17,5 +17,5 @@ test('P2-UI-019 JSON restore rejects stale file reads before confirmation or wor
  assert.ok(snapshot>=0&&snapshot<awaitRead,'capture state before async read');
  assert.ok(awaitRead<guard&&guard<confirm&&confirm<assignment,
   'reject stale restore before confirmation and any worksheet replacement');
- assert.match(handler,/finally \{input\.value='';\}/,'file input resets on rejection');
+ assert.match(handler,/finally\s*\{[\s\S]*?if\(selectionVersion===restoreSelectionVersion\)input\.value='';[\s\S]*?\}/,'only the latest selection clears its file input');
 });
