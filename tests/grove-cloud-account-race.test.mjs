@@ -69,3 +69,11 @@ test('failed pending cloud save prevents sign-out while preserving local copy', 
   assert.match(source, /if \(dirty && !\(await upload\(\)\)\) \{[\s\S]*?return;[\s\S]*?client\.auth\.signOut\(\)/);
   assert.match(source, /return !error;/);
 });
+
+
+test('failed cloud upload remains dirty so a later sign-out retries persistence', () => {
+  const upload = source.slice(source.indexOf('async function upload()'), source.indexOf('function scheduleSave()'));
+  assert.match(upload, /if \(error\) \{\s*\/\/[^\n]*\n\s*dirty = true;/);
+  assert.match(upload, /else \{[\s\S]*?if \(dirty\) scheduleSave\(\);/);
+  assert.match(source, /if \(dirty && !\(await upload\(\)\)\) \{/);
+});
