@@ -78,7 +78,7 @@
     // A previous account's request must never update this account's sync state.
     if (epoch !== accountEpoch || ownerId !== currentUserId) return;
     inFlight = false;
-    if (error) { message('Cloud save failed: ' + error.message + '. Your local copy is still saved.'); }
+    if (error) { message('Cloud save failed: ' + (error?.message || 'Network error') + '. Your local copy is still saved.'); }
     else { message('Cloud saved. Your data is synchronized to this account.'); }
     if (dirty) scheduleSave();
   }
@@ -108,7 +108,7 @@
       error = failure;
     }
     if (readEpoch !== accountEpoch || scopedId !== currentUserId) return;
-    if (error) { message('Could not load cloud workspace: ' + error.message); return; }
+    if (error) { message('Could not load cloud workspace: ' + (error?.message || 'Network error')); return; }
     if (!data) {
       // Never upload a local workspace to a newly connected account without an explicit choice.
       pending = { workspace: null, explorer: null };
