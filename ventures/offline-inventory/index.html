@@ -20,6 +20,7 @@ import {removeItem,toCsv,renameItem,searchItems,toJson,fromJson} from './src/inv
 import {lowStockItems} from './src/inventory.mjs';
 const sampleRows=[{id:'bolts',name:'Bolts',count:3},{id:'nuts',name:'Nuts',count:5}];
 let worksheet=createWorksheet(sampleRows);
+let restoreSelectionVersion=0;
 const rows=document.querySelector('#rows'),message=document.querySelector('#message');
 function render(invalidateStock=true){
  // Validate before any DOM mutation; malformed search must preserve rows and stock results.
@@ -114,12 +115,14 @@ document.querySelector('#export-json').addEventListener('click',()=>{
 });
 document.querySelector('#import-json').addEventListener('change',async event=>{
  const input=event.target,file=input.files?.[0];
+ const selectionVersion=++restoreSelectionVersion;
  if(!file)return;
  // Capture the worksheet before asynchronous file reading; never silently overwrite newer edits.
  const worksheetAtSelection=worksheet;
  try {
   if(file.size>65536)throw Error('Backup exceeds 64 KiB');
   const restored=fromJson(await file.text());
+  if(selectionVersion!==restoreSelectionVersion)throw Error('A newer backup selection superseded this restore');
   if(worksheet!==worksheetAtSelection)throw Error('Worksheet changed while reading backup; select the file again');
   if(!confirm('Replace the current worksheet with this local backup?')){message.textContent='JSON restore canceled; worksheet unchanged';return;}
   worksheet=restored;
