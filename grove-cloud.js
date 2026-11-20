@@ -152,9 +152,13 @@
   el('groveCloudSignout').addEventListener('click', async () => {
     clearTimeout(timer);
     if (dirty) await upload();
-    const { error } = await client.auth.signOut();
-    if (error) message(error.message);
-    else void activate(null);
+    try {
+      const { error } = await client.auth.signOut();
+      if (error) message('Sign out failed: ' + error.message);
+      else void activate(null);
+    } catch (failure) {
+      message('Sign out failed: ' + (failure?.message || 'Network error') + '. Your local copy remains saved.');
+    }
   });
   el('groveCloudUseRemote').addEventListener('click', () => {
     if (!pending) return;
