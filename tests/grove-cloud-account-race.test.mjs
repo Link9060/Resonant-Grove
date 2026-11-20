@@ -26,3 +26,9 @@ test('rejected workspace fetches are handled after account isolation check', () 
   assert.match(source, /catch \(failure\) \{\s*error = failure;\s*\}\s*if \(scopedId !== currentUserId\) return;/);
   assert.match(source, /if \(error\) \{ message\('Could not load cloud workspace:/);
 });
+
+test('rejected sign-out requests preserve local state and report a failure', () => {
+  assert.match(source, /try \{\s*const \{ error \} = await client\.auth\.signOut\(\);/);
+  assert.match(source, /catch \(failure\) \{\s*message\('Sign out failed:/);
+  assert.match(source, /Your local copy remains saved/);
+});
