@@ -159,6 +159,12 @@
     }
   });
   el('groveCloudSignout').addEventListener('click', async () => {
+    // Do not sign out while a prior upload is unresolved: upload() only marks dirty
+    // when inFlight, so awaiting it would not await the actual network request.
+    if (inFlight) {
+      message('Cloud save is still in progress. Wait for it to finish before signing out.');
+      return;
+    }
     clearTimeout(timer);
     if (dirty) await upload();
     try {
