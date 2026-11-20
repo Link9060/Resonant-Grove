@@ -61,8 +61,8 @@
     window.GroveExplorer.replace(copy.explorer);
   }
   async function upload() {
-    if (!client || !user || !ready) return;
-    if (inFlight) { dirty = true; return; }
+    if (!client || !user || !ready) return false;
+    if (inFlight) { dirty = true; return false; }
     inFlight = true; dirty = false;
     const epoch = accountEpoch;
     const ownerId = user.id;
@@ -76,11 +76,12 @@
       error = failure;
     }
     // A previous account's request must never update this account's sync state.
-    if (epoch !== accountEpoch || ownerId !== currentUserId) return;
+    if (epoch !== accountEpoch || ownerId !== currentUserId) return false;
     inFlight = false;
     if (error) { message('Cloud save failed: ' + (error?.message || 'Network error') + '. Your local copy is still saved.'); }
     else { message('Cloud saved. Your data is synchronized to this account.'); }
     if (dirty) scheduleSave();
+    return !error;
   }
   function scheduleSave() {
     if (!ready || !user) return;
@@ -166,7 +167,10 @@
       return;
     }
     clearTimeout(timer);
-    if (dirty) await upload();
+    if (dirty && !(await upload())) {
+      message('Cloud save did not finish successfully. Your local copy is safe; retry sign out after checking the connection.');
+      return;
+    }
     try {
       const { error } = await client.auth.signOut();
       if (error) message('Sign out failed: ' + error.message);
