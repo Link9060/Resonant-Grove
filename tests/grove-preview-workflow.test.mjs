@@ -33,8 +33,8 @@ test('preview copies an explicit public asset allowlist, never the repository tr
 });
 
 test('changes to the packaged favicon trigger a fresh review artifact', () => {
-  assert.match(workflow, /- 'favicon\\.svg'/);
-  assert.match(workflow, /for file in index\\.html styles\\.css app\\.js favicon\\.svg/);
+  assert.match(workflow, /- 'favicon\.svg'/);
+  assert.match(workflow, /for file in index\.html styles\.css app\.js favicon\.svg/);
 });
 
 test('validation workflow edits retrigger preview packaging', () => {
