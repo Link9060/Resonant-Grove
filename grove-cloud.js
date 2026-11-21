@@ -71,9 +71,11 @@
     ui();
     const epoch = accountEpoch;
     const ownerId = user.id;
-    const snapshot = localCopy();
     let error;
     try {
+      // Snapshot reads can fail (for example, when local storage is unavailable).
+      // Keep the same failure path as network errors so the upload lock is released.
+      const snapshot = localCopy();
       ({ error } = await client.from('grove_workspaces').upsert({
         owner_id: ownerId, ...snapshot, updated_at: new Date().toISOString()
       }, { onConflict: 'owner_id' }));
