@@ -55,6 +55,12 @@ on:
       - '.github/workflows/validate-autonomous.yml'
   workflow_dispatch:
 
+# Cancel superseded validation runs for the same PR to conserve free CI minutes.
+# Keep manual dispatches independent, and never cancel another PR's run.
+concurrency:
+  group: grove-validation-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
