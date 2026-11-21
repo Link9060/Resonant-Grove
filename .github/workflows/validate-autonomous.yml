@@ -68,17 +68,21 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      GROVE_VALIDATED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
+          # Validate the actual PR source head, matching the review artifact.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Verify checkout revision
         shell: bash
         run: |
           set -euo pipefail
-          # PR validation uses GitHub's synthetic merge commit, not the raw PR head.
-          # Never silently validate a different checkout than the event specifies.
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          # PR events otherwise default to a synthetic merge commit. Pin source
+          # validation to the immutable PR head used by preview packaging.
+          test "$(git rev-parse HEAD)" = "$GROVE_VALIDATED_SHA"
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
