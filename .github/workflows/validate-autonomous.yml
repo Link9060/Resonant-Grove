@@ -64,6 +64,15 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify checkout revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          # PR validation uses GitHub's synthetic merge commit, not the raw PR head.
+          # Never silently validate a different checkout than the event specifies.
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
