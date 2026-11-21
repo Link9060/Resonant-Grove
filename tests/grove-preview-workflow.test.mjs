@@ -33,7 +33,7 @@ test('preview copies an explicit public asset allowlist, never the repository tr
 });
 
 test('validation workflow edits retrigger preview packaging', () => {
-  assert.match(workflow, /- '\\.github\/workflows\/validate-autonomous\\.yml'/);
+  assert.match(workflow, /- '\\.github\/workflows\/validate-autonomous\.yml'/);
 });
 
 test('preview and validation both execute all Phase 1 suites, excluding Phase 2', () => {
