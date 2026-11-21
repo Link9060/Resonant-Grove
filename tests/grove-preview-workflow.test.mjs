@@ -67,3 +67,12 @@ test('preview and validation pin the same Node 22 runtime', () => {
     assert.ok(source.includes("node-version: '22'"), 'Node major version must match');
   }
 });
+
+
+test('validation triggers for all top-level assets, scripts and Phase 1 tests', () => {
+  const validation = readFileSync('.github/workflows/validate-autonomous.yml', 'utf8');
+  for (const pattern of ["'*.html'", "'*.js'", "'*.css'", "'favicon.svg'", "'tests/**'", "'scripts/**'"]) {
+    assert.ok(validation.includes(`- ${pattern}`), `missing validation trigger: ${pattern}`);
+  }
+  assert.match(validation, /- '\\.github\\/workflows\\/validate-autonomous\\.yml'/);
+});
