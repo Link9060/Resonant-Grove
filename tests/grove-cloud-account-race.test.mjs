@@ -115,3 +115,14 @@ test('cloud toggle remains pending while upload is active and refreshes at uploa
   const upload = source.slice(source.indexOf('async function upload()'), source.indexOf('function scheduleSave()'));
   assert.match(upload, /inFlight = true; dirty = false;\s*ui\(\);/);
 });
+
+test('cloud account panel exposes expansion state and restores keyboard focus', () => {
+  assert.match(source, /button\.setAttribute\('aria-controls', panel\.id\)/);
+  assert.match(source, /button\.setAttribute\('aria-expanded', 'false'\)/);
+  assert.match(source, /function setPanelOpen\(open, restoreFocus = false\)/);
+  assert.match(source, /button\.setAttribute\('aria-expanded', String\(open\)\)/);
+  assert.match(source, /if \(open\) el\('groveCloudClose'\)\.focus\(\)/);
+  assert.match(source, /else if \(restoreFocus\) button\.focus\(\)/);
+  assert.match(source, /event\.key === 'Escape'/);
+  assert.match(source, /setPanelOpen\(false, true\)/);
+});
