@@ -14,6 +14,7 @@ on:
       - 'docs/PHASE1-ACCEPTANCE.md'
       - 'docs/ISOLATED-PREVIEW-SETUP.md'
       - '.github/workflows/grove-preview.yml'
+      - '.github/workflows/validate-autonomous.yml'
 
 # Avoid spending free Actions minutes packaging superseded PR revisions.
 # A newer push cancels only this PR's older preview-packaging run.
