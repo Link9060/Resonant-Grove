@@ -6,6 +6,10 @@ on:
       - 'index.html'
       - 'app.js'
       - 'grove-cloud.js'
+      - 'grove-cloud.css'
+      - 'grove-agent-desk.js'
+      - 'grove-agent-desk.css'
+      - 'styles.css'
       - 'tests/grove-cloud-account-race.test.mjs'
       - 'autonomous-grove.js'
       - 'grove-build-feed.js'
@@ -61,6 +65,7 @@ jobs:
           set -euo pipefail
           node --check app.js
           node --check grove-cloud.js
+          node --check grove-agent-desk.js
           node --check autonomous-grove.js
           node --check grove-build-feed.js
           node --check scripts/grove-build-catalog.mjs
