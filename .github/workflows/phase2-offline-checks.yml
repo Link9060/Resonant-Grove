@@ -32,3 +32,17 @@ jobs:
           node --check ventures/offline-inventory/src/inventory.mjs
       - name: Execute isolated offline Phase 2 tests
         run: node --test tests/phase2-*.test.mjs ventures/offline-inventory/tests/*.test.mjs
+      - name: Smoke-test fictional restore fixture CLI
+        run: |
+          set -eu
+          fixture_dir="$(mktemp -d)"
+          trap 'rm -rf "$fixture_dir"' EXIT
+          node ventures/offline-inventory/tests/restore-fixtures.mjs "$fixture_dir"
+          for name in restore-a.json restore-b.json invalid-total.json oversized.json; do
+            test -s "$fixture_dir/$name"
+          done
+          if node ventures/offline-inventory/tests/restore-fixtures.mjs "$fixture_dir"; then
+            echo "ERROR: fixture generator overwrote existing files"
+            exit 1
+          fi
+          echo "P2-QA-099: four fixtures created; overwrite correctly refused"
