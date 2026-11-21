@@ -76,3 +76,8 @@ test('validation triggers for all top-level assets, scripts and Phase 1 tests', 
   }
   assert.ok(validation.includes("- '.github/workflows/validate-autonomous.yml'"));
 });
+
+test('any Phase 1 script edit triggers fresh preview packaging', () => {
+  assert.ok(workflow.includes("- 'scripts/**'"), 'preview must rerun for script additions and edits');
+  assert.doesNotMatch(workflow, /- 'scripts\/(?:verify_review_artifact|smoke_review_http|serve_review)\.py'/);
+});
