@@ -126,3 +126,12 @@ test('cloud account panel exposes expansion state and restores keyboard focus', 
   assert.match(source, /event\.key === 'Escape'/);
   assert.match(source, /setPanelOpen\(false, true\)/);
 });
+
+test('snapshot failures share the upload error path and release the lock', () => {
+  const upload = source.slice(source.indexOf('async function upload()'), source.indexOf('function scheduleSave()'));
+  assert.match(upload, /try \{\s*\/\/[^\n]*\n\s*\/\/[^\n]*\n\s*const snapshot = localCopy\(\);/);
+  assert.ok(upload.indexOf('const snapshot = localCopy();') > upload.indexOf('try {'));
+  assert.ok(upload.indexOf('const snapshot = localCopy();') < upload.indexOf('catch (failure)'));
+  assert.match(upload, /catch \(failure\) \{\s*error = failure;/);
+  assert.match(upload, /inFlight = false;\s*if \(error\) \{[\s\S]*?dirty = true;/);
+});
