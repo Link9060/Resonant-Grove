@@ -37,6 +37,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Validate source
         shell: bash
         run: |
