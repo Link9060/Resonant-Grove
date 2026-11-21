@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import threading
 import urllib.request
+import urllib.error
 from urllib.parse import urlsplit, unquote
 
 class LocalAssets(HTMLParser):
@@ -68,6 +69,15 @@ def smoke(directory: Path, expected_sha: str) -> None:
                     raise AssertionError(f"{path}: empty response")
                 if expected and expected.lower().encode() not in data.lower():
                     raise AssertionError(f"{path}: expected content missing or wrong SHA")
+        # Private repository paths must not be served by the review artifact.
+        # This catches accidental broad-copy packaging before an artifact is uploaded.
+        for private_path in ("/.github/workflows/deploy.yml", "/tests/grove-preview-workflow.test.mjs", "/.git/config"):
+            try:
+                with urllib.request.urlopen(base + private_path, timeout=5) as response:
+                    raise AssertionError(f"Private repository path served: {private_path} (HTTP {response.status})")
+            except urllib.error.HTTPError as error:
+                if error.code not in (403, 404):
+                    raise AssertionError(f"Unexpected response for private path {private_path}: HTTP {error.code}") from error
         # A 200 response for index.html does not prove its linked assets exist.
         with urllib.request.urlopen(base + "/index.html", timeout=5) as response:
             parser = LocalAssets()
