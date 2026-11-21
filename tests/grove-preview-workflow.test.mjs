@@ -59,3 +59,11 @@ test('validation checks the immutable PR head, not only a synthetic merge commit
   assert.match(validation, /test "\$\(git rev-parse HEAD\)" = "\$GROVE_VALIDATED_SHA"/);
   assert.match(validation, /persist-credentials:\s*false/);
 });
+
+test('preview and validation pin the same Node 22 runtime', () => {
+  const validation = readFileSync('.github/workflows/validate-autonomous.yml', 'utf8');
+  for (const source of [workflow, validation]) {
+    assert.ok(source.includes('uses: actions/setup-node@v4'), 'Node setup must be explicit');
+    assert.ok(source.includes("node-version: '22'"), 'Node major version must match');
+  }
+});
