@@ -21,19 +21,20 @@ function harness(){
  const message={textContent:''};
  const search={value:'',focus(){}};
  const nodes={'#import-json':input,'#message':message,'#search':search};
- let confirms=0, renders=0;
+ let confirms=0, renders=0, allowRestore=true;
  const context={
   document:{querySelector:selector=>{assert.ok(nodes[selector],selector);return nodes[selector];}},
   message,
   worksheet:{items:[{id:'initial'}]},
   restoreSelectionVersion:0,
   fromJson:JSON.parse,
-  confirm:()=>{confirms++;return true;},
+  confirm:()=>{confirms++;return allowRestore;},
   render:()=>{renders++;}
  };
  runInNewContext(html.slice(a,b),context);
  return {
   context,input,message,
+  setConfirm(value){allowRestore=value;},
   get confirms(){return confirms;},
   get renders(){return renders;},
   select(file){
@@ -78,4 +79,21 @@ test('P2-UI-020 older completion before newer does not clear input',async()=>{
  b.resolve('{"id":"B"}');await pendingB;
  assert.equal(h.context.worksheet.id,'B');
  assert.equal(h.confirms,1);
+});
+
+test('P2-UI-022 newer canceled restore still supersedes an older pending read',async()=>{
+ const h=harness(),a=deferred(),b=deferred();
+ const pendingA=h.select(backup('A.json',a));
+ const pendingB=h.select(backup('B.json',b));
+ h.setConfirm(false);
+ b.resolve('{"id":"B"}');await pendingB;
+ assert.equal(h.context.worksheet.items[0].id,'initial');
+ assert.equal(h.confirms,1);
+ const status=h.message.textContent;
+ assert.match(status,/canceled/);
+ a.resolve('{"id":"A"}');await pendingA;
+ assert.equal(h.context.worksheet.items[0].id,'initial');
+ assert.equal(h.confirms,1);
+ assert.equal(h.message.textContent,status);
+ assert.equal(h.renders,0);
 });
