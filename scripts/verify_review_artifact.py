@@ -25,6 +25,21 @@ def verify(root: Path) -> None:
         parts = tuple(part.casefold() for part in Path(name).parts)
         if any(part in forbidden_parts for part in parts) or any(part in forbidden_names or part.startswith(".env.") or part.startswith(".env_") or part.endswith(".pem") or part.endswith(".key") for part in parts):
             raise ValueError(f"Forbidden review artifact path: {name}")
+    # Explicit packaging contract: a valid checksum must not legitimize an
+    # unexpected file (for example a source map or repository documentation).
+    allowed = {
+        ".nojekyll", "REVIEW.txt", "review.html",
+        "index.html", "styles.css", "app.js", "favicon.svg",
+        "autonomous-grove.js", "autonomous-grove.css",
+        "grove-agent-desk.js", "grove-agent-desk.css",
+        "grove-scout-feed.js", "grove-seed-feed.js",
+        "grove-build-feed.js", "grove-cloud.js", "grove-cloud.css",
+        "docs/PHASE1-ACCEPTANCE.md", "docs/ISOLATED-PREVIEW-SETUP.md",
+        "scripts/verify_review_artifact.py", "scripts/serve_review.py",
+    }
+    unexpected = expected - allowed
+    if unexpected:
+        raise ValueError(f"Unexpected review artifact files: {sorted(unexpected)}")
     seen = set()
     for line in manifest.read_text(encoding="utf-8").splitlines():
         match = re.fullmatch(r"([0-9a-f]{64})  (.+)", line)
