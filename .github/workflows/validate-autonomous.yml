@@ -84,7 +84,8 @@ jobs:
           node --check scripts/grove-seed-evaluator.mjs
           node --check scripts/grove-worksheet-export.mjs
           node --check scripts/grove-opportunity-scout.mjs
-          node --test tests/grove-cloud-account-race.test.mjs
-          node --test tests/grove-build-queue.test.mjs tests/autonomous-grove.test.mjs tests/grove-scout.test.mjs tests/grove-prototype.test.mjs tests/grove-worksheet-export.test.mjs tests/grove-seed-evaluator.test.mjs tests/grove-seed-keeper.test.mjs tests/grove-prototype-qa.test.mjs tests/grove-evidence.test.mjs
+          # Execute every Phase 1 Grove regression suite, including newly added files.
+          # Keep Phase 2 tests isolated to their own development workflow.
+          node --test tests/grove-*.test.mjs tests/autonomous-grove.test.mjs
           test -s index.html
           test -s autonomous-grove.css
