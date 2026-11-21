@@ -31,3 +31,14 @@ test('preview copies an explicit public asset allowlist, never the repository tr
   assert.doesNotMatch(workflow, /(?:cp|rsync)\s+[^\n]*(?:\.env|\.git\/|\.github\/|node_modules\/|secrets\.)/);
   assert.match(workflow, /retention-days:\s*14/);
 });
+
+test('preview and validation both execute all Phase 1 suites, excluding Phase 2', () => {
+  const validation = readFileSync('.github/workflows/validate-autonomous.yml', 'utf8');
+  const expected = 'node --test tests/grove-*.test.mjs tests/autonomous-grove.test.mjs';
+  assert.ok(workflow.includes(expected), 'preview must run the full Phase 1 Node suite');
+  assert.ok(validation.includes(expected), 'validation must run the full Phase 1 Node suite');
+  for (const source of [workflow, validation]) {
+    assert.match(source, /python3 -m unittest discover -s tests -p 'test_\*\.py'/);
+    assert.doesNotMatch(source, /node --test[^\n]*phase2-/);
+  }
+});
