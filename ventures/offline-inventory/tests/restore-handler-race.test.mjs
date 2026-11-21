@@ -127,3 +127,19 @@ test('P2-UI-021 stale rejected read does not clear newer pending selection',asyn
  assert.equal(h.confirms,1);
  assert.equal(h.input.value,'');
 });
+
+test('P2-UI-022 newer oversized backup error supersedes older pending restore',async()=>{
+ const h=harness(),a=deferred();
+ const pendingA=h.select(backup('A.json',a));
+ const pendingB=h.select({name:'oversized-B.json',size:65537,text:()=>{throw Error('oversized file must not be read');}});
+ await pendingB;
+ const status=h.message.textContent;
+ assert.match(status,/exceeds 64 KiB/);
+ assert.equal(h.confirms,0);
+ assert.equal(h.input.value,'');
+ a.resolve('{"id":"A"}');await pendingA;
+ assert.equal(h.message.textContent,status);
+ assert.equal(h.context.worksheet.items[0].id,'initial');
+ assert.equal(h.confirms,0);
+ assert.equal(h.renders,0);
+});
