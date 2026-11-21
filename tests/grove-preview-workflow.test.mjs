@@ -32,6 +32,11 @@ test('preview copies an explicit public asset allowlist, never the repository tr
   assert.match(workflow, /retention-days:\s*14/);
 });
 
+test('changes to the packaged favicon trigger a fresh review artifact', () => {
+  assert.match(workflow, /- 'favicon\\.svg'/);
+  assert.match(workflow, /for file in index\\.html styles\\.css app\\.js favicon\\.svg/);
+});
+
 test('validation workflow edits retrigger preview packaging', () => {
   assert.match(workflow, /- '\.github\/workflows\/validate-autonomous\.yml'/);
 });
