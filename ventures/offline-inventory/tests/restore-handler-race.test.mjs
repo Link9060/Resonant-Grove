@@ -24,6 +24,7 @@ function harness(){
  let confirms=0, renders=0;
  const context={
   document:{querySelector:selector=>{assert.ok(nodes[selector],selector);return nodes[selector];}},
+  message,
   worksheet:{items:[{id:'initial'}]},
   restoreSelectionVersion:0,
   fromJson:JSON.parse,
