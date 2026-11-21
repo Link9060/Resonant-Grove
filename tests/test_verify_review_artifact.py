@@ -19,7 +19,7 @@ class ArtifactVerificationTests(unittest.TestCase):
         (self.root / ".nojekyll").write_bytes(b"")
         (self.root / "review.html").write_text("<h1>Review</h1>", encoding="utf-8")
         (self.root / "docs").mkdir()
-        (self.root / "docs" / "guide.txt").write_text("test", encoding="utf-8")
+        (self.root / "docs" / "PHASE1-ACCEPTANCE.md").write_text("test", encoding="utf-8")
         self.write_manifest()
 
     def write_manifest(self):
@@ -67,6 +67,17 @@ class ArtifactVerificationTests(unittest.TestCase):
                 target = self.root / name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text("test secret", encoding="utf-8")
+                self.write_manifest()
+                self.assert_rejected()
+                target.unlink()
+                self.write_manifest()
+
+    def test_unexpected_files_rejected_even_with_recomputed_manifest(self):
+        for name in ("README.md", "SUPABASE.md", "app.js.map", "docs/extra.md", "scripts/debug.py"):
+            with self.subTest(name=name):
+                target = self.root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("unapproved fixture", encoding="utf-8")
                 self.write_manifest()
                 self.assert_rejected()
                 target.unlink()
