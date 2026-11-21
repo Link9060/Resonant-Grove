@@ -71,7 +71,11 @@ def smoke(directory: Path, expected_sha: str) -> None:
                     raise AssertionError(f"{path}: expected content missing or wrong SHA")
         # Private repository paths must not be served by the review artifact.
         # This catches accidental broad-copy packaging before an artifact is uploaded.
-        for private_path in ("/.github/workflows/deploy.yml", "/tests/grove-preview-workflow.test.mjs", "/.git/config"):
+        for private_path in (
+            "/.github/", "/.github/workflows/", "/.github/workflows/deploy.yml",
+            "/tests/", "/tests/grove-preview-workflow.test.mjs",
+            "/.git/", "/.git/config", "/README.md", "/SUPABASE.md",
+        ):
             for method in ("GET", "HEAD"):
                 request = urllib.request.Request(base + private_path, method=method)
                 try:
