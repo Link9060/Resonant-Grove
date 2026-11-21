@@ -46,3 +46,11 @@ test('preview and validation both execute all Phase 1 suites, excluding Phase 2'
     assert.doesNotMatch(source, /node --test[^\n]*phase2-/);
   }
 });
+
+test('validation checks the immutable PR head, not only a synthetic merge commit', () => {
+  const validation = readFileSync('.github/workflows/validate-autonomous.yml', 'utf8');
+  assert.match(validation, /GROVE_VALIDATED_SHA:\s*\$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+  assert.match(validation, /ref:\s*\$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+  assert.match(validation, /test "\$\(git rev-parse HEAD\)" = "\$GROVE_VALIDATED_SHA"/);
+  assert.match(validation, /persist-credentials:\s*false/);
+});
