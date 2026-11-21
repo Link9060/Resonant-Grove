@@ -11,6 +11,10 @@ on:
       - 'grove-agent-desk.css'
       - 'styles.css'
       - 'tests/**/*.test.mjs'
+      - 'tests/test_*.py'
+      - 'scripts/serve_review.py'
+      - 'scripts/verify_review_artifact.py'
+      - 'scripts/smoke_review_http.py'
       - 'autonomous-grove.js'
       - 'grove-build-feed.js'
       - 'scripts/grove-build-catalog.mjs'
@@ -87,5 +91,7 @@ jobs:
           # Execute every Phase 1 Grove regression suite, including newly added files.
           # Keep Phase 2 tests isolated to their own development workflow.
           node --test tests/grove-*.test.mjs tests/autonomous-grove.test.mjs
+          # Exercise Python artifact, loopback-server and integrity regressions too.
+          python3 -m unittest discover -s tests -p 'test_*.py'
           test -s index.html
           test -s autonomous-grove.css
