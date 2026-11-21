@@ -72,12 +72,18 @@ def smoke(directory: Path, expected_sha: str) -> None:
         # Private repository paths must not be served by the review artifact.
         # This catches accidental broad-copy packaging before an artifact is uploaded.
         for private_path in ("/.github/workflows/deploy.yml", "/tests/grove-preview-workflow.test.mjs", "/.git/config"):
-            try:
-                with urllib.request.urlopen(base + private_path, timeout=5) as response:
-                    raise AssertionError(f"Private repository path served: {private_path} (HTTP {response.status})")
-            except urllib.error.HTTPError as error:
-                if error.code not in (403, 404):
-                    raise AssertionError(f"Unexpected response for private path {private_path}: HTTP {error.code}") from error
+            for method in ("GET", "HEAD"):
+                request = urllib.request.Request(base + private_path, method=method)
+                try:
+                    with urllib.request.urlopen(request, timeout=5) as response:
+                        raise AssertionError(
+                            f"Private repository path served: {method} {private_path} (HTTP {response.status})"
+                        )
+                except urllib.error.HTTPError as error:
+                    if error.code not in (403, 404):
+                        raise AssertionError(
+                            f"Unexpected response for {method} {private_path}: HTTP {error.code}"
+                        ) from error
         # A 200 response for index.html does not prove its linked assets exist.
         with urllib.request.urlopen(base + "/index.html", timeout=5) as response:
             parser = LocalAssets()
