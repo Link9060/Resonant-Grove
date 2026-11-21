@@ -10,7 +10,7 @@ on:
       - 'grove-agent-desk.js'
       - 'grove-agent-desk.css'
       - 'styles.css'
-      - 'tests/grove-cloud-account-race.test.mjs'
+      - 'tests/**/*.test.mjs'
       - 'autonomous-grove.js'
       - 'grove-build-feed.js'
       - 'scripts/grove-build-catalog.mjs'
