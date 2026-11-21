@@ -32,6 +32,10 @@ test('preview copies an explicit public asset allowlist, never the repository tr
   assert.match(workflow, /retention-days:\s*14/);
 });
 
+test('validation workflow edits retrigger preview packaging', () => {
+  assert.match(workflow, /- '\\.github\/workflows\/validate-autonomous\\.yml'/);
+});
+
 test('preview and validation both execute all Phase 1 suites, excluding Phase 2', () => {
   const validation = readFileSync('.github/workflows/validate-autonomous.yml', 'utf8');
   const expected = 'node --test tests/grove-*.test.mjs tests/autonomous-grove.test.mjs';
