@@ -15,6 +15,9 @@
   const panel = document.createElement('section');
   panel.className = 'grove-cloud-panel';
   panel.hidden = true;
+  panel.id = 'groveCloudPanel';
+  button.setAttribute('aria-controls', panel.id);
+  button.setAttribute('aria-expanded', 'false');
   panel.setAttribute('aria-label', 'Grove cloud account');
   panel.innerHTML = `
     <div class="grove-cloud-heading"><strong>Grove Cloud</strong><button type="button" id="groveCloudClose" aria-label="Close cloud account">×</button></div>
@@ -151,8 +154,20 @@
       message('Authentication failed: ' + (failure?.message || 'Network error') + '. Your local data remains saved.');
     }
   }
-  button.addEventListener('click', () => { panel.hidden = !panel.hidden; });
-  el('groveCloudClose').addEventListener('click', () => { panel.hidden = true; });
+  function setPanelOpen(open, restoreFocus = false) {
+    panel.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+    if (open) el('groveCloudClose').focus();
+    else if (restoreFocus) button.focus();
+  }
+  button.addEventListener('click', () => { setPanelOpen(panel.hidden); });
+  el('groveCloudClose').addEventListener('click', () => { setPanelOpen(false, true); });
+  panel.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !panel.hidden) {
+      event.preventDefault();
+      setPanelOpen(false, true);
+    }
+  });
   el('groveCloudForm').addEventListener('submit', event => {
     event.preventDefault(); void authenticate(false);
   });
