@@ -97,3 +97,33 @@ test('P2-UI-022 newer canceled restore still supersedes an older pending read',a
  assert.equal(h.message.textContent,status);
  assert.equal(h.renders,0);
 });
+
+test('P2-UI-022 newer invalid backup error survives older late success',async()=>{
+ const h=harness(),a=deferred(),b=deferred();
+ const pendingA=h.select(backup('A.json',a));
+ const pendingB=h.select(backup('invalid-B.json',b));
+ b.resolve('{not valid JSON');await pendingB;
+ const status=h.message.textContent;
+ assert.match(status,/JSON restore failed:/);
+ assert.equal(h.confirms,0);
+ assert.equal(h.context.worksheet.items[0].id,'initial');
+ a.resolve('{"id":"A"}');await pendingA;
+ assert.equal(h.message.textContent,status);
+ assert.equal(h.confirms,0);
+ assert.equal(h.renders,0);
+ assert.equal(h.context.worksheet.items[0].id,'initial');
+});
+
+test('P2-UI-021 stale rejected read does not clear newer pending selection',async()=>{
+ const h=harness(),a=deferred(),b=deferred();
+ const pendingA=h.select(backup('A.json',a));
+ const pendingB=h.select(backup('B.json',b));
+ a.reject(Error('stale file read failed'));await pendingA;
+ assert.equal(h.input.value,'B.json');
+ assert.equal(h.message.textContent,'');
+ assert.equal(h.confirms,0);
+ b.resolve('{"id":"B"}');await pendingB;
+ assert.equal(h.context.worksheet.id,'B');
+ assert.equal(h.confirms,1);
+ assert.equal(h.input.value,'');
+});
