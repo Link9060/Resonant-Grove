@@ -74,5 +74,5 @@ test('validation triggers for all top-level assets, scripts and Phase 1 tests', 
   for (const pattern of ["'*.html'", "'*.js'", "'*.css'", "'favicon.svg'", "'tests/**'", "'scripts/**'"]) {
     assert.ok(validation.includes(`- ${pattern}`), `missing validation trigger: ${pattern}`);
   }
-  assert.match(validation, /- '\\.github\\/workflows\\/validate-autonomous\\.yml'/);
+  assert.ok(validation.includes("- '.github/workflows/validate-autonomous.yml'"));
 });
