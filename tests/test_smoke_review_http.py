@@ -257,6 +257,8 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             ".github/workflows/deploy.yml",
             "tests/grove-preview-workflow.test.mjs",
             ".git/config",
+            "README.md",
+            "SUPABASE.md",
         ):
             with self.subTest(path=relative):
                 target = self.root / relative
