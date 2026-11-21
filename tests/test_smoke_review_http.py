@@ -251,6 +251,21 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         (self.root / "background.png").write_bytes(b"fixture image")
         module.smoke(self.root, SHA)
 
+    def test_private_repository_paths_are_rejected_for_get_and_head(self):
+        # A broad-copy packaging regression must fail before artifact upload.
+        for relative in (
+            ".github/workflows/deploy.yml",
+            "tests/grove-preview-workflow.test.mjs",
+            ".git/config",
+        ):
+            with self.subTest(path=relative):
+                target = self.root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("private fixture", encoding="utf-8")
+                with self.assertRaisesRegex(AssertionError, "Private repository path served"):
+                    module.smoke(self.root, SHA)
+                target.unlink()
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
