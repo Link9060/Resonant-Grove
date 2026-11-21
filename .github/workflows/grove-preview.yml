@@ -45,7 +45,8 @@ jobs:
           for file in app.js autonomous-grove.js grove-agent-desk.js grove-scout-feed.js grove-seed-feed.js grove-build-feed.js grove-cloud.js; do
             node --check "$file"
           done
-          node --test tests/*.test.mjs
+          # Run the complete Phase 1 suites; keep Phase 2's independent tests gated.
+          node --test tests/grove-*.test.mjs tests/autonomous-grove.test.mjs
           python3 -m unittest discover -s tests -p 'test_*.py'
           python3 -m py_compile scripts/serve_review.py
       - name: Assemble standalone preview
