@@ -226,6 +226,26 @@ class HostHeaderTests(unittest.TestCase):
                     finally:
                         conn.close()
 
+    def test_private_paths_rejected_for_get_and_head(self):
+        root = Path(self.tmp.name)
+        (root / ".github" / "workflows").mkdir(parents=True)
+        (root / ".github" / "workflows" / "deploy.yml").write_text("private workflow", encoding="utf-8")
+        (root / "README.md").write_text("private documentation", encoding="utf-8")
+        for method in ("GET", "HEAD"):
+            for path in ("/.github/workflows/deploy.yml", "/%2egithub/workflows/deploy.yml",
+                         "/README.md", "/readme.md?download=1"):
+                with self.subTest(method=method, path=path):
+                    conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                    try:
+                        conn.request(method, path, headers={"Host": "localhost"})
+                        response = conn.getresponse()
+                        body = response.read()
+                        self.assertEqual(response.status, 403)
+                        self.assertNotIn(b"private", body)
+                        self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                    finally:
+                        conn.close()
+
     def test_external_host_rejected_without_leaking_contents(self):
         for method in ("GET", "HEAD"):
             for host in ("attacker.example", "attacker.example:8765", "127.0.0.1.attacker.example"):
