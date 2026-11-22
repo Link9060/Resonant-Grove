@@ -107,6 +107,24 @@ class HostHeaderTests(unittest.TestCase):
                     self.assertIn(b" 403 ", response.split(b"\r\n", 1)[0])
                     self.assertNotIn(b"review test", response)
 
+    def test_unexpected_public_looking_files_are_rejected(self):
+        root = Path(self.tmp.name)
+        (root / "unexpected.txt").write_text("private after verification", encoding="utf-8")
+        (root / "unexpected.js").write_text("unexpected script", encoding="utf-8")
+        for method in ("GET", "HEAD"):
+            for path in ("/unexpected.txt", "/unexpected.js", "/unexpected%2Etxt"):
+                with self.subTest(method=method, path=path):
+                    conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                    try:
+                        conn.request(method, path, headers={"Host": "localhost"})
+                        response = conn.getresponse()
+                        body = response.read()
+                        self.assertEqual(response.status, 403)
+                        self.assertNotIn(b"private after verification", body)
+                        self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                    finally:
+                        conn.close()
+
     def test_directory_listing_is_disabled(self):
         # A directory without index.html must not disclose artifact filenames.
         (Path(self.tmp.name) / "private").mkdir()
