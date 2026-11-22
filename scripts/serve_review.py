@@ -40,6 +40,9 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_HEAD(self):
+        if self._private_path():
+            self.send_error(403, "Private repository path rejected")
+            return
         if not self._allowed_host():
             self.send_error(403, "Non-loopback Host rejected")
             return
