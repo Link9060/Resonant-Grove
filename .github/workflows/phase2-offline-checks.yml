@@ -47,3 +47,18 @@ jobs:
             exit 1
           fi
           echo "P2-QA-099: four fixtures created; overwrite correctly refused"
+          # P2-QA-118: independently smoke-test symlink refusal, not just unit assertions.
+          outside_dir="$(mktemp -d)"
+          trap 'rm -rf "$fixture_dir" "$outside_dir"' EXIT
+          ln -s "$outside_dir" "$fixture_dir/linked"
+          if node ventures/offline-inventory/tests/restore-fixtures.mjs "$fixture_dir/linked/nested"; then
+            echo "ERROR: fixture generator accepted symlinked parent"
+            exit 1
+          fi
+          for name in restore-a.json restore-b.json invalid-total.json oversized.json; do
+            if test -e "$outside_dir/nested/$name"; then
+              echo "ERROR: fixture generator wrote outside selected directory"
+              exit 1
+            fi
+          done
+          echo "P2-QA-118: symlinked output parent rejected without external writes"
