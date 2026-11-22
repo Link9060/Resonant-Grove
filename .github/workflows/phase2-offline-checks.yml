@@ -30,6 +30,7 @@ jobs:
           node --check phase2/evaluate.mjs
           node --check phase2/spec.mjs
           node --check ventures/offline-inventory/src/inventory.mjs
+          node --check ventures/offline-inventory/tests/restore-fixtures.mjs
       - name: Execute isolated offline Phase 2 tests
         run: node --test tests/phase2-*.test.mjs ventures/offline-inventory/tests/*.test.mjs
       - name: Smoke-test fictional restore fixture CLI
