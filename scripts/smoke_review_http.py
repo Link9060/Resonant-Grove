@@ -6,6 +6,7 @@ Uses only Python's standard library. Does not contact external hosts or deploy.
 import argparse
 import functools
 import http.server
+from serve_review import ReviewHandler
 from html.parser import HTMLParser
 from pathlib import Path
 import re
@@ -48,7 +49,7 @@ def smoke(directory: Path, expected_sha: str) -> None:
     directory = directory.resolve(strict=True)
     if not directory.is_dir():
         raise ValueError("Artifact directory does not exist")
-    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(directory))
+    handler = functools.partial(ReviewHandler, directory=str(directory))
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -69,6 +70,16 @@ def smoke(directory: Path, expected_sha: str) -> None:
                     raise AssertionError(f"{path}: empty response")
                 if expected and expected.lower().encode() not in data.lower():
                     raise AssertionError(f"{path}: expected content missing or wrong SHA")
+        # Test the actual review server handler, not a different stock HTTP handler.
+        # Reject DNS rebinding attempts even on the loopback listener.
+        for host in ("attacker.example", "127.0.0.2"):
+            request = urllib.request.Request(base + "/index.html", headers={"Host": host})
+            try:
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    raise AssertionError(f"Untrusted Host accepted: {host} (HTTP {response.status})")
+            except urllib.error.HTTPError as error:
+                if error.code != 403:
+                    raise AssertionError(f"Unexpected Host rejection status: {host} HTTP {error.code}") from error
         # Private repository paths must not be served by the review artifact.
         # This catches accidental broad-copy packaging before an artifact is uploaded.
         for private_path in (
