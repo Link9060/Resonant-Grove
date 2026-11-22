@@ -62,3 +62,16 @@ jobs:
             fi
           done
           echo "P2-QA-118: symlinked output parent rejected without external writes"
+          # P2-QA-120: reject a symlink supplied as the output directory itself.
+          ln -s "$outside_dir" "$fixture_dir/direct-link"
+          if node ventures/offline-inventory/tests/restore-fixtures.mjs "$fixture_dir/direct-link"; then
+            echo "ERROR: fixture generator accepted direct symlink destination"
+            exit 1
+          fi
+          for name in restore-a.json restore-b.json invalid-total.json oversized.json; do
+            if test -e "$outside_dir/$name"; then
+              echo "ERROR: fixture generator wrote through direct symlink"
+              exit 1
+            fi
+          done
+          echo "P2-QA-120: direct symlink output rejected without external writes"
