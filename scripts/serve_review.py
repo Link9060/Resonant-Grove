@@ -57,6 +57,11 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
         if not target.is_relative_to(root):
             self.send_error(403, "Path outside review artifact rejected")
             return None
+        # A post-verification symlink must not alias a hidden or internal file.
+        relative = target.relative_to(root)
+        if any(part.lower().startswith(".") or part.lower() in {"tests", "__pycache__"} for part in relative.parts) or (relative.parts and relative.parts[-1].lower() in {"readme.md", "supabase.md"}):
+            self.send_error(403, "Private resolved review path rejected")
+            return None
         # The base handler can serve an index symlink after this check.
         if target.is_dir():
             for index in ("index.html", "index.htm"):
