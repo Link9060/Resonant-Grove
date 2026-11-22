@@ -246,6 +246,29 @@ class HostHeaderTests(unittest.TestCase):
                     finally:
                         conn.close()
 
+    def test_symlink_alias_to_private_file_is_rejected(self):
+        # A file added after artifact verification must not bypass private-path rules.
+        root = Path(self.tmp.name)
+        (root / ".env").write_text("private fixture", encoding="utf-8")
+        (root / "README.md").write_text("private documentation", encoding="utf-8")
+        for private_name in (".env", "README.md"):
+            alias = root / ("alias-" + private_name.replace(".", "_") + ".txt")
+            try:
+                alias.symlink_to(root / private_name)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlink creation unavailable on this platform")
+            for method in ("GET", "HEAD"):
+                with self.subTest(method=method, private_name=private_name):
+                    conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                    try:
+                        conn.request(method, "/" + alias.name, headers={"Host": "localhost"})
+                        response = conn.getresponse()
+                        body = response.read()
+                        self.assertEqual(response.status, 403)
+                        self.assertNotIn(b"private", body)
+                    finally:
+                        conn.close()
+
     def test_external_host_rejected_without_leaking_contents(self):
         for method in ("GET", "HEAD"):
             for host in ("attacker.example", "attacker.example:8765", "127.0.0.1.attacker.example"):
