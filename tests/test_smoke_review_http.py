@@ -162,7 +162,10 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         )
         for name in ("frame.html", "captions.vtt", "diagram.svg", "document.pdf"):
             (self.root / name).write_bytes(b"test fixture")
-        module.smoke(self.root, SHA)
+        # Even present-on-disk assets must fail if they are outside the
+        # explicitly packaged public-file allowlist.
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
 
     def test_missing_css_background_asset_fails(self):
         (self.root / "styles.css").write_text(
