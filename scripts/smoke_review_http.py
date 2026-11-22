@@ -57,7 +57,6 @@ def smoke(directory: Path, expected_sha: str) -> None:
         base = f"http://127.0.0.1:{server.server_port}"
         for path, expected in (
             ("/review.html", f'<code id="revision">{expected_sha}</code>'),
-            ("/REVIEW.txt", f"GROVE_PREVIEW_SHA={expected_sha}"),
             ("/index.html", "<html"),
             ("/app.js", None),
             ("/styles.css", None),
@@ -70,6 +69,10 @@ def smoke(directory: Path, expected_sha: str) -> None:
                     raise AssertionError(f"{path}: empty response")
                 if expected and expected.lower().encode() not in data.lower():
                     raise AssertionError(f"{path}: expected content missing or wrong SHA")
+        # The SHA marker is private build metadata: inspect it on disk, not over HTTP.
+        marker = (directory / "REVIEW.txt").read_text(encoding="utf-8")
+        if f"GROVE_PREVIEW_SHA={expected_sha}" not in marker.splitlines():
+            raise AssertionError("Review marker missing or wrong SHA")
         # Test the actual review server handler, not a different stock HTTP handler.
         # Reject DNS rebinding attempts even on the loopback listener.
         for host in ("attacker.example", "127.0.0.2"):
@@ -87,6 +90,8 @@ def smoke(directory: Path, expected_sha: str) -> None:
             "/tests/", "/tests/grove-preview-workflow.test.mjs",
             "/.git/", "/.git/config", "/.env", "/.env.local", "/.ssh/id_rsa",
             "/.nojekyll", "/%2eenv", "/README.md", "/SUPABASE.md",
+            "/REVIEW.txt", "/SHA256SUMS.txt", "/scripts/serve_review.py",
+            "/docs/PHASE1-ACCEPTANCE.md",
         ):
             for method in ("GET", "HEAD"):
                 request = urllib.request.Request(base + private_path, method=method)
