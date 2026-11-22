@@ -44,6 +44,29 @@ class HostHeaderTests(unittest.TestCase):
                 with self.subTest(method=method, host=host):
                     self.assertEqual(self.request(method, host)[0], 200)
 
+    def test_successful_responses_have_private_review_headers(self):
+        # Successful content must not be cached, framed, sniffed, or granted
+        # device permissions. Check both body-bearing GET and header-only HEAD.
+        for method in ("GET", "HEAD"):
+            with self.subTest(method=method):
+                conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                try:
+                    conn.request(method, "/index.html", headers={"Host": "localhost"})
+                    response = conn.getresponse()
+                    body = response.read()
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(body, b"review test" if method == "GET" else b"")
+                    self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                    self.assertEqual(response.getheader("X-Content-Type-Options"), "nosniff")
+                    self.assertEqual(response.getheader("X-Frame-Options"), "DENY")
+                    self.assertEqual(response.getheader("Referrer-Policy"), "no-referrer")
+                    self.assertEqual(
+                        response.getheader("Permissions-Policy"),
+                        "camera=(), microphone=(), geolocation=()",
+                    )
+                finally:
+                    conn.close()
+
     def test_wrong_port_and_noncanonical_host_rejected(self):
         for method in ("GET", "HEAD"):
             for host in (
