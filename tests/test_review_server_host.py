@@ -201,6 +201,31 @@ class HostHeaderTests(unittest.TestCase):
                 finally:
                     conn.close()
 
+    def test_directory_index_symlink_to_private_in_root_is_rejected(self):
+        # A directory URL must not follow index.html/index.htm into private files.
+        root = Path(self.tmp.name)
+        (root / ".env").write_text("private index fixture", encoding="utf-8")
+        (root / "README.md").write_text("private documentation fixture", encoding="utf-8")
+        for index_name, private_name in (("index.html", ".env"), ("index.htm", "README.md")):
+            directory = root / ("alias-" + index_name.replace(".", "-"))
+            directory.mkdir()
+            try:
+                (directory / index_name).symlink_to(root / private_name)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlink creation unavailable on this platform")
+            for method in ("GET", "HEAD"):
+                with self.subTest(index=index_name, method=method):
+                    conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                    try:
+                        conn.request(method, "/" + directory.name + "/", headers={"Host": "localhost"})
+                        response = conn.getresponse()
+                        body = response.read()
+                        self.assertEqual(response.status, 403)
+                        self.assertNotIn(b"private", body)
+                        self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                    finally:
+                        conn.close()
+
     def test_encoded_symlink_escape_is_rejected(self):
         # Percent-encoded URLs must not bypass the artifact-root restriction.
         outside = tempfile.TemporaryDirectory()
