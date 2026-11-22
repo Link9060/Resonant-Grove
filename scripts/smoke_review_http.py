@@ -95,8 +95,9 @@ def smoke(directory: Path, expected_sha: str) -> None:
                         raise AssertionError(f"{path}: HEAD missing security header {header}")
         # The SHA marker is private build metadata: inspect it on disk, not over HTTP.
         marker = (directory / "REVIEW.txt").read_text(encoding="utf-8")
-        if f"GROVE_PREVIEW_SHA={expected_sha}" not in marker.splitlines():
-            raise AssertionError("Review marker missing or wrong SHA")
+        sha_lines = [line for line in marker.splitlines() if line.startswith("GROVE_PREVIEW_SHA=")]
+        if sha_lines != [f"GROVE_PREVIEW_SHA={expected_sha}"]:
+            raise AssertionError("Review marker missing, duplicated, or wrong SHA")
         # Test the actual review server handler, not a different stock HTTP handler.
         # Reject DNS rebinding attempts even on the loopback listener.
         for host in ("attacker.example", "127.0.0.2"):
