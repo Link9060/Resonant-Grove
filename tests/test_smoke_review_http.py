@@ -41,7 +41,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         (self.root / "index.html").write_text(
             "<html><body><script src='empty.js'></script></body></html>", encoding="utf-8")
         (self.root / "empty.js").write_text("", encoding="utf-8")
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(urllib.error.HTTPError):
             module.smoke(self.root, SHA)
 
     def test_linked_script_wrong_mime_fails(self):
@@ -77,7 +77,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError):
             module.smoke(self.root, SHA)
 
-    def test_existing_linked_image_passes(self):
+    def test_unallowlisted_linked_image_fails(self):
         (self.root / "index.html").write_text(
             "<html><body><img src='logo.svg'><script src='app.js'></script></body></html>",
             encoding="utf-8",
@@ -85,7 +85,8 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         (self.root / "logo.svg").write_text(
             "<svg xmlns='http://www.w3.org/2000/svg'></svg>", encoding="utf-8"
         )
-        module.smoke(self.root, SHA)
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
 
     def test_missing_srcset_candidate_fails(self):
         (self.root / "index.html").write_text(
@@ -95,7 +96,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError):
             module.smoke(self.root, SHA)
 
-    def test_existing_srcset_candidates_pass(self):
+    def test_unallowlisted_srcset_candidates_fail(self):
         (self.root / "index.html").write_text(
             "<html><body><picture><source srcset='small.svg 1x, large.svg 2x'>"
             "<img src='small.svg'></picture><script src='app.js'></script></body></html>",
@@ -105,7 +106,8 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             (self.root / name).write_text(
                 "<svg xmlns='http://www.w3.org/2000/svg'></svg>", encoding="utf-8"
             )
-        module.smoke(self.root, SHA)
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
 
     def test_missing_video_poster_fails(self):
         (self.root / "index.html").write_text(
@@ -123,7 +125,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError):
             module.smoke(self.root, SHA)
 
-    def test_present_video_and_audio_assets_pass(self):
+    def test_unallowlisted_video_and_audio_assets_fail(self):
         (self.root / "index.html").write_text(
             "<html><body><video src='clip.webm' poster='poster.svg'></video>"
             "<audio src='sound.wav'></audio><script src='app.js'></script></body></html>",
@@ -131,7 +133,8 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         )
         for name in ("clip.webm", "poster.svg", "sound.wav"):
             (self.root / name).write_bytes(b"test fixture")
-        module.smoke(self.root, SHA)
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
 
     def test_missing_embedded_assets_fail(self):
         cases = (
@@ -149,7 +152,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
                 with self.assertRaises(urllib.error.HTTPError):
                     module.smoke(self.root, SHA)
 
-    def test_existing_embedded_assets_pass(self):
+    def test_unallowlisted_embedded_assets_fail(self):
         (self.root / "index.html").write_text(
             "<html><body><iframe src='frame.html'></iframe>"
             "<video><track src='captions.vtt'></video>"
@@ -168,14 +171,15 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError):
             module.smoke(self.root, SHA)
 
-    def test_existing_css_background_asset_passes(self):
+    def test_unallowlisted_css_background_asset_fails(self):
         (self.root / "styles.css").write_text(
             "body { background-image: url(\"background.svg?v=1\"); }", encoding="utf-8"
         )
         (self.root / "background.svg").write_text(
             "<svg xmlns='http://www.w3.org/2000/svg'></svg>", encoding="utf-8"
         )
-        module.smoke(self.root, SHA)
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
 
     def test_missing_unquoted_css_font_fails(self):
         (self.root / "styles.css").write_text(
@@ -185,13 +189,14 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError):
             module.smoke(self.root, SHA)
 
-    def test_existing_unquoted_css_font_passes(self):
+    def test_unallowlisted_css_font_fails(self):
         (self.root / "styles.css").write_text(
             "@font-face { src: url(font.woff2?v=2) format('woff2'); }",
             encoding="utf-8",
         )
         (self.root / "font.woff2").write_bytes(b"fixture font")
-        module.smoke(self.root, SHA)
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
 
     def test_css_font_html_fallback_fails(self):
         (self.root / "styles.css").write_text(
@@ -244,12 +249,13 @@ class ReviewHttpSmokeTests(unittest.TestCase):
                     with self.assertRaisesRegex(AssertionError, "Wrong content type for CSS asset"):
                         module.smoke(self.root, SHA)
 
-    def test_css_raster_image_valid_mime_passes(self):
+    def test_unallowlisted_css_raster_image_fails(self):
         (self.root / "styles.css").write_text(
             "body { background: url(background.png?v=1); }", encoding="utf-8"
         )
         (self.root / "background.png").write_bytes(b"fixture image")
-        module.smoke(self.root, SHA)
+        with self.assertRaises(urllib.error.HTTPError):
+            module.smoke(self.root, SHA)
 
     def test_private_repository_paths_are_rejected_for_get_and_head(self):
         # A broad-copy packaging regression must fail before artifact upload.
@@ -264,8 +270,9 @@ class ReviewHttpSmokeTests(unittest.TestCase):
                 target = self.root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text("private fixture", encoding="utf-8")
-                with self.assertRaisesRegex(AssertionError, "Private repository path served"):
-                    module.smoke(self.root, SHA)
+                # The smoke runner now checks the private route is denied; presence
+                # on disk alone is a packaging-integrity concern, not HTTP exposure.
+                module.smoke(self.root, SHA)
                 target.unlink()
 
     def test_review_handler_denies_private_files_directly(self):
