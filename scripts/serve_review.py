@@ -51,11 +51,23 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
         super().do_HEAD()
 
     def send_head(self):
-        """Never serve a symlink that resolves outside the verified artifact root."""
+        """Serve only public files from the verified review packaging contract."""
         root = Path(self.directory).resolve()
         target = Path(self.translate_path(self.path)).resolve()
+        public_files = {
+            "index.html", "review.html", "styles.css", "app.js", "favicon.svg",
+            "autonomous-grove.js", "autonomous-grove.css",
+            "grove-agent-desk.js", "grove-agent-desk.css",
+            "grove-scout-feed.js", "grove-seed-feed.js",
+            "grove-build-feed.js", "grove-cloud.js", "grove-cloud.css",
+        }
         if not target.is_relative_to(root):
             self.send_error(403, "Path outside review artifact rejected")
+            return None
+        # Do not serve new files added after verification, even with benign names.
+        # Directory URLs remain supported only for an approved index file.
+        if target.is_file() and target.relative_to(root).as_posix() not in public_files:
+            self.send_error(403, "File not in public review allowlist")
             return None
         # A post-verification symlink must not alias a hidden or internal file.
         relative = target.relative_to(root)
@@ -70,6 +82,9 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
                     resolved_index = candidate.resolve()
                     if not resolved_index.is_relative_to(root):
                         self.send_error(403, "Directory index outside review artifact rejected")
+                        return None
+                    if resolved_index.relative_to(root).as_posix() not in public_files:
+                        self.send_error(403, "Directory index not in public review allowlist")
                         return None
                     index_parts = resolved_index.relative_to(root).parts
                     if any(part.lower().startswith(".") or part.lower() in {"tests", "__pycache__", "scripts", "docs"} for part in index_parts) or (index_parts and index_parts[-1].lower() in {"readme.md", "supabase.md", "review.txt", "sha256sums.txt"}):
