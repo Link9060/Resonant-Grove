@@ -5,10 +5,15 @@ Uses only Python's standard library. Does not contact external hosts or deploy.
 """
 import argparse
 import functools
-import importlib.util
 import http.server
+from html.parser import HTMLParser
+import importlib.util
 from pathlib import Path
-import sys
+import re
+import threading
+import urllib.error
+import urllib.request
+from urllib.parse import unquote, urlsplit
 
 # Load the sibling server by file path so both direct execution and unittest's
 # importlib-based loading work without modifying sys.path.
@@ -17,12 +22,6 @@ _SERVER_SPEC = importlib.util.spec_from_file_location("grove_review_server", _SE
 _SERVER_MODULE = importlib.util.module_from_spec(_SERVER_SPEC)
 _SERVER_SPEC.loader.exec_module(_SERVER_MODULE)
 ReviewHandler = _SERVER_MODULE.ReviewHandler
-from html.parser import HTMLParser
-import re
-import threading
-import urllib.request
-import urllib.error
-from urllib.parse import urlsplit, unquote
 
 class LocalAssets(HTMLParser):
     def __init__(self):
