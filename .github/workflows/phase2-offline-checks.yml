@@ -47,7 +47,6 @@ jobs:
             exit 1
           fi
           echo "P2-QA-099: four fixtures created; overwrite correctly refused"
-          # P2-QA-118: independently smoke-test symlink refusal, not just unit assertions.
           outside_dir="$(mktemp -d)"
           trap 'rm -rf "$fixture_dir" "$outside_dir"' EXIT
           ln -s "$outside_dir" "$fixture_dir/linked"
@@ -62,7 +61,6 @@ jobs:
             fi
           done
           echo "P2-QA-118: symlinked output parent rejected without external writes"
-          # P2-QA-120: reject a symlink supplied as the output directory itself.
           ln -s "$outside_dir" "$fixture_dir/direct-link"
           if node ventures/offline-inventory/tests/restore-fixtures.mjs "$fixture_dir/direct-link"; then
             echo "ERROR: fixture generator accepted direct symlink destination"
@@ -75,3 +73,12 @@ jobs:
             fi
           done
           echo "P2-QA-120: direct symlink output rejected without external writes"
+          # P2-QA-124: dangling symlink must not be treated as an available output directory.
+          ln -s "$fixture_dir/missing-target" "$fixture_dir/dangling-link"
+          if node ventures/offline-inventory/tests/restore-fixtures.mjs "$fixture_dir/dangling-link"; then
+            echo "ERROR: fixture generator accepted dangling symlink destination"
+            exit 1
+          fi
+          test ! -e "$fixture_dir/missing-target"
+          test -L "$fixture_dir/dangling-link"
+          echo "P2-QA-124: dangling symlink output rejected without creating target"
