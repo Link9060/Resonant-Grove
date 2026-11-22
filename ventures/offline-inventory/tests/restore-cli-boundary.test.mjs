@@ -79,3 +79,22 @@ test('P2-QA-116: symlinked destination and parent directories refuse writes', ()
     rmSync(root, {recursive: true, force: true});
   }
 });
+
+test('P2-QA-122: dangling symlinked output directory refuses writes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'grove-p2-cli-'));
+  try {
+    const missing = join(root, 'not-created');
+    const alias = join(root, 'dangling-alias');
+    symlinkSync(missing, alias, 'dir');
+    const result = run([alias], root);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Symlinked fixture output directory is not allowed/);
+    assert.equal(lstatSync(alias).isSymbolicLink(), true);
+    assert.equal(existsSync(missing), false);
+    for (const name of Object.keys(makeRestoreFixtures())) {
+      assert.equal(existsSync(join(root, name)), false);
+    }
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+});
