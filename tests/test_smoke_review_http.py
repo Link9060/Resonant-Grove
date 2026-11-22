@@ -327,6 +327,20 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, SHA)
 
+    def test_duplicate_review_marker_fails(self):
+        (self.root / "REVIEW.txt").write_text(
+            f"GROVE_PREVIEW_SHA={SHA}\nGROVE_PREVIEW_SHA={SHA}\n", encoding="utf-8"
+        )
+        with self.assertRaisesRegex(AssertionError, "duplicated"):
+            module.smoke(self.root, SHA)
+
+    def test_conflicting_review_marker_fails(self):
+        (self.root / "REVIEW.txt").write_text(
+            f"GROVE_PREVIEW_SHA={SHA}\nGROVE_PREVIEW_SHA={'b' * 40}\n", encoding="utf-8"
+        )
+        with self.assertRaisesRegex(AssertionError, "duplicated"):
+            module.smoke(self.root, SHA)
+
     def test_tampered_review_marker_fails(self):
         (self.root / "REVIEW.txt").write_text("GROVE_PREVIEW_SHA=" + "b" * 40, encoding="utf-8")
         with self.assertRaises(AssertionError):
