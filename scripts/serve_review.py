@@ -66,9 +66,15 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
         if target.is_dir():
             for index in ("index.html", "index.htm"):
                 candidate = target / index
-                if candidate.is_file() and not candidate.resolve().is_relative_to(root):
-                    self.send_error(403, "Directory index outside review artifact rejected")
-                    return None
+                if candidate.is_file():
+                    resolved_index = candidate.resolve()
+                    if not resolved_index.is_relative_to(root):
+                        self.send_error(403, "Directory index outside review artifact rejected")
+                        return None
+                    index_parts = resolved_index.relative_to(root).parts
+                    if any(part.lower().startswith(".") or part.lower() in {"tests", "__pycache__"} for part in index_parts) or (index_parts and index_parts[-1].lower() in {"readme.md", "supabase.md"}):
+                        self.send_error(403, "Private directory index target rejected")
+                        return None
         return super().send_head()
 
     def list_directory(self, path):
