@@ -77,6 +77,22 @@ def smoke(directory: Path, expected_sha: str) -> None:
                     raise AssertionError(f"{path}: empty response")
                 if expected and expected.lower().encode() not in data.lower():
                     raise AssertionError(f"{path}: expected content missing or wrong SHA")
+                if response.headers.get("Cache-Control") != "no-store, max-age=0":
+                    raise AssertionError(f"{path}: missing private no-store cache policy")
+            # HEAD must expose the same security policy without leaking a body.
+            head_request = urllib.request.Request(base + path, method="HEAD")
+            with urllib.request.urlopen(head_request, timeout=5) as response:
+                if response.status != 200 or response.read():
+                    raise AssertionError(f"{path}: HEAD failed or returned a response body")
+                for header, required in (
+                    ("Cache-Control", "no-store, max-age=0"),
+                    ("X-Content-Type-Options", "nosniff"),
+                    ("X-Frame-Options", "DENY"),
+                    ("Referrer-Policy", "no-referrer"),
+                    ("Permissions-Policy", "camera=(), microphone=(), geolocation=()"),
+                ):
+                    if response.headers.get(header) != required:
+                        raise AssertionError(f"{path}: HEAD missing security header {header}")
         # The SHA marker is private build metadata: inspect it on disk, not over HTTP.
         marker = (directory / "REVIEW.txt").read_text(encoding="utf-8")
         if f"GROVE_PREVIEW_SHA={expected_sha}" not in marker.splitlines():
