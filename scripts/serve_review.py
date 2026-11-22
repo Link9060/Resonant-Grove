@@ -23,7 +23,17 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
             f"localhost:{self.server.server_port}",
         }
 
+    def _private_path(self):
+        """Block repository internals even if an artifact is later modified."""
+        from urllib.parse import unquote, urlsplit
+        path = unquote(urlsplit(self.path).path).replace("\\", "/")
+        parts = [part.lower() for part in path.split("/") if part]
+        return any(part in {".git", ".github", "tests", "__pycache__"} for part in parts) or (bool(parts) and parts[-1] in {"readme.md", "supabase.md"})
+
     def do_GET(self):
+        if self._private_path():
+            self.send_error(403, "Private repository path rejected")
+            return
         if not self._allowed_host():
             self.send_error(403, "Non-loopback Host rejected")
             return
