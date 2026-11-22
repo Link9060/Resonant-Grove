@@ -198,7 +198,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError):
             module.smoke(self.root, SHA)
 
-    def test_css_font_html_fallback_fails(self):
+    def test_unallowlisted_css_font_html_fallback_is_denied(self):
         (self.root / "styles.css").write_text(
             "@font-face { src: url(font.woff2); }", encoding="utf-8"
         )
@@ -211,10 +211,10 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             return original_guess_type(handler, path)
 
         with patch.object(module.http.server.SimpleHTTPRequestHandler, "guess_type", html_fallback):
-            with self.assertRaisesRegex(AssertionError, "Wrong content type for CSS asset"):
+            with self.assertRaises(urllib.error.HTTPError):
                 module.smoke(self.root, SHA)
 
-    def test_css_image_html_fallback_fails(self):
+    def test_unallowlisted_css_image_html_fallback_is_denied(self):
         (self.root / "styles.css").write_text(
             "body { background: url(background.svg); }", encoding="utf-8"
         )
@@ -227,10 +227,10 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             return original_guess_type(handler, path)
 
         with patch.object(module.http.server.SimpleHTTPRequestHandler, "guess_type", html_fallback):
-            with self.assertRaisesRegex(AssertionError, "Wrong content type for CSS asset"):
+            with self.assertRaises(urllib.error.HTTPError):
                 module.smoke(self.root, SHA)
 
-    def test_css_raster_image_html_fallback_fails(self):
+    def test_unallowlisted_css_raster_html_fallback_is_denied(self):
         original_guess_type = module.http.server.SimpleHTTPRequestHandler.guess_type
         for extension in ("png", "jpg", "jpeg", "webp", "gif"):
             with self.subTest(extension=extension):
@@ -246,7 +246,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
                     return original_guess_type(handler, path)
 
                 with patch.object(module.http.server.SimpleHTTPRequestHandler, "guess_type", html_fallback):
-                    with self.assertRaisesRegex(AssertionError, "Wrong content type for CSS asset"):
+                    with self.assertRaises(urllib.error.HTTPError):
                         module.smoke(self.root, SHA)
 
     def test_unallowlisted_css_raster_image_fails(self):
