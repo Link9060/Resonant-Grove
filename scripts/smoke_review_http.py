@@ -85,7 +85,8 @@ def smoke(directory: Path, expected_sha: str) -> None:
         for private_path in (
             "/.github/", "/.github/workflows/", "/.github/workflows/deploy.yml",
             "/tests/", "/tests/grove-preview-workflow.test.mjs",
-            "/.git/", "/.git/config", "/README.md", "/SUPABASE.md",
+            "/.git/", "/.git/config", "/.env", "/.env.local", "/.ssh/id_rsa",
+            "/.nojekyll", "/%2eenv", "/README.md", "/SUPABASE.md",
         ):
             for method in ("GET", "HEAD"):
                 request = urllib.request.Request(base + private_path, method=method)
