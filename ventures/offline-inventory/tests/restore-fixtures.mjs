@@ -32,6 +32,19 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     catch (error) { if (error.code === 'ENOENT') return false; throw error; }
   };
   if (targets.some(([target]) => occupied(target))) throw Error('Fixture output already exists; refusing partial overwrite');
+  // Reject symlinked destination directories (including existing parent components).
+  // This prevents a local fixture command from writing outside the path the reviewer chose.
+  const resolvedDirectory = resolve(directory);
+  const parts = resolvedDirectory.split('/').filter(Boolean);
+  let cursor = '/';
+  for (const part of parts) {
+    cursor = resolve(cursor, part);
+    try {
+      if (lstatSync(cursor).isSymbolicLink()) throw Error('Symlinked fixture output directory is not allowed');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
   mkdirSync(directory,{recursive:true});
   for (const [target,data] of targets) writeFileSync(target,data,{flag:'wx'});
   console.log('Wrote four fictional QA fixtures to '+resolve(directory));
