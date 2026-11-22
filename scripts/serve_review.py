@@ -28,7 +28,9 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
         from urllib.parse import unquote, urlsplit
         path = unquote(urlsplit(self.path).path).replace("\\", "/")
         parts = [part.lower() for part in path.split("/") if part]
-        return any(part in {".git", ".github", "tests", "__pycache__"} for part in parts) or (bool(parts) and parts[-1] in {"readme.md", "supabase.md"})
+        # Reject all hidden path components, including accidentally copied .env files.
+        # The packaged .nojekyll marker does not need to be served over HTTP.
+        return any(part.startswith(".") or part in {"tests", "__pycache__"} for part in parts) or (bool(parts) and parts[-1] in {"readme.md", "supabase.md"})
 
     def do_GET(self):
         if self._private_path():
