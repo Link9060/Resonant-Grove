@@ -274,7 +274,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         import http.server
         import threading
         import urllib.request
-        for name in (".git/config", ".github/workflows/deploy.yml",
+        for name in (".git/config", ".env", ".env.local", ".ssh/id_rsa", ".nojekyll", ".github/workflows/deploy.yml",
                      "tests/private.txt", "README.md", "SUPABASE.md"):
             target = self.root / name
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -285,7 +285,7 @@ class ReviewHttpSmokeTests(unittest.TestCase):
         thread.start()
         try:
             base = f"http://127.0.0.1:{server.server_port}"
-            for path in ("/.git/config", "/.github/workflows/deploy.yml",
+            for path in ("/.git/config", "/.env", "/.env.local", "/.ssh/id_rsa", "/.nojekyll", "/%2eenv", "/.github/workflows/deploy.yml",
                          "/tests/private.txt", "/README.md", "/SUPABASE.md",
                          "/%2egit/config"):
                 for method in ("GET", "HEAD"):
