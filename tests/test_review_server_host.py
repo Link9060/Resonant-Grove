@@ -317,6 +317,28 @@ class HostHeaderTests(unittest.TestCase):
                     finally:
                         conn.close()
 
+    def test_packaged_review_metadata_and_scripts_are_not_served(self):
+        root = Path(self.tmp.name)
+        for directory, name in (("scripts", "serve_review.py"), ("docs", "PHASE1-ACCEPTANCE.md")):
+            folder = root / directory
+            folder.mkdir()
+            (folder / name).write_text("internal review metadata", encoding="utf-8")
+        for name in ("REVIEW.txt", "SHA256SUMS.txt"):
+            (root / name).write_text("internal review metadata", encoding="utf-8")
+        for method in ("GET", "HEAD"):
+            for path in ("/scripts/serve_review.py", "/docs/PHASE1-ACCEPTANCE.md",
+                         "/REVIEW.txt", "/SHA256SUMS.txt", "/%73cripts/serve_review.py"):
+                with self.subTest(method=method, path=path):
+                    conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                    try:
+                        conn.request(method, path, headers={"Host": "localhost"})
+                        response = conn.getresponse()
+                        body = response.read()
+                        self.assertEqual(response.status, 403)
+                        self.assertNotIn(b"internal review metadata", body)
+                    finally:
+                        conn.close()
+
     def test_external_host_rejected_without_leaking_contents(self):
         for method in ("GET", "HEAD"):
             for host in ("attacker.example", "attacker.example:8765", "127.0.0.1.attacker.example"):
