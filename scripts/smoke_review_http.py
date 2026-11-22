@@ -5,10 +5,19 @@ Uses only Python's standard library. Does not contact external hosts or deploy.
 """
 import argparse
 import functools
+import importlib.util
 import http.server
-from serve_review import ReviewHandler
-from html.parser import HTMLParser
 from pathlib import Path
+import sys
+
+# Load the sibling server by file path so both direct execution and unittest's
+# importlib-based loading work without modifying sys.path.
+_SERVER_PATH = Path(__file__).resolve().with_name("serve_review.py")
+_SERVER_SPEC = importlib.util.spec_from_file_location("grove_review_server", _SERVER_PATH)
+_SERVER_MODULE = importlib.util.module_from_spec(_SERVER_SPEC)
+_SERVER_SPEC.loader.exec_module(_SERVER_MODULE)
+ReviewHandler = _SERVER_MODULE.ReviewHandler
+from html.parser import HTMLParser
 import re
 import threading
 import urllib.request
