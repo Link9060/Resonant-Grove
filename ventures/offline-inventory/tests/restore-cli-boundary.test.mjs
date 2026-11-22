@@ -1,7 +1,7 @@
 /** P2-QA-108: CLI requires an explicit destination and supports fresh nested local paths. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync, existsSync, readFileSync, rmSync, symlinkSync, lstatSync} from 'node:fs';
+import {mkdtempSync, mkdirSync, existsSync, readFileSync, rmSync, symlinkSync, lstatSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
@@ -52,6 +52,28 @@ test('P2-QA-113: dangling symlink at last fixture path blocks all output atomica
     assert.equal(lstatSync(last).isSymbolicLink(), true);
     for (const name of ['restore-a.json', 'restore-b.json', 'invalid-total.json']) {
       assert.equal(existsSync(join(root, name)), false, name + ' should not be created');
+    }
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+});
+
+test('P2-QA-116: symlinked destination and parent directories refuse writes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'grove-p2-cli-'));
+  try {
+    const actual = join(root, 'actual');
+    const alias = join(root, 'alias');
+    const nested = join(alias, 'nested');
+    mkdirSync(actual);
+    symlinkSync(actual, alias, 'dir');
+    for (const destination of [alias, nested]) {
+      const result = run([destination], root);
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /Symlinked fixture output directory is not allowed/);
+    }
+    for (const name of Object.keys(makeRestoreFixtures())) {
+      assert.equal(existsSync(join(actual, name)), false);
+      assert.equal(existsSync(join(actual, 'nested', name)), false);
     }
   } finally {
     rmSync(root, {recursive: true, force: true});
