@@ -107,6 +107,30 @@ class HostHeaderTests(unittest.TestCase):
                     self.assertIn(b" 403 ", response.split(b"\r\n", 1)[0])
                     self.assertNotIn(b"review test", response)
 
+    def test_approved_public_assets_and_root_remain_accessible(self):
+        # Security deny rules must not break normal navigation or static assets.
+        root = Path(self.tmp.name)
+        (root / "app.js").write_text("window.groveReview = true;", encoding="utf-8")
+        (root / "styles.css").write_text("body { color: black; }", encoding="utf-8")
+        for method in ("GET", "HEAD"):
+            for path, expected in (
+                ("/", b"review test"),
+                ("/index.html?check=1", b"review test"),
+                ("/app.js", b"window.groveReview = true;"),
+                ("/styles.css", b"body { color: black; }"),
+            ):
+                with self.subTest(method=method, path=path):
+                    conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+                    try:
+                        conn.request(method, path, headers={"Host": "localhost"})
+                        response = conn.getresponse()
+                        body = response.read()
+                        self.assertEqual(response.status, 200)
+                        self.assertEqual(body, expected if method == "GET" else b"")
+                        self.assertEqual(response.getheader("Cache-Control"), "no-store, max-age=0")
+                    finally:
+                        conn.close()
+
     def test_unexpected_public_looking_files_are_rejected(self):
         root = Path(self.tmp.name)
         (root / "unexpected.txt").write_text("private after verification", encoding="utf-8")
