@@ -2,7 +2,7 @@
  * Run: node ventures/offline-inventory/tests/restore-fixtures.mjs <output-directory>
  * Writes only to the explicitly supplied local directory. Never use real customer data.
  */
-import {existsSync, mkdirSync, writeFileSync} from 'node:fs';
+import {lstatSync, mkdirSync, writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createWorksheet, toJson, fromJson} from '../src/inventory.mjs';
@@ -26,7 +26,12 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const fixtures = makeRestoreFixtures();
   const targets = Object.entries(fixtures).map(([name, data]) => [resolve(directory, name), data]);
   // Preflight all paths so a rerun with a later existing file cannot create earlier partial fixtures.
-  if (targets.some(([target]) => existsSync(target))) throw Error('Fixture output already exists; refusing partial overwrite');
+  // lstat detects dangling symlinks too; existsSync follows them and misses these occupied paths.
+  const occupied = target => {
+    try { lstatSync(target); return true; }
+    catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+  };
+  if (targets.some(([target]) => occupied(target))) throw Error('Fixture output already exists; refusing partial overwrite');
   mkdirSync(directory,{recursive:true});
   for (const [target,data] of targets) writeFileSync(target,data,{flag:'wx'});
   console.log('Wrote four fictional QA fixtures to '+resolve(directory));
