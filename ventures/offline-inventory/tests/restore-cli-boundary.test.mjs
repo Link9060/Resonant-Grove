@@ -1,7 +1,7 @@
 /** P2-QA-108: CLI requires an explicit destination and supports fresh nested local paths. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync, mkdirSync, existsSync, readFileSync, rmSync, symlinkSync, lstatSync} from 'node:fs';
+import {mkdtempSync, mkdirSync, existsSync, readFileSync, rmSync, symlinkSync, lstatSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
@@ -93,6 +93,24 @@ test('P2-QA-122: dangling symlinked output directory refuses writes', () => {
     assert.equal(existsSync(missing), false);
     for (const name of Object.keys(makeRestoreFixtures())) {
       assert.equal(existsSync(join(root, name)), false);
+    }
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+});
+
+test('P2-QA-128: existing final fixture prevents partial writes and preserves original bytes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'grove-p2-cli-'));
+  try {
+    const last = join(root, 'oversized.json');
+    const original = 'reviewer-owned file: do not replace';
+    writeFileSync(last, original);
+    const result = run([root], root);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /refusing partial overwrite/);
+    assert.equal(readFileSync(last, 'utf8'), original);
+    for (const name of ['restore-a.json', 'restore-b.json', 'invalid-total.json']) {
+      assert.equal(existsSync(join(root, name)), false, name + ' must not be created');
     }
   } finally {
     rmSync(root, {recursive: true, force: true});
