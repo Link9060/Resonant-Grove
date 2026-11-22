@@ -268,6 +268,37 @@ class ReviewHttpSmokeTests(unittest.TestCase):
                     module.smoke(self.root, SHA)
                 target.unlink()
 
+    def test_review_handler_denies_private_files_directly(self):
+        # Defense in depth if a private file appears after artifact verification.
+        import functools
+        import http.server
+        import threading
+        import urllib.request
+        for name in (".git/config", ".github/workflows/deploy.yml",
+                     "tests/private.txt", "README.md", "SUPABASE.md"):
+            target = self.root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("private fixture", encoding="utf-8")
+        handler = functools.partial(module.ReviewHandler, directory=str(self.root))
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            base = f"http://127.0.0.1:{server.server_port}"
+            for path in ("/.git/config", "/.github/workflows/deploy.yml",
+                         "/tests/private.txt", "/README.md", "/SUPABASE.md",
+                         "/%2egit/config"):
+                for method in ("GET", "HEAD"):
+                    with self.subTest(path=path, method=method):
+                        request = urllib.request.Request(base + path, method=method)
+                        with self.assertRaises(urllib.error.HTTPError) as error:
+                            urllib.request.urlopen(request, timeout=5)
+                        self.assertEqual(error.exception.code, 403)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+
     def test_wrong_expected_sha_fails(self):
         with self.assertRaises(AssertionError):
             module.smoke(self.root, "b" * 40)
