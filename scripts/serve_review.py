@@ -30,7 +30,7 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
         parts = [part.lower() for part in path.split("/") if part]
         # Reject all hidden path components, including accidentally copied .env files.
         # The packaged .nojekyll marker does not need to be served over HTTP.
-        return any(part.startswith(".") or part in {"tests", "__pycache__"} for part in parts) or (bool(parts) and parts[-1] in {"readme.md", "supabase.md"})
+        return any(part.startswith(".") or part in {"tests", "__pycache__", "scripts", "docs"} for part in parts) or (bool(parts) and parts[-1] in {"readme.md", "supabase.md", "review.txt", "sha256sums.txt"})
 
     def do_GET(self):
         if self._private_path():
@@ -59,7 +59,7 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
             return None
         # A post-verification symlink must not alias a hidden or internal file.
         relative = target.relative_to(root)
-        if any(part.lower().startswith(".") or part.lower() in {"tests", "__pycache__"} for part in relative.parts) or (relative.parts and relative.parts[-1].lower() in {"readme.md", "supabase.md"}):
+        if any(part.lower().startswith(".") or part.lower() in {"tests", "__pycache__", "scripts", "docs"} for part in relative.parts) or (relative.parts and relative.parts[-1].lower() in {"readme.md", "supabase.md", "review.txt", "sha256sums.txt"}):
             self.send_error(403, "Private resolved review path rejected")
             return None
         # The base handler can serve an index symlink after this check.
@@ -72,7 +72,7 @@ class ReviewHandler(http.server.SimpleHTTPRequestHandler):
                         self.send_error(403, "Directory index outside review artifact rejected")
                         return None
                     index_parts = resolved_index.relative_to(root).parts
-                    if any(part.lower().startswith(".") or part.lower() in {"tests", "__pycache__"} for part in index_parts) or (index_parts and index_parts[-1].lower() in {"readme.md", "supabase.md"}):
+                    if any(part.lower().startswith(".") or part.lower() in {"tests", "__pycache__", "scripts", "docs"} for part in index_parts) or (index_parts and index_parts[-1].lower() in {"readme.md", "supabase.md", "review.txt", "sha256sums.txt"}):
                         self.send_error(403, "Private directory index target rejected")
                         return None
         return super().send_head()
