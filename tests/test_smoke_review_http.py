@@ -30,6 +30,19 @@ class ReviewHttpSmokeTests(unittest.TestCase):
     def test_complete_artifact_passes(self):
         module.smoke(self.root, SHA)
 
+    def test_missing_get_security_header_fails(self):
+        # Regression: a successful GET must enforce the same policy as HEAD.
+        original_send_header = module.ReviewHandler.send_header
+
+        def omit_get_header(handler, keyword, value):
+            if handler.command == "GET" and keyword.lower() == "x-frame-options":
+                return
+            return original_send_header(handler, keyword, value)
+
+        with patch.object(module.ReviewHandler, "send_header", omit_get_header):
+            with self.assertRaisesRegex(AssertionError, "GET missing security header X-Frame-Options"):
+                module.smoke(self.root, SHA)
+
     def test_missing_linked_asset_fails(self):
         (self.root / "index.html").write_text(
             "<html><head><link rel='stylesheet' href='missing.css'></head>"
