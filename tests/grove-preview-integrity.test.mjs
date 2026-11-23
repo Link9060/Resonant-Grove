@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const workflow=readFileSync(new URL('../.github/workflows/grove-preview.yml',import.meta.url),'utf8');
 const production=readFileSync(new URL('../.github/workflows/deploy.yml',import.meta.url),'utf8');
 
-test('review workflow checks out and stamps the same exact PR-head revision',()=>{
+test('review workflow checks out and stamps the same exact PR or scoped push revision',()=>{
   assert.match(workflow,/GROVE_SOURCE_SHA:\s*\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
   assert.match(workflow,/ref:\s*\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
   assert.match(workflow,/grove-review-\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
@@ -15,7 +15,7 @@ test('review workflow checks out and stamps the same exact PR-head revision',()=
   assert.match(workflow,/grep -Fq "GROVE_PREVIEW_SHA=\$\{GROVE_SOURCE_SHA\}"/);
 });
 
-test('review artifacts are PR-only and never built from manual main-branch dispatch',()=>{
+test('review artifacts are scoped to PRs or the isolated development branch, never manual main dispatch',()=>{
   assert.match(workflow,/pull_request:\s*\n\s*branches: \[main\]/);
   assert.doesNotMatch(workflow,/workflow_dispatch:/);
   assert.doesNotMatch(workflow,/github\.sha/);
