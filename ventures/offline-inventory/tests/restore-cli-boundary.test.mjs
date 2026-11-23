@@ -134,3 +134,24 @@ test('P2-QA-133: regular-file parent rejects nested output without altering pare
     rmSync(root, {recursive: true, force: true});
   }
 });
+
+test('P2-QA-136: occupied final fixture directory refuses partial output and preserves nested contents', () => {
+  const root = mkdtempSync(join(tmpdir(), 'grove-p2-cli-'));
+  try {
+    const occupied = join(root, 'oversized.json');
+    mkdirSync(occupied);
+    const sentinel = join(occupied, 'reviewer-note.txt');
+    const original = 'fictional reviewer-owned directory contents';
+    writeFileSync(sentinel, original);
+    const result = run([root], root);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /refusing partial overwrite/);
+    assert.equal(lstatSync(occupied).isDirectory(), true);
+    assert.equal(readFileSync(sentinel, 'utf8'), original);
+    for (const name of ['restore-a.json', 'restore-b.json', 'invalid-total.json']) {
+      assert.equal(existsSync(join(root, name)), false, name + ' must not be created');
+    }
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+});
