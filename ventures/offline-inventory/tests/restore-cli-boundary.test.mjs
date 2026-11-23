@@ -116,3 +116,21 @@ test('P2-QA-128: existing final fixture prevents partial writes and preserves or
     rmSync(root, {recursive: true, force: true});
   }
 });
+
+test('P2-QA-133: regular-file parent rejects nested output without altering parent', () => {
+  const root = mkdtempSync(join(tmpdir(), 'grove-p2-cli-'));
+  try {
+    const parent = join(root, 'occupied-parent');
+    const original = 'fictional reviewer file: preserve these bytes';
+    writeFileSync(parent, original);
+    const result = run([join(parent, 'nested')], root);
+    assert.notEqual(result.status, 0);
+    assert.equal(readFileSync(parent, 'utf8'), original);
+    assert.equal(lstatSync(parent).isFile(), true);
+    for (const name of Object.keys(makeRestoreFixtures())) {
+      assert.equal(existsSync(join(root, name)), false);
+    }
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+});
