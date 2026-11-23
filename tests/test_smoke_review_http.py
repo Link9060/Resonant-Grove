@@ -56,6 +56,32 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, "HEAD missing security header Referrer-Policy"):
                 module.smoke(self.root, SHA)
 
+    def test_untrusted_host_is_rejected_for_head_and_get(self):
+        # DNS-rebinding protection must cover both methods, not only GET.
+        import functools
+        import threading
+        import urllib.request
+
+        handler = functools.partial(module.ReviewHandler, directory=str(self.root))
+        server = module.http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            base = f"http://127.0.0.1:{server.server_port}/index.html"
+            for method in ("GET", "HEAD"):
+                for host in ("attacker.example", "127.0.0.2"):
+                    with self.subTest(method=method, host=host):
+                        request = urllib.request.Request(
+                            base, method=method, headers={"Host": host}
+                        )
+                        with self.assertRaises(urllib.error.HTTPError) as error:
+                            urllib.request.urlopen(request, timeout=5)
+                        self.assertEqual(error.exception.code, 403)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+
     def test_missing_linked_asset_fails(self):
         (self.root / "index.html").write_text(
             "<html><head><link rel='stylesheet' href='missing.css'></head>"
