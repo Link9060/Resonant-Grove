@@ -177,3 +177,24 @@ test('P2-QA-140: relative output path resolves beneath the explicit working dire
     rmSync(root, {recursive: true, force: true});
   }
 });
+
+test('P2-QA-146: symlink to an existing reviewer file blocks all fixtures without changing target', () => {
+  const root = mkdtempSync(join(tmpdir(), 'grove-p2-cli-'));
+  try {
+    const original = 'fictional reviewer-owned content: preserve';
+    const target = join(root, 'reviewer-note.txt');
+    const link = join(root, 'oversized.json');
+    writeFileSync(target, original);
+    symlinkSync(target, link);
+    const result = run([root], root);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /refusing partial overwrite/);
+    assert.equal(lstatSync(link).isSymbolicLink(), true);
+    assert.equal(readFileSync(target, 'utf8'), original);
+    for (const name of ['restore-a.json', 'restore-b.json', 'invalid-total.json']) {
+      assert.equal(existsSync(join(root, name)), false, name + ' must not be created');
+    }
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+});
