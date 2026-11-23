@@ -8,8 +8,8 @@ test('preview packages the exact PR or scoped branch-push head without write cre
   assert.match(workflow, /pull_request:\s*\n\s*branches:\s*\[main\]/);
   assert.match(workflow, /permissions:\s*\n\s*contents:\s*read/);
   assert.doesNotMatch(workflow, /permissions:\s*write-all|(?:issues|contents|deployments|pages):\s*write/);
-  assert.match(workflow, /GROVE_SOURCE_SHA:\s*\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
-  assert.match(workflow, /ref:\s*\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
+  assert.match(workflow, /GROVE_SOURCE_SHA:\s*\$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+  assert.match(workflow, /ref:\s*\$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /persist-credentials:\s*false/);
   assert.match(workflow, /git rev-parse HEAD/);
   assert.match(workflow, /test "\$actual_sha" = "\$GROVE_SOURCE_SHA"/);
