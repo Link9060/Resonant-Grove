@@ -23,6 +23,8 @@ export function makeRestoreFixtures() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const directory = process.argv[2];
   if (!directory) throw Error('Provide an explicit local output directory');
+  // Never write fixtures into the filesystem root, even when invoked with elevated permissions.
+  if (resolve(directory) === resolve('/')) throw Error('Filesystem root is not a fixture output directory');
   const fixtures = makeRestoreFixtures();
   const targets = Object.entries(fixtures).map(([name, data]) => [resolve(directory, name), data]);
   // Preflight all paths so a rerun with a later existing file cannot create earlier partial fixtures.
