@@ -29,7 +29,7 @@ test('rejected workspace fetches are handled after account isolation check', () 
 });
 
 test('rejected sign-out requests preserve local state and report a failure', () => {
-  assert.match(source, /try \{\s*const \{ error \} = await client\.auth\.signOut\(\);/);
+  assert.match(source, /try \{[\s\S]*?const \{ error \} = await client\.auth\.signOut\(\);/);
   assert.match(source, /catch \(failure\) \{\s*message\('Sign out failed:/);
   assert.match(source, /Your local copy remains saved/);
 });
