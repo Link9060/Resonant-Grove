@@ -43,6 +43,19 @@ class ReviewHttpSmokeTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, "GET missing security header X-Frame-Options"):
                 module.smoke(self.root, SHA)
 
+    def test_missing_head_security_header_fails(self):
+        # A successful HEAD must retain its security policy independently of GET.
+        original_send_header = module.ReviewHandler.send_header
+
+        def omit_head_header(handler, keyword, value):
+            if handler.command == "HEAD" and keyword.lower() == "referrer-policy":
+                return
+            return original_send_header(handler, keyword, value)
+
+        with patch.object(module.ReviewHandler, "send_header", omit_head_header):
+            with self.assertRaisesRegex(AssertionError, "HEAD missing security header Referrer-Policy"):
+                module.smoke(self.root, SHA)
+
     def test_missing_linked_asset_fails(self):
         (self.root / "index.html").write_text(
             "<html><head><link rel='stylesheet' href='missing.css'></head>"
