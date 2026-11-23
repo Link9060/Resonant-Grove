@@ -82,3 +82,9 @@ jobs:
           test ! -e "$fixture_dir/missing-target"
           test -L "$fixture_dir/dangling-link"
           echo "P2-QA-124: dangling symlink output rejected without creating target"
+          # P2-QA-143: root output must be rejected before any writes.
+          if node ventures/offline-inventory/tests/restore-fixtures.mjs /; then
+            echo "ERROR: fixture generator accepted filesystem root"
+            exit 1
+          fi
+          echo "P2-QA-143: filesystem root output rejected"
