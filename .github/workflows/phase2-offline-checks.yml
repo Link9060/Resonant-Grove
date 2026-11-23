@@ -88,3 +88,19 @@ jobs:
             exit 1
           fi
           echo "P2-QA-143: filesystem root output rejected"
+          # P2-QA-149: an occupied later fixture must not cause partial output.
+          partial_dir="$(mktemp -d)"
+          trap 'rm -rf "$fixture_dir" "$outside_dir" "$partial_dir"' EXIT
+          printf 'keep-me' > "$partial_dir/oversized.json"
+          if node ventures/offline-inventory/tests/restore-fixtures.mjs "$partial_dir"; then
+            echo "ERROR: fixture generator accepted occupied later output"
+            exit 1
+          fi
+          test "$(cat "$partial_dir/oversized.json")" = "keep-me"
+          for name in restore-a.json restore-b.json invalid-total.json; do
+            if test -e "$partial_dir/$name"; then
+              echo "ERROR: fixture generator partially created $name"
+              exit 1
+            fi
+          done
+          echo "P2-QA-149: occupied later fixture preserves contents and prevents partial writes"
