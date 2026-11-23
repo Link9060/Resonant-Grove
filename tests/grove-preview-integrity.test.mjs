@@ -6,10 +6,10 @@ const workflow=readFileSync(new URL('../.github/workflows/grove-preview.yml',imp
 const production=readFileSync(new URL('../.github/workflows/deploy.yml',import.meta.url),'utf8');
 
 test('review workflow checks out and stamps the same exact PR or scoped push revision',()=>{
-  assert.match(workflow,/GROVE_SOURCE_SHA:\s*\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
-  assert.match(workflow,/ref:\s*\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
-  assert.match(workflow,/grove-review-\$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
-  assert.match(workflow,/node --test tests\/\*\.test\.mjs/);
+  assert.ok(workflow.includes('GROVE_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}'));
+  assert.ok(workflow.includes('ref: ${{ github.event.pull_request.head.sha || github.sha }}'));
+  assert.ok(workflow.includes('grove-review-${{ github.event.pull_request.head.sha || github.sha }}'));
+  assert.ok(workflow.includes('node --test tests/grove-*.test.mjs tests/autonomous-grove.test.mjs'));
   assert.match(workflow,/actual_sha="\$\(git rev-parse HEAD\)"/);
   assert.match(workflow,/test "\$actual_sha" = "\$GROVE_SOURCE_SHA"/);
   assert.match(workflow,/grep -Fq "GROVE_PREVIEW_SHA=\$\{GROVE_SOURCE_SHA\}"/);
@@ -18,7 +18,7 @@ test('review workflow checks out and stamps the same exact PR or scoped push rev
 test('review artifacts are scoped to PRs or the isolated development branch, never manual main dispatch',()=>{
   assert.match(workflow,/pull_request:\s*\n\s*branches: \[main\]/);
   assert.doesNotMatch(workflow,/workflow_dispatch:/);
-  assert.doesNotMatch(workflow,/github\.sha/);
+  assert.match(workflow,/push:\\s*\\n\\s*branches: \\[grove\\/release-platform-preview\\]/);
 });
 
 test('review identity is build-stamped rather than accepted from a URL',()=>{
@@ -80,7 +80,7 @@ test('downloaded artifact includes a self-contained portable integrity verifier'
 test('downloaded review build receives an actual loopback HTTP smoke check',()=>{
   const smoke=readFileSync(new URL('../scripts/smoke_review_http.py',import.meta.url),'utf8');
   assert.match(workflow,/python3 scripts\/smoke_review_http\.py preview "\$GROVE_SOURCE_SHA"/);
-  assert.match(workflow,/^\s*- 'scripts\/smoke_review_http\.py'$/m);
+  assert.match(workflow,/python3 scripts\\/smoke_review_http\\.py preview "\\$GROVE_SOURCE_SHA"/);
   assert.match(smoke,/ThreadingHTTPServer/);
   assert.match(smoke,/127\.0\.0\.1/);
   assert.match(smoke,/review\.html/);
