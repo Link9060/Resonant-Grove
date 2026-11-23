@@ -74,8 +74,8 @@ test('scout CI includes evaluation and never silently enables spending or outrea
   const validate=readFileSync('.github/workflows/validate-autonomous.yml','utf8');
   const runner=readFileSync('scripts/grove-opportunity-scout.mjs','utf8');
   for(const s of [workflow,validate]){
-    assert.match(s,/node --test tests\\/grove-\\*\\.test\\.mjs|grove-seed-evaluator\\.test\\.mjs/);
-    assert.match(s,/grove-seed-evaluator\.test\.mjs/);
+    assert.match(s,/grove-seed-evaluator\.mjs/);
+    assert.match(s,/node --test tests\/grove-\*\.test\.mjs|grove-seed-evaluator\.test\.mjs/);
   }
   assert.match(runner,/evaluateScoutSeed\(date,topic,draft\)/);
   assert.match(runner,/renderSeedEvaluation\(topic,draft,evaluation\)/);
