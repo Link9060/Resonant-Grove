@@ -155,3 +155,25 @@ test('P2-QA-136: occupied final fixture directory refuses partial output and pre
     rmSync(root, {recursive: true, force: true});
   }
 });
+
+test('P2-QA-140: relative output path resolves beneath the explicit working directory', () => {
+  const root = mkdtempSync(join(tmpdir(), 'grove-p2-cli-'));
+  try {
+    const relative = join('fictional', 'restore');
+    const result = run([relative], root);
+    assert.equal(result.status, 0, result.stderr);
+    const expected = makeRestoreFixtures();
+    for (const [name, value] of Object.entries(expected)) {
+      assert.equal(readFileSync(join(root, relative, name), 'utf8'), value);
+      assert.equal(existsSync(join(root, name)), false, 'no fixture may leak into cwd root');
+    }
+    const retry = run([relative], root);
+    assert.notEqual(retry.status, 0, 'repeat invocation must refuse overwrite');
+    assert.match(retry.stderr, /refusing partial overwrite/);
+    for (const [name, value] of Object.entries(expected)) {
+      assert.equal(readFileSync(join(root, relative, name), 'utf8'), value);
+    }
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+});
