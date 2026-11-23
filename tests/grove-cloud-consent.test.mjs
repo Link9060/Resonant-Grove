@@ -20,5 +20,5 @@ test('missing cloud copy cannot be selected as a remote workspace', () => {
 
 test('account changes invalidate pending sync and reject stale fetch results', () => {
   assert.match(cloud, /currentUserId\s*=\s*nextId;\s*user\s*=\s*nextUser;\s*ready\s*=\s*false;\s*pending\s*=\s*null/);
-  assert.match(cloud, /if \(scopedId !== currentUserId\) return;/);
+  assert.match(cloud, /if \(readEpoch !== accountEpoch \|\| scopedId !== currentUserId\) return;/);
 });
