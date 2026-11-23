@@ -80,7 +80,6 @@ test('downloaded artifact includes a self-contained portable integrity verifier'
 test('downloaded review build receives an actual loopback HTTP smoke check',()=>{
   const smoke=readFileSync(new URL('../scripts/smoke_review_http.py',import.meta.url),'utf8');
   assert.match(workflow,/python3 scripts\/smoke_review_http\.py preview "\$GROVE_SOURCE_SHA"/);
-  assert.match(workflow,/python3 scripts\\/smoke_review_http\\.py preview "\\$GROVE_SOURCE_SHA"/);
   assert.match(smoke,/ThreadingHTTPServer/);
   assert.match(smoke,/127\.0\.0\.1/);
   assert.match(smoke,/review\.html/);
