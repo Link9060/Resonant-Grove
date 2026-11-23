@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const workflow = readFileSync('.github/workflows/grove-preview.yml', 'utf8');
 
-test('preview packages only an exact pull-request head without write credentials', () => {
+test('preview packages the exact PR or scoped branch-push head without write credentials', () => {
   assert.match(workflow, /pull_request:\s*\n\s*branches:\s*\[main\]/);
   assert.match(workflow, /permissions:\s*\n\s*contents:\s*read/);
   assert.doesNotMatch(workflow, /permissions:\s*write-all|(?:issues|contents|deployments|pages):\s*write/);
