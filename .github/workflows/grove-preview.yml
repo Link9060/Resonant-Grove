@@ -1,6 +1,8 @@
 name: Grove development preview package
 
 on:
+  push:
+    branches: [grove/release-platform-preview]
   pull_request:
     branches: [main]
     paths:
@@ -18,7 +20,7 @@ on:
 # Avoid spending free Actions minutes packaging superseded PR revisions.
 # A newer push cancels only this PR's older preview-packaging run.
 concurrency:
-  group: grove-preview-${{ github.event.pull_request.number }}
+  group: grove-preview-${{ github.event.pull_request.number || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -29,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      GROVE_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      GROVE_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,7 +71,7 @@ jobs:
           touch preview/.nojekyll
           # Stamp the exact tested source revision into every downloadable build.
           # This is an offline artifact only; it does not deploy to production.
-          printf '%s\n' "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" "GROVE_PREVIEW_PR=${{ github.event.pull_request.number }}" "GROVE_PREVIEW_RUN=${GITHUB_RUN_ID}" > preview/REVIEW.txt
+          printf '%s\n' "GROVE_PREVIEW_SHA=${GROVE_SOURCE_SHA}" "GROVE_PREVIEW_PR=${{ github.event.pull_request.number || '65' }}" "GROVE_PREVIEW_RUN=${GITHUB_RUN_ID}" > preview/REVIEW.txt
           # Render the verified SHA directly. Never derive the displayed revision from a URL fragment.
           cat > preview/review.html <<EOF
           <!doctype html>
@@ -109,7 +111,7 @@ jobs:
       - name: Upload verified unmerged review artifact
         uses: actions/upload-artifact@v4
         with:
-          name: grove-review-${{ github.event.pull_request.head.sha }}
+          name: grove-review-${{ github.event.pull_request.head.sha || github.sha }}
           path: preview/
           include-hidden-files: true
           retention-days: 14
