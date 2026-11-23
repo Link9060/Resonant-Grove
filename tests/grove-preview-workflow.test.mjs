@@ -81,3 +81,11 @@ test('any Phase 1 script edit triggers fresh preview packaging', () => {
   assert.ok(workflow.includes("- 'scripts/**'"), 'preview must rerun for script additions and edits');
   assert.doesNotMatch(workflow, /- 'scripts\/(?:verify_review_artifact|smoke_review_http|serve_review)\.py'/);
 });
+
+
+test('preview branch pushes trigger exact-head checks without publishing main', () => {
+  assert.match(workflow, /on:\s*\n\s*push:\s*\n\s*branches:\s*\[grove\/release-platform-preview\]/);
+  assert.doesNotMatch(workflow, /push:\s*\n\s*branches:\s*\[[^\]]*main/);
+  assert.match(workflow, /group:\s*grove-preview-\$\{\{ github\.event\.pull_request\.number \|\| github\.ref_name \}\}/);
+  assert.match(workflow, /GROVE_PREVIEW_PR=\$\{\{ github\.event\.pull_request\.number \|\| '65' \}\}/);
+});
