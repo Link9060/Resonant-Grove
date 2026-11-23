@@ -108,8 +108,8 @@ test('scheduled Scout includes QA report and at most one optional local rewrite'
   const validation=readFileSync('.github/workflows/validate-autonomous.yml','utf8');
   const runner=readFileSync('scripts/grove-opportunity-scout.mjs','utf8');
   for(const file of [workflow,validation]){
-    assert.match(file,/node --test tests\\/grove-\\*\\.test\\.mjs|grove-prototype-qa\\.test\\.mjs/);
-    assert.match(file,/grove-prototype-qa\.test\.mjs/);
+    assert.match(file,/grove-prototype-qa\.mjs/);
+    assert.match(file,/node --test tests\/grove-\*\.test\.mjs|grove-prototype-qa\.test\.mjs/);
   }
   assert.match(runner,/auditPrototype\(topic,selected,prototype\)/);
   assert.match(runner,/preferRevisedPrototype\(prototype,revised,topic,selected\)/);
